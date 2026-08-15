@@ -12,7 +12,7 @@ describe('Health (e2e)', () => {
         app = await createTestApp();
     }, 30000);
 
-    afterEach(async () => {
+    afterAll(async () => {
         if (app) {
             await app.close();
         }
