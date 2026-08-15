@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta name="color-scheme" content="light"/>
+    <title>LifeMem — сервис временно недоступен</title>
+    <style>
+        :root {
+            --ink: #0f2f2d;
+            --ink-soft: #1a4d4a;
+            --mist: #dfe8ea;
+            --card: #ffffff;
+            --text: #1c2b2a;
+            --muted: #5a716e;
+            --accent: #b8f0e8;
+            --line: #e4eeed;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(1200px 600px at 10% -10%, rgba(42, 107, 102, 0.18), transparent 60%),
+                radial-gradient(900px 500px at 100% 0%, rgba(15, 47, 45, 0.12), transparent 55%),
+                linear-gradient(180deg, var(--mist) 0%, #edf3f4 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+
+        .shell {
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 22px 60px rgba(15, 47, 45, 0.14);
+            animation: rise 0.7s ease-out both;
+        }
+
+        .hero {
+            background: linear-gradient(145deg, #0f2f2d 0%, #1a4d4a 55%, #2a6b66 100%);
+            padding: 36px 40px 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            right: -60px;
+            top: -70px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(184, 240, 232, 0.22), transparent 70%);
+            animation: pulse 4.5s ease-in-out infinite;
+        }
+
+        .brand {
+            margin: 0 0 8px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 30px;
+            letter-spacing: 0.04em;
+            color: #f3faf8;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tagline {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 14px;
+            color: rgba(243, 250, 248, 0.78);
+            position: relative;
+            z-index: 1;
+        }
+
+        .body {
+            padding: 36px 40px 28px;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 18px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #eef7f5;
+            color: var(--ink-soft);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d97757;
+            box-shadow: 0 0 0 0 rgba(217, 119, 87, 0.55);
+            animation: blink 1.6s ease-out infinite;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(26px, 4vw, 32px);
+            font-weight: normal;
+            line-height: 1.2;
+            color: var(--ink);
+        }
+
+        .lead {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.65;
+            color: var(--muted);
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .btn {
+            appearance: none;
+            border: 0;
+            cursor: pointer;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: var(--ink);
+            color: #f3faf8;
+            box-shadow: 0 10px 24px rgba(15, 47, 45, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: var(--ink-soft);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--ink-soft);
+            border: 1px solid var(--line);
+        }
+
+        .btn-ghost:hover {
+            background: #f4faf9;
+        }
+
+        .meta {
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 1px solid var(--line);
+            display: grid;
+            gap: 8px;
+            font-size: 13px;
+            color: #7a8f8c;
+        }
+
+        .meta strong {
+            color: var(--ink-soft);
+            font-weight: 600;
+        }
+
+        .footer {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 12px;
+            color: #8a9c9a;
+        }
+
+        @keyframes rise {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.55; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.08); }
+        }
+
+        @keyframes blink {
+            0% { box-shadow: 0 0 0 0 rgba(217, 119, 87, 0.5); }
+            70% { box-shadow: 0 0 0 10px rgba(217, 119, 87, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 119, 87, 0); }
+        }
+
+        @media (max-width: 520px) {
+            .hero, .body {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="shell">
+    <section class="card" aria-labelledby="title">
+        <header class="hero">
+            <p class="brand">LifeMem</p>
+            <p class="tagline">Твои воспоминания — в одном месте</p>
+        </header>
+
+        <div class="body">
+            <p class="status"><span class="dot" aria-hidden="true"></span> Технические работы</p>
+            <h1 id="title">Сервис временно недоступен</h1>
+            <p class="lead">
+                Мы уже работаем над восстановлением. Ваши данные в безопасности -
+                просто дайте нам немного времени и попробуйте снова чуть позже.
+            </p>
+
+            <div class="actions">
+                <button class="btn btn-primary" type="button" onclick="location.reload()">
+                    Обновить страницу
+                </button>
+                <a class="btn btn-ghost" href="mailto:support@lifemem.com">Написать в поддержку</a>
+            </div>
+
+            <div class="meta">
+                <div>Обычно это занимает <strong>несколько минут</strong>.</div>
+                <div>Если проблема не уходит - напишите нам, мы поможем.</div>
+            </div>
+        </div>
+    </section>
+    <p class="footer">© <span id="year"></span> LifeMem</p>
+</main>
+<script>
+    document.getElementById('year').textContent = String(new Date().getFullYear());
+</script>
+</body>
+</html>
