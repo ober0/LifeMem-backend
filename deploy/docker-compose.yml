@@ -28,20 +28,29 @@ services:
             retries: 5
 
     lifemem-minio:
-        image: minio/minio:RELEASE.2025-04-22T22-12-26Z-cpuv1
+        build:
+            context: .
+            dockerfile: Dockerfile.minio
+        image: lifemem-minio:local
         container_name: lifemem-minio
         restart: unless-stopped
         ports:
-            - '9000:9000'
-            - '9001:9001'
+            - '${S3_HOST_PORT:-9100}:9000'
+            - '${S3_CONSOLE_HOST_PORT:-9101}:9001'
         env_file:
             - ../.env.prod
         environment:
             MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID}
             MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY}
+            S3_BUCKET: ${S3_BUCKET}
         volumes:
             - lifemem_minio_data:/data
-        command: server --console-address ":9001" /data
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://127.0.0.1:9000/minio/health/live']
+            interval: 10s
+            timeout: 5s
+            retries: 10
+            start_period: 15s
 
     lifemem-app:
         build:
@@ -61,7 +70,7 @@ services:
             lifemem-redis:
                 condition: service_healthy
             lifemem-minio:
-                condition: service_started
+                condition: service_healthy
 
 volumes:
     lifemem_pgdata:

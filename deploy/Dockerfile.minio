@@ -1,0 +1,8 @@
+FROM minio/mc:latest AS mc
+
+FROM minio/minio:RELEASE.2025-04-22T22-12-26Z-cpuv1
+
+COPY --from=mc /usr/bin/mc /usr/local/bin/mc
+COPY minio-entrypoint.sh /usr/local/bin/minio-entrypoint.sh
+
+ENTRYPOINT ["/bin/sh", "/usr/local/bin/minio-entrypoint.sh"]
