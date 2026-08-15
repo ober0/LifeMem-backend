@@ -1,12 +1,12 @@
 import { Request } from 'express';
-
-export type DeviceType = 'desktop' | 'mobile';
+import { DeviceType } from '../types/user';
 
 export function getDeviceType(req: Request): DeviceType {
     const clientType = req.headers['x-client-type'] as string | undefined;
 
     if (clientType === 'mobile') {
-        return 'mobile';
+        return DeviceType.MOBILE;
     }
-    return 'desktop';
+
+    return DeviceType.WEB;
 }

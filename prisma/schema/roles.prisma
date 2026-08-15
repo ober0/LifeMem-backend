@@ -1,0 +1,58 @@
+model Role {
+  id String @id @default(uuid()) @db.Uuid
+
+  name      String  @unique
+  isDefault Boolean @default(false) @map("is_default")
+
+  users       User[]
+  permissions RolePermission[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("role")
+}
+
+model PermissionCategory {
+  id String @id @default(uuid()) @db.Uuid
+
+  key String @unique
+
+  permissions Permission[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("permission_category")
+}
+
+model Permission {
+  id String @id @default(uuid()) @db.Uuid
+
+  key String @unique
+
+  category             PermissionCategory? @relation(fields: [permissionCategoryId], references: [id], onDelete: SetNull)
+  permissionCategoryId String?             @map("permission_category_id") @db.Uuid
+
+  roles RolePermission[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([permissionCategoryId])
+  @@map("permission")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permission")
+}

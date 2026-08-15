@@ -53,7 +53,21 @@ async function bootstrap() {
 
     const port = process.env.PORT || 3000;
 
-    const config = new DocumentBuilder().setTitle(`Api документация`).setVersion('0.0.1').build();
+    const config = new DocumentBuilder()
+        .setTitle(`Api документация`)
+        .setVersion('0.0.1')
+        .addGlobalParameters({
+            name: 'x-client-type',
+            in: 'header',
+            required: false,
+            description: 'Тип клиента',
+            schema: {
+                type: 'string',
+                enum: ['web', 'mobile'],
+                default: 'web'
+            }
+        })
+        .build();
 
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('docs', app, document);

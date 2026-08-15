@@ -35,11 +35,11 @@ export class TranslateFilter implements ExceptionFilter {
 
         const normalizedLang = lang.toLowerCase();
 
-        const code = typeof rawMessage === 'string' ? rawMessage : 'error.unknown';
+        const code = typeof rawMessage === 'string' ? rawMessage : 'error.common.unknown';
         const msg = this.translate(code, normalizedLang, rawMessage);
 
         const payload = {
-            timestamp: new Date().toISOString(),
+            timestamp: Date.now(),
             path: request.originalUrl || request.url,
             code,
             msg
@@ -86,6 +86,6 @@ export class TranslateFilter implements ExceptionFilter {
             return exception.message;
         }
 
-        return 'error.unknown';
+        return 'error.common.unknown';
     }
 }

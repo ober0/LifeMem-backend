@@ -1,0 +1,24 @@
+model Logs {
+  id String @id @default(uuid()) @db.Uuid
+
+  method   String
+  url      String
+  status   Int
+  duration Int
+  ip       String?
+
+  body String?
+
+  isSuccess Boolean @map("is_success")
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String? @map("user_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@map("logs")
+}
