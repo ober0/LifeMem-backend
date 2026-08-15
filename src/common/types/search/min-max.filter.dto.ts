@@ -18,10 +18,10 @@ export class DateMinMaxFilterDto {
     @ApiPropertyOptional({ type: String, format: 'date-time' })
     @IsOptional()
     @Type(() => Date)
-    min?: Date;
+    from?: Date;
 
     @ApiPropertyOptional({ type: String, format: 'date-time' })
     @IsOptional()
     @Type(() => Date)
-    max?: Date;
+    to?: Date;
 }

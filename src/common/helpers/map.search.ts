@@ -37,7 +37,7 @@ export function mapSearch<T>(
             let data: Record<string, any> = {};
 
             const exist = modifiedPath.find((item) => item.key === key);
-            if (value instanceof DateMinMaxFilterDto || value instanceof NumberMinMaxFilterDto) {
+            if (value instanceof NumberMinMaxFilterDto) {
                 if (exist) {
                     data = exist.path
                         .split('.')
@@ -50,6 +50,21 @@ export function mapSearch<T>(
                     mappedFilters[key] = {
                         gte: value.min ?? undefined,
                         lte: value.max ?? undefined
+                    };
+                }
+            } else if (value instanceof DateMinMaxFilterDto) {
+                if (exist) {
+                    data = exist.path
+                        .split('.')
+                        .reverse()
+                        .reduce<Record<string, unknown>>((acc, key) => ({ [key]: acc }), {
+                            gte: value.from ?? undefined,
+                            lte: value.to ?? undefined
+                        });
+                } else {
+                    mappedFilters[key] = {
+                        gte: value.from ?? undefined,
+                        lte: value.to ?? undefined
                     };
                 }
             } else if (isContains(filters, key)) {
