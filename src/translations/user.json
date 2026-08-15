@@ -1,0 +1,26 @@
+{
+    "not_found": {
+        "ru": "Пользователь не найден",
+        "en": "User not found"
+    },
+    "email_already_exists": {
+        "ru": "Пользователь с такой почтой уже существует",
+        "en": "User with this email already exists"
+    },
+    "no_access": {
+        "ru": "Нет доступа",
+        "en": "No access"
+    },
+    "already_verified": {
+        "ru": "Почта уже подтверждена",
+        "en": "Email already verified"
+    },
+    "password_incorrect": {
+        "ru": "Неверный пароль",
+        "en": "Incorrect password"
+    },
+    "password_identical": {
+        "ru": "Новый пароль совпадает с текущим",
+        "en": "New password is identical to the current one"
+    }
+}

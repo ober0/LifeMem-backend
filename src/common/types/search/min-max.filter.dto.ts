@@ -1,0 +1,27 @@
+import { IsOptional, IsNumber } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+
+export class NumberMinMaxFilterDto {
+    @ApiPropertyOptional({ type: Number })
+    @IsOptional()
+    @IsNumber()
+    min?: number;
+
+    @ApiPropertyOptional({ type: Number })
+    @IsOptional()
+    @IsNumber()
+    max?: number;
+}
+
+export class DateMinMaxFilterDto {
+    @ApiPropertyOptional({ type: String, format: 'date-time' })
+    @IsOptional()
+    @Type(() => Date)
+    min?: Date;
+
+    @ApiPropertyOptional({ type: String, format: 'date-time' })
+    @IsOptional()
+    @Type(() => Date)
+    max?: Date;
+}

@@ -1,0 +1,68 @@
+services:
+    lifemem-postgres:
+        image: postgres:18
+        container_name: lifemem-postgres
+        restart: unless-stopped
+        env_file:
+            - ../.env.prod
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGRES_DB}
+        volumes:
+            - lifemem_pgdata:/var/lib/postgresql
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    lifemem-redis:
+        image: redis:alpine
+        container_name: lifemem-redis
+        restart: unless-stopped
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    lifemem-minio:
+        image: minio/minio:RELEASE.2025-04-22T22-12-26Z-cpuv1
+        container_name: lifemem-minio
+        restart: unless-stopped
+        ports:
+            - '9000:9000'
+            - '9001:9001'
+        env_file:
+            - ../.env.prod
+        environment:
+            MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID}
+            MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY}
+        volumes:
+            - lifemem_minio_data:/data
+        command: server --console-address ":9001" /data
+
+    lifemem-app:
+        build:
+            context: ..
+            dockerfile: deploy/Dockerfile
+        container_name: lifemem-app
+        restart: unless-stopped
+        env_file:
+            - ../.env.prod
+        environment:
+            NODE_ENV: production
+        ports:
+            - '${PORT:-3000}:3000'
+        depends_on:
+            lifemem-postgres:
+                condition: service_healthy
+            lifemem-redis:
+                condition: service_healthy
+            lifemem-minio:
+                condition: service_started
+
+volumes:
+    lifemem_pgdata:
+    lifemem_minio_data:
