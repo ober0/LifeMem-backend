@@ -1,0 +1,12 @@
+{
+    "extends": "../tsconfig.json",
+    "include": ["./seeds/**/*.ts",
+        "../src/common/config/role-permission/**/*.ts"
+    ],
+    "compilerOptions": {
+        "outDir": "../dist/prisma-seed",
+        "rootDir": "..",
+        "declaration": false,
+        "sourceMap": false
+    }
+}

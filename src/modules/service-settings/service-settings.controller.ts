@@ -1,9 +1,10 @@
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuardHttp } from '../auth/guards/auth.guard';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Permission } from '../../common/config/role-permission';
+import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ServiceSettingsDto } from './dto/base.dto';
-import { ServiceSettingsService } from './service-settings.service';
 import { ServiceSettingsUpdateDto } from './dto/update.dto';
+import { ServiceSettingsService } from './service-settings.service';
 
 @ApiTags('Service Settings')
 @Controller('settings')
@@ -18,8 +19,7 @@ export class ServiceSettingsController {
     }
 
     @Patch('set')
-    @ApiBearerAuth()
-    @UseGuards(JwtAuthGuardHttp())
+    @UseGuards(JwtAuthGuardHttp({ permissions: [Permission.ServiceSettingsUpdate] }))
     @ApiOperation({ summary: 'Частично обновить настройки приложения' })
     @ApiOkResponse({ type: ServiceSettingsDto })
     async updateServiceSettings(@Body() dto: ServiceSettingsUpdateDto) {

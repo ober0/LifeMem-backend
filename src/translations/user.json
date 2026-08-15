@@ -7,6 +7,18 @@
         "ru": "Пользователь с такой почтой уже существует",
         "en": "User with this email already exists"
     },
+    "phone_already_exists": {
+        "ru": "Пользователь с таким телефоном уже существует",
+        "en": "User with this phone number already exists"
+    },
+    "phone_not_correct": {
+        "ru": "Некорректный номер телефона",
+        "en": "Invalid phone number"
+    },
+    "phone_not_access": {
+        "ru": "Номера из этой страны не поддерживаются",
+        "en": "Phone numbers from this country are not supported"
+    },
     "no_access": {
         "ru": "Нет доступа",
         "en": "No access"

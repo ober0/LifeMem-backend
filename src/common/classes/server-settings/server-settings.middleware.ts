@@ -1,6 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
-import { ServiceSettingsService } from '../../modules/service-settings/service-settings.service';
+import { ServiceSettingsService } from '../../../modules/service-settings/service-settings.service';
 import { ServerSettings } from './server-settings';
 
 @Injectable()

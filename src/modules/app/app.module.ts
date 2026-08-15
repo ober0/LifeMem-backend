@@ -1,9 +1,9 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
-import { ActorMiddleware } from '../../common/actor';
+import { ActorMiddleware } from '../../common/classes/actor';
 import { LoggerMiddleware } from '../../common/middlewares/logger.middleware';
-import { ServerSettingsMiddleware } from '../../common/server-settings';
+import { ServerSettingsMiddleware } from '../../common/classes/server-settings';
 import { TranslateFilter } from '../../common/translation/translate.filter';
 import { AuthModule } from '../auth/auth.module';
 import { HealthModule } from '../health/health.module';
@@ -14,6 +14,7 @@ import { ServiceSettingsModule } from '../service-settings/service-settings.modu
 import { SmtpModule } from '../smtp/smtp.module';
 import { UserModule } from '../user/user.module';
 import { UserSettingsModule } from '../user-settings/user-settings.module';
+import { RoleModule } from '../role/role.module';
 
 @Module({
     imports: [
@@ -26,7 +27,8 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         UserModule,
         AuthModule,
         UserSettingsModule,
-        ServiceSettingsModule
+        ServiceSettingsModule,
+        RoleModule
     ],
     providers: [
         {

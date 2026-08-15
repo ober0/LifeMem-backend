@@ -1,0 +1,10 @@
+{
+    "not_found": {
+        "ru": "Роль не найдена",
+        "en": "Role not found"
+    },
+    "default_not_found": {
+        "ru": "Роль по умолчанию не найдена",
+        "en": "Default role not found"
+    }
+}

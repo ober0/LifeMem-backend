@@ -6,16 +6,16 @@
     "private": true,
     "license": "UNLICENSED",
     "scripts": {
-        "build": "nest build",
-        "seed:dev": "ts-node -r tsconfig-paths/register ./prisma/seed.ts",
-        "seed": "node dist/prisma/seed.js",
+        "build": "nest build && tsc -p prisma/tsconfig.json",
+        "seed:dev": "ts-node -r tsconfig-paths/register ./prisma/seeds/seed.ts",
+        "seed": "node dist/prisma-seed/prisma/seeds/seed.js",
         "dev": "nest start --watch",
         "prod": "node dist/src/main.js",
         "generate": "npx prisma generate --schema ./prisma/schema/",
         "migrate:make": "npx prisma migrate dev --schema ./prisma/schema/ --create-only",
         "migrate:apply": "npx prisma migrate deploy --schema ./prisma/schema/",
         "migrate:reset": "npx prisma migrate reset --force --schema ./prisma/schema/",
-        "db:e2e": "node --env-file=.env.e2e ./node_modules/prisma/build/index.js migrate deploy --schema ./prisma/schema/ && node --env-file=.env.e2e ./node_modules/ts-node/dist/bin.js -r tsconfig-paths/register ./prisma/seed.ts",
+        "db:e2e": "node --env-file=.env.e2e ./node_modules/prisma/build/index.js migrate deploy --schema ./prisma/schema/ && node --env-file=.env.e2e ./node_modules/ts-node/dist/bin.js -r tsconfig-paths/register ./prisma/seeds/seed.ts",
         "lint": "eslint \"{src,test,prisma}/**/*.{ts,js}\" --fix",
         "lint:check": "eslint \"{src,test,prisma}/**/*.{ts,js}\"",
         "prisma:validate": "npx prisma validate --schema ./prisma/schema/",
@@ -40,12 +40,14 @@
         "@nestjs/swagger": "^11.1.1",
         "@nestjs/terminus": "^11.0.0",
         "@prisma/client": "6.19",
+        "bcryptjs": "^3.0.3",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.1",
         "cookie-parser": "^1.4.7",
         "express": "^5.1.0",
         "express-basic-auth": "^1.2.1",
         "ioredis": "^5.6.0",
+        "libphonenumber-js": "^1.13.11",
         "nestjs-i18n": "^10.5.0",
         "nodemailer": "^6.10.0",
         "prisma": "6.19",
@@ -61,6 +63,7 @@
         "@stylistic/eslint-plugin-ts": "^4.2.0",
         "@swc/cli": "^0.6.0",
         "@swc/core": "^1.10.7",
+        "@types/bcryptjs": "^2.4.6",
         "@types/cookie-parser": "^1.4.8",
         "@types/express": "^5.0.0",
         "@types/jest": "^29.5.14",
@@ -98,5 +101,9 @@
         ],
         "coverageDirectory": "../coverage",
         "testEnvironment": "node"
+    },
+    "prisma": {
+        "schema": "./prisma/schema",
+        "seed": "ts-node -r tsconfig-paths/register ./prisma/seeds/seed.ts"
     }
 }

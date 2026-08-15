@@ -9,15 +9,19 @@ import {
     UnauthorizedException
 } from '@nestjs/common';
 import { Request } from 'express';
-import { getDeviceType } from '../../../common/helpers/get-device-type';
-import { getRequestIp } from '../../../common/helpers/get-ip';
-import { DeviceType } from '../../../common/types/user';
-import { UserService } from '../../user/user.service';
+import { UserService } from '../../modules/user/user.service';
+import { PermissionKey } from '../config/role-permission';
+import { getDeviceType } from '../helpers/get-device-type';
+import { getRequestIp } from '../helpers/get-ip';
+import { DeviceType } from '../types/user';
 
-export function JwtAuthGuardHttp(
+export function JwtAuthGuardHttp({
     allowUnauthorized = false,
-    permissions: string[] = []
-): Type<CanActivate> {
+    permissions = []
+}: {
+    allowUnauthorized?: boolean;
+    permissions?: PermissionKey[];
+}): Type<CanActivate> {
     @Injectable()
     class JwtAuthGuardHttpMixin implements CanActivate {
         constructor(private readonly userService: UserService) {}
@@ -82,7 +86,7 @@ export function JwtAuthGuardHttp(
             return parts[1];
         }
 
-        private assertPermissions(req: Request, required: string[]): void {
+        private assertPermissions(req: Request, required: PermissionKey[]): void {
             if (required.length === 0) {
                 return;
             }

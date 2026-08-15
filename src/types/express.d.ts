@@ -1,5 +1,5 @@
-import type { Actor } from '../common/actor/actor';
-import type { ServerSettings } from '../common/server-settings/server-settings';
+import type { Actor } from '../common/classes/actor/actor';
+import type { ServerSettings } from '../common/classes/server-settings/server-settings';
 
 /**
  * Дополняет Express.Request (open interface для merging).

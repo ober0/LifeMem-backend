@@ -4,7 +4,14 @@
     "sourceRoot": "src",
     "compilerOptions": {
         "deleteOutDir": true,
-        "assets": ["translations/**/*"],
+        "assets": [
+            "translations/**/*",
+            {
+                "include": "modules/smtp/templates/**/*",
+                "outDir": "dist/src",
+                "watchAssets": true
+            }
+        ],
         "watchAssets": true
     }
 }
