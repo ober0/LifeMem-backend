@@ -7,53 +7,81 @@ on:
     branches: [main]
 
 concurrency:
-  group: ci-cd-${{ github.ref }}
+  group: ${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: E2E tests
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-
+    timeout-minutes: 5
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - run: npm ci
+      - run: npm run lint:check
 
-      - name: Install dependencies
-        run: npm ci
+  build:
+    name: Build
+    needs: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run generate
+      - run: npm run build
 
-      - name: Prepare e2e env
-        run: cp .env.e2e.example .env.e2e
+  unit:
+    name: Unit tests
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run generate
+      - run: npm test
 
-      - name: Generate Prisma Client
-        run: npm run generate
-
-      - name: Start e2e infrastructure
-        run: npm run docker:e2e
-
-      - name: Run e2e tests
-        run: npm run test:e2e
-
-      - name: Stop e2e infrastructure
+  e2e:
+    name: e2e tests
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: cp .env.e2e.example .env.e2e
+      - run: npm run generate
+      - run: npm run docker:e2e
+      - run: npm run test:e2e
+      - name: stop
         if: always()
         run: npm run docker:e2e:down
 
   deploy:
-    name: Deploy to server
-    needs: test
+    name: deploy
+    needs: e2e
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
+    timeout-minutes: 15
     steps:
-      - name: Deploy over SSH
+      - name: deploy
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.SSH_HOST }}

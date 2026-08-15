@@ -2,13 +2,15 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { createTestApp } from './helpers/create-app';
+import { ensureE2eBucket } from './helpers/ensure-bucket';
 
 describe('Health (e2e)', () => {
     let app: INestApplication<App>;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
+        await ensureE2eBucket();
         app = await createTestApp();
-    }, 15000);
+    }, 30000);
 
     afterEach(async () => {
         if (app) {

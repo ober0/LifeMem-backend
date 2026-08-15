@@ -1,8 +1,12 @@
 FROM minio/mc:latest AS mc
 
+FROM alpine:3.20 AS entrypoint
+COPY minio-entrypoint.sh /minio-entrypoint.sh
+RUN sed -i 's/\r$//' /minio-entrypoint.sh && chmod +x /minio-entrypoint.sh
+
 FROM minio/minio:RELEASE.2025-04-22T22-12-26Z-cpuv1
 
 COPY --from=mc /usr/bin/mc /usr/local/bin/mc
-COPY minio-entrypoint.sh /usr/local/bin/minio-entrypoint.sh
+COPY --from=entrypoint /minio-entrypoint.sh /usr/local/bin/minio-entrypoint.sh
 
 ENTRYPOINT ["/bin/sh", "/usr/local/bin/minio-entrypoint.sh"]

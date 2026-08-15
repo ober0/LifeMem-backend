@@ -4,15 +4,11 @@ services:
         container_name: lifemem-postgres
         restart: unless-stopped
         env_file:
-            - ../.env.prod
-        environment:
-            POSTGRES_USER: ${POSTGRES_USER}
-            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-            POSTGRES_DB: ${POSTGRES_DB}
+            - .env.prod
         volumes:
             - lifemem_pgdata:/var/lib/postgresql
         healthcheck:
-            test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+            test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
             interval: 10s
             timeout: 5s
             retries: 5
@@ -29,7 +25,7 @@ services:
 
     lifemem-minio:
         build:
-            context: .
+            context: ./deploy
             dockerfile: Dockerfile.minio
         image: lifemem-minio:local
         container_name: lifemem-minio
@@ -38,11 +34,7 @@ services:
             - '${S3_HOST_PORT:-9100}:9000'
             - '${S3_CONSOLE_HOST_PORT:-9101}:9001'
         env_file:
-            - ../.env.prod
-        environment:
-            MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID}
-            MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY}
-            S3_BUCKET: ${S3_BUCKET}
+            - .env.prod
         volumes:
             - lifemem_minio_data:/data
         healthcheck:
@@ -54,16 +46,16 @@ services:
 
     lifemem-app:
         build:
-            context: ..
+            context: .
             dockerfile: deploy/Dockerfile
         container_name: lifemem-app
         restart: unless-stopped
         env_file:
-            - ../.env.prod
+            - .env.prod
         environment:
             NODE_ENV: production
         ports:
-            - '${PORT:-3000}:3000'
+            - '${VM_PORT:-3000}:${PORT:-3000}'
         depends_on:
             lifemem-postgres:
                 condition: service_healthy

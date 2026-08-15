@@ -1,7 +1,15 @@
 #!/bin/sh
-set -eu
+set -e
 
+
+export MINIO_ROOT_USER="${MINIO_ROOT_USER:-${S3_ACCESS_KEY_ID}}"
+export MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD:-${S3_SECRET_ACCESS_KEY}}"
 BUCKET="${S3_BUCKET:-lifemem}"
+
+if [ -z "$MINIO_ROOT_USER" ] || [ -z "$MINIO_ROOT_PASSWORD" ]; then
+  echo "MINIO_ROOT_USER/S3_ACCESS_KEY_ID and MINIO_ROOT_PASSWORD/S3_SECRET_ACCESS_KEY are required" >&2
+  exit 1
+fi
 
 minio server /data --console-address ":9001" &
 MINIO_PID=$!
@@ -17,10 +25,7 @@ until curl -sf http://127.0.0.1:9000/minio/health/live >/dev/null 2>&1; do
   sleep 1
 done
 
-if ! mc alias set local http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; then
-  echo "Failed to configure mc alias (bucket will not be created)" >&2
-else
-  mc mb -p "local/${BUCKET}" || true
-fi
+mc alias set local http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" || echo "mc alias failed" >&2
+mc mb -p "local/${BUCKET}" || true
 
-wait "$MINIO_PID"
+wait "$MINIO_PID" || true
