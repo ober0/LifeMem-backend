@@ -95,5 +95,6 @@ jobs:
             git fetch origin main
             git checkout main
             git reset --hard origin/main
+            npm run docker:prod:down
             npm run docker:prod
             docker compose -f deploy/docker-compose.yml -p lifemem-prod --env-file .env.prod ps
