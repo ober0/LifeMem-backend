@@ -15,6 +15,7 @@ import { SmtpModule } from '../smtp/smtp.module';
 import { UserModule } from '../user/user.module';
 import { UserSettingsModule } from '../user-settings/user-settings.module';
 import { RoleModule } from '../role/role.module';
+import { LogsModule } from '../logs/logs.module';
 
 @Module({
     imports: [
@@ -28,7 +29,8 @@ import { RoleModule } from '../role/role.module';
         AuthModule,
         UserSettingsModule,
         ServiceSettingsModule,
-        RoleModule
+        RoleModule,
+        LogsModule
     ],
     providers: [
         {

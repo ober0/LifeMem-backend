@@ -14,12 +14,12 @@ export class UserDto extends BaseEntity {
     @ApiPropertyOptional({ type: String, nullable: true })
     @IsOptional()
     @IsEmail()
-    email: string | null;
+    email?: string | null;
 
     @ApiPropertyOptional({ type: String, nullable: true })
     @IsOptional()
     @IsString()
-    phoneNumber: string | null;
+    phoneNumber?: string | null;
 
     @ApiProperty({ format: 'uuid' })
     @IsUUID()

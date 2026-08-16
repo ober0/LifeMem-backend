@@ -1,9 +1,14 @@
 import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import { LogsService } from '../../modules/logs/logs.service';
+import { LogsCreateDto } from '../../modules/logs/dto/base.dto';
+import { HttpMethod } from '@prisma/client';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
     private logger: Logger = new Logger(LoggerMiddleware.name);
+
+    constructor(private readonly loggerService: LogsService) {}
 
     use(req: Request, res: Response, next: NextFunction) {
         const start = Date.now();
@@ -12,7 +17,7 @@ export class LoggerMiddleware implements NestMiddleware {
 
         this.logger.log(`START [${method}] ${url}`);
 
-        res.on('finish', async () => {
+        res.on('finish', () => {
             const status = res.statusCode;
             const duration = Date.now() - start;
 
@@ -23,6 +28,19 @@ export class LoggerMiddleware implements NestMiddleware {
             } else {
                 this.logger.log(`END [${method}] ${url} [CODE: ${status}] - ${duration}ms`);
             }
+
+            setImmediate(() => {
+                const data: LogsCreateDto = {
+                    code: status,
+                    method: (method.charAt(0).toUpperCase() + method.slice(1).toLowerCase()) as HttpMethod,
+                    userId: req.actor.user?.id,
+                    path: req.path,
+                    duration,
+                    ip: req.ip
+                };
+
+                void this.loggerService.create(data);
+            });
         });
 
         next();

@@ -1,0 +1,60 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { LogsSearchDto } from './dto/search.dto';
+import { Prisma } from '@prisma/client';
+import { mapSort } from '../../common/helpers/map.sort';
+import { mapPagination } from '../../common/helpers/map.pagination';
+import { mapSearch } from '../../common/helpers/map.search';
+import { LogsCreateDto } from './dto/base.dto';
+
+@Injectable()
+export class LogsRepository {
+    constructor(private readonly prisma: PrismaService) {}
+
+    private buildWhere(dto: LogsSearchDto): Prisma.LogsWhereInput {
+        return mapSearch(dto.filters, [], [], dto.query, ['code', 'path', 'method']);
+    }
+
+    async search(dto: LogsSearchDto) {
+        return this.prisma.logs.findMany({
+            where: this.buildWhere(dto),
+            orderBy: mapSort(dto.sorts),
+            ...mapPagination(dto.pagination),
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        nickname: true,
+                        email: true,
+                        phoneNumber: true
+                    }
+                }
+            }
+        });
+    }
+
+    async count(dto: LogsSearchDto): Promise<number> {
+        return this.prisma.logs.count({
+            where: this.buildWhere(dto)
+        });
+    }
+
+    async create(data: LogsCreateDto) {
+        return this.prisma.logs.create({
+            data: {
+                ...(data.userId && {
+                    user: {
+                        connect: {
+                            id: data.userId
+                        }
+                    }
+                }),
+                duration: data.duration,
+                code: data.code,
+                path: data.path,
+                method: data.method ?? 'Undefined',
+                ip: data.ip
+            }
+        });
+    }
+}
