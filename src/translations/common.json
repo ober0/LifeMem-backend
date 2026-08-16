@@ -2,5 +2,9 @@
     "unknown": {
         "ru": "Неизвестная ошибка",
         "en": "Unknown error"
+    },
+    "validation_failed": {
+        "ru": "Ошибка валидации",
+        "en": "Validation failed"
     }
 }

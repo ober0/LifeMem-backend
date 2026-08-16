@@ -16,6 +16,8 @@ import { UserModule } from '../user/user.module';
 import { UserSettingsModule } from '../user-settings/user-settings.module';
 import { RoleModule } from '../role/role.module';
 import { LogsModule } from '../logs/logs.module';
+import { AuthLogModule } from '../auth-log/auth-log.module';
+import { MobileSmsModule } from '../mobile-sms/mobile-sms.module';
 
 @Module({
     imports: [
@@ -30,7 +32,9 @@ import { LogsModule } from '../logs/logs.module';
         UserSettingsModule,
         ServiceSettingsModule,
         RoleModule,
-        LogsModule
+        LogsModule,
+        AuthLogModule,
+        MobileSmsModule
     ],
     providers: [
         {

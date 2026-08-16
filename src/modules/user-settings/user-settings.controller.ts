@@ -2,7 +2,7 @@ import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Actor } from '../../common/classes/actor';
 import { UserSettingsDto } from '../../common/types/user';
-import { CurrentActor } from '../auth/decorators/current-actor.decorator';
+import { CurrentActor } from '../../common/decorators/current-actor.decorator';
 import { UserSettingsService } from './user-settings.service';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 

@@ -1,13 +1,18 @@
-import { Body, Controller, Get, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Actor } from '../../common/classes/actor';
+import { CurrentActor } from '../../common/decorators/current-actor.decorator';
+import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
+import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { UserDto } from '../../common/types/user';
-import { CurrentActor } from '../auth/decorators/current-actor.decorator';
 import { RoleService } from '../role/role.service';
+import { OAuthBindingDto } from './dto/bindings.dto';
+import { ConfirmEmailDto } from './dto/confirm-email.dto';
+import { ConfirmPhoneDto } from './dto/confirm-phone.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { RegisterResponseDto } from './dto/register-response.dto';
 import { SelfDto } from './dto/self.dto';
 import { UserService } from './user.service';
-import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 
 @ApiTags('User')
 @Controller('user')
@@ -18,17 +23,39 @@ export class UserController {
     ) {}
 
     @Post()
-    @ApiOperation({ summary: 'Создание пользователя' })
-    @ApiCreatedResponse({ type: UserDto })
-    async create(@Body() dto: CreateUserDto): Promise<UserDto> {
+    @ApiOperation({
+        summary: 'Регистрация'
+    })
+    @ApiCreatedResponse({ type: RegisterResponseDto })
+    @ApiErrorResponses()
+    async create(@Body() dto: CreateUserDto): Promise<RegisterResponseDto> {
         return this.userService.create(dto);
     }
 
-    @Get('self')
+    @Post('confirm-email')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Подтверждение email' })
+    @ApiOkResponse({ type: UserDto })
+    @ApiErrorResponses()
+    async confirmEmail(@Body() dto: ConfirmEmailDto): Promise<UserDto> {
+        return this.userService.confirmEmail(dto);
+    }
+
+    @Post('confirm-phone')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Подтверждение телефона' })
+    @ApiOkResponse({ type: UserDto })
+    @ApiErrorResponses()
+    async confirmPhone(@Body() dto: ConfirmPhoneDto): Promise<UserDto> {
+        return this.userService.confirmPhone(dto);
+    }
+
+    @Get('me')
     @UseGuards(JwtAuthGuardHttp({}))
     @ApiOperation({ summary: 'Получение информации о себе' })
     @ApiOkResponse({ type: SelfDto })
-    async self(@CurrentActor() actor: Actor) {
+    @ApiErrorResponses()
+    async info(@CurrentActor() actor: Actor) {
         if (!actor.user) {
             throw new UnauthorizedException('error.auth.unauthorized');
         }
@@ -40,5 +67,18 @@ export class UserController {
             permissions: actor.permissions,
             role
         };
+    }
+
+    @ApiOperation({ summary: 'Получить привязки' })
+    @Get('me/bindings')
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiOkResponse({ type: OAuthBindingDto, isArray: true })
+    @ApiErrorResponses()
+    async getBindings(@CurrentActor() actor: Actor): Promise<OAuthBindingDto[]> {
+        if (!actor.user) {
+            throw new UnauthorizedException('error.auth.unauthorized');
+        }
+
+        return this.userService.getBindings(actor.user.id);
     }
 }

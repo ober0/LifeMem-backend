@@ -9,7 +9,8 @@ export const Permission = {
 
     ServiceSettingsUpdate: 'service_settings.update',
 
-    LogsRead: 'logs.read'
+    LogsRead: 'logs.read',
+    AuthLogsRead: 'auth_logs.read'
 } as const;
 
 export type PermissionKey = (typeof Permission)[keyof typeof Permission];
@@ -18,7 +19,8 @@ export const PERMISSIONS_BY_CATEGORY = {
     users: [Permission.UsersSearch, Permission.UsersAdminDelete],
     roles: [Permission.RolesRead, Permission.RolesCreate, Permission.RolesUpdate, Permission.RolesDelete],
     service_settings: [Permission.ServiceSettingsUpdate],
-    logs: [Permission.LogsRead]
+    logs: [Permission.LogsRead],
+    auth_logs: [Permission.AuthLogsRead]
 } as const;
 
 export type PermissionCategoryKey = keyof typeof PERMISSIONS_BY_CATEGORY;

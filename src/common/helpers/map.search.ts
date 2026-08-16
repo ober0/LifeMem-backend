@@ -15,9 +15,11 @@ export function mapSearch<T>(
     modifiedPath: { key: keyof T; path: string }[] = [],
     excludedValues: (keyof T | string)[] = [],
     query?: string,
-    queryFields: string[] = []
+    queryFields: string[] = [],
+    filterClass?: new () => T
 ): any {
     const mappedFilters: Record<string, any> = {};
+    const containsMetaTarget = filterClass?.prototype ?? (filters as object | undefined);
 
     if (filters) {
         for (const [key, value] of Object.entries(filters)) {
@@ -67,7 +69,11 @@ export function mapSearch<T>(
                         lte: value.to ?? undefined
                     };
                 }
-            } else if (isContains(filters, key)) {
+            } else if (
+                (containsMetaTarget && isContains(containsMetaTarget, key)) ||
+                key === 'id' ||
+                key.endsWith('Id')
+            ) {
                 if (exist) {
                     data = exist.path
                         .split('.')

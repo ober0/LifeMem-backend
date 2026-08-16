@@ -1,12 +1,12 @@
 import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
-import { ApiProperty, PickType } from '@nestjs/swagger';
+import { ApiProperty, PartialType, PickType } from '@nestjs/swagger';
 import { Contains } from '../../../common/helpers/contains.decorator';
 import { GenerateSearchDto } from '../../../common/types/search/base-search.dto';
 import { SortTypes } from '../../../common/types/search/sort-types.dto';
 import { LogsBaseDto } from './base.dto';
 import { HttpMethod } from '@prisma/client';
 
-export class LogsFilterDto extends PickType(LogsBaseDto, ['code', 'path']) {
+export class LogsFilterDto extends PartialType(PickType(LogsBaseDto, ['code', 'path'])) {
     @ApiProperty({ required: false, type: String })
     @IsOptional()
     @IsUUID()

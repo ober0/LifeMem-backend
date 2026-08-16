@@ -12,7 +12,6 @@ import { Request } from 'express';
 import { UserService } from '../../modules/user/user.service';
 import { PermissionKey } from '../config/role-permission';
 import { getDeviceType } from '../helpers/get-device-type';
-import { getRequestIp } from '../helpers/get-ip';
 import { DeviceType } from '../types/user';
 
 export function JwtAuthGuardHttp({
@@ -33,9 +32,6 @@ export function JwtAuthGuardHttp({
 
             const req = context.switchToHttp().getRequest<Request>();
             const deviceType = getDeviceType(req);
-            const ip = getRequestIp(req);
-
-            req.actor.setDevice({ ip, type: deviceType });
 
             const token = this.tryGetToken(req, deviceType);
 

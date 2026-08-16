@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { OAuthProvider } from '@prisma/client';
+import { IsEmail, IsOptional, IsPhoneNumber, IsString, IsStrongPassword, MinLength, ValidateIf } from 'class-validator';
 
 export class CreateUserDto {
     @ApiProperty({ example: 'alex' })
@@ -12,13 +13,24 @@ export class CreateUserDto {
     @IsEmail()
     email?: string;
 
-    @ApiProperty({ minLength: 8, example: 'password1' })
+    @ApiPropertyOptional({ minLength: 8, example: 'password1' })
+    @ValidateIf((o: CreateUserDto) => Boolean(o.email))
     @IsString()
-    @MinLength(8)
-    password: string;
+    @IsStrongPassword()
+    password?: string;
 
-    @ApiPropertyOptional({ example: '+79991234567', nullable: true })
+    @ApiPropertyOptional({ example: '+79991234567' })
     @IsOptional()
+    // не юзать IsPhone так как не маппит 8800
     @IsString()
-    phoneNumber?: string | null;
+    phoneNumber?: string;
+}
+
+export interface OauthCreateUser {
+    nickname: string;
+    provider: OAuthProvider;
+    providerUserId: string;
+    providerEmail?: string;
+    providerUsername?: string;
+    providerAvatarUrl?: string;
 }

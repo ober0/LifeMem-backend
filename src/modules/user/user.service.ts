@@ -1,97 +1,243 @@
-import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+    BadRequestException,
+    ConflictException,
+    Injectable,
+    NotFoundException,
+    UnauthorizedException
+} from '@nestjs/common';
+import { ConfirmCodeType, User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
 import { Phone } from '../../common/classes/phone';
 import { BASE_USER_SETTINGS } from '../../common/config/base-user-settings.const';
+import { MOBILE_CODE_LIFETIME_MS } from '../../common/config/contains';
+import { generateCode } from '../../common/helpers/generate-code';
+import { LangEnum } from '../../common/types/lang.enum';
 import { AuthUserInfo, PermissionDto, UserDto, UserSettingsDto } from '../../common/types/user';
+import { MobileSmsService } from '../mobile-sms/mobile-sms.service';
 import { RoleService } from '../role/role.service';
+import { SmtpService } from '../smtp/smtp.service';
 import { AuthUserRecord } from './consts/user.constants';
-import { CreateUserDto } from './dto/create-user.dto';
+import { ConfirmEmailDto } from './dto/confirm-email.dto';
+import { ConfirmPhoneDto } from './dto/confirm-phone.dto';
+import { CreateUserDto, OauthCreateUser } from './dto/create-user.dto';
+import { RegisterResponseDto } from './dto/register-response.dto';
 import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
     constructor(
         private readonly userRepository: UserRepository,
-        private readonly roleService: RoleService
+        private readonly roleService: RoleService,
+        private readonly smtpService: SmtpService,
+        private readonly mobileSmsService: MobileSmsService
     ) {}
 
-    async create(dto: CreateUserDto): Promise<UserDto> {
-        if (!dto.email && !dto.phoneNumber) {
-            throw new BadRequestException('error.auth.no_auth_data');
+    async create(dto: CreateUserDto): Promise<RegisterResponseDto> {
+        if (dto.phoneNumber && (dto.email || dto.password)) {
+            throw new BadRequestException('error.auth.single_auth_method_required');
         }
 
-        let normalizedPhone: string | null = null;
-
-        if (dto.email) {
-            const emailOwner = await this.userRepository.findByEmail(dto.email);
-            if (emailOwner) {
-                throw new ConflictException('error.user.email_already_exists');
-            }
+        if (dto.email && dto.password) {
+            return this.registerByEmail(dto.nickname, dto.email, dto.password);
         }
 
         if (dto.phoneNumber) {
-            const phone = Phone.tryCreate(dto.phoneNumber);
+            return this.registerByPhone(dto.nickname, dto.phoneNumber);
+        }
 
-            if (!phone) {
-                throw new BadRequestException('error.user.phone_not_correct');
-            }
-            if (!phone.isAccess) {
-                throw new BadRequestException('error.user.phone_not_access');
-            }
+        throw new BadRequestException('error.auth.no_auth_data');
+    }
 
-            normalizedPhone = phone.normalized;
-
-            const phoneOwner = await this.userRepository.findByPhoneNumber(normalizedPhone);
-            if (phoneOwner) {
-                throw new ConflictException('error.user.phone_already_exists');
-            }
+    private async registerByEmail(nickname: string, email: string, password: string): Promise<RegisterResponseDto> {
+        const emailOwner = await this.userRepository.findByEmail(email);
+        if (emailOwner) {
+            throw new ConflictException('error.user.email_already_exists');
         }
 
         const role = await this.roleService.getDefaultRole();
-        const passwordHash = await bcrypt.hash(dto.password, 10);
+        const passwordHash = await bcrypt.hash(password, 10);
 
         const user = await this.userRepository.create({
-            nickname: dto.nickname,
-            email: dto.email,
-            phoneNumber: normalizedPhone,
+            nickname,
+            email,
+            phoneNumber: null,
             roleId: role.id,
             passwordHash,
             settings: BASE_USER_SETTINGS
         });
 
+        const code = generateCode();
+        await this.userRepository.createConfirmationCode({
+            type: ConfirmCodeType.Email,
+            code,
+            userId: user.id
+        });
+
+        await this.smtpService.sendCodeEmail({
+            to: email,
+            code,
+            lang: LangEnum.Ru,
+            expiresMinutes: MOBILE_CODE_LIFETIME_MS / 60_000
+        });
+
+        return {
+            user: this.toUserDto(user),
+            message: 'Код подтверждения отправлен на email',
+            alert: true
+        };
+    }
+
+    private async registerByPhone(nickname: string, phoneNumber: string): Promise<RegisterResponseDto> {
+        const phone = Phone.tryCreate(phoneNumber);
+
+        if (!phone) {
+            throw new BadRequestException('error.user.phone_not_correct');
+        }
+        if (!phone.isAccess) {
+            throw new BadRequestException('error.user.phone_not_access');
+        }
+
+        const phoneOwner = await this.userRepository.findByPhoneNumber(phone.normalized);
+        if (phoneOwner) {
+            throw new ConflictException('error.user.phone_already_exists');
+        }
+
+        const role = await this.roleService.getDefaultRole();
+
+        const user = await this.userRepository.create({
+            nickname,
+            email: null,
+            phoneNumber: phone.normalized,
+            roleId: role.id,
+            settings: BASE_USER_SETTINGS
+        });
+
+        const code = generateCode();
+        await this.userRepository.createConfirmationCode({
+            type: ConfirmCodeType.Phone,
+            code,
+            userId: user.id
+        });
+
+        if (process.env.NODE_ENV === 'production') {
+            setImmediate(() => {
+                void this.mobileSmsService.sendMessage(phone, code);
+            });
+        }
+
+        if (process.env.NODE_ENV === 'production') {
+            // FIXME
+            return {
+                user: this.toUserDto(user),
+                message: `Код ${code} отправлен`,
+                alert: true
+            };
+        }
+
+        return {
+            user: this.toUserDto(user),
+            message: `Код ${code} отправлен`,
+            alert: true
+        };
+    }
+
+    async confirmEmail(dto: ConfirmEmailDto): Promise<UserDto> {
+        const user = await this.userRepository.findByEmail(dto.email);
+        if (!user) {
+            throw new NotFoundException('error.user.not_found');
+        }
+
+        if (user.isEmailVerified) {
+            throw new BadRequestException('error.user.already_verified');
+        }
+
+        const confirm = await this.userRepository.consumeValidConfirmationCode(
+            user.id,
+            ConfirmCodeType.Email,
+            Number(dto.code)
+        );
+
+        if (!confirm) {
+            throw new BadRequestException('error.auth.invalid_code');
+        }
+
+        const updated = await this.userRepository.markEmailVerified(user.id);
+        return this.toUserDto(updated);
+    }
+
+    async confirmPhone(dto: ConfirmPhoneDto): Promise<UserDto> {
+        const phone = Phone.tryCreate(dto.phone);
+
+        if (!phone) {
+            throw new BadRequestException('error.user.phone_not_correct');
+        }
+        if (!phone.isAccess) {
+            throw new BadRequestException('error.user.phone_not_access');
+        }
+
+        const user = await this.userRepository.findByPhoneNumber(phone.normalized);
+        if (!user) {
+            throw new NotFoundException('error.user.not_found');
+        }
+
+        if (user.isPhoneVerified) {
+            throw new BadRequestException('error.user.phone_already_verified');
+        }
+
+        const confirm = await this.userRepository.consumeValidConfirmationCode(
+            user.id,
+            ConfirmCodeType.Phone,
+            Number(dto.code)
+        );
+
+        if (!confirm) {
+            throw new BadRequestException('error.auth.invalid_code');
+        }
+
+        const updated = await this.userRepository.markPhoneVerified(user.id);
+        return this.toUserDto(updated);
+    }
+
+    async getUserInfoFromToken(token: string): Promise<AuthUserInfo> {
+        let payload: { id: string };
+
+        try {
+            payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as { id: string };
+        } catch {
+            throw new UnauthorizedException('error.auth.invalid_token');
+        }
+
+        if (!payload?.id) {
+            throw new UnauthorizedException('error.auth.invalid_token');
+        }
+
+        const record = await this.userRepository.findAuthUserById(payload.id);
+
+        if (!record) {
+            throw new UnauthorizedException('error.auth.unauthorized');
+        }
+
+        return this.toAuthUserInfo(record);
+    }
+
+    private toUserDto(user: User): UserDto {
         return {
             id: user.id,
             nickname: user.nickname,
             passwordId: user.passwordId,
             email: user.email,
             phoneNumber: user.phoneNumber,
+            isEmailVerified: user.isEmailVerified,
+            isPhoneVerified: user.isPhoneVerified,
             roleId: user.roleId,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         };
     }
 
-    async getUserInfoFromToken(token: string): Promise<AuthUserInfo> {
-        const record = await this.userRepository.findAuthUserByToken(token);
-
-        if (!record) {
-            throw new UnauthorizedException('error.auth.invalid_token');
-        }
-
-        return this.toAuthUserInfo(record);
-    }
-
     private toAuthUserInfo(record: AuthUserRecord): AuthUserInfo {
-        const user: UserDto = {
-            id: record.id,
-            nickname: record.nickname,
-            passwordId: record.passwordId,
-            email: record.email,
-            phoneNumber: record.phoneNumber,
-            roleId: record.roleId,
-            createdAt: record.createdAt,
-            updatedAt: record.updatedAt
-        };
+        const user = this.toUserDto(record);
 
         const permissions: PermissionDto[] = record.role.permissions.map(({ permission }) => ({
             id: permission.id,
@@ -106,5 +252,35 @@ export class UserService {
         };
 
         return { user, permissions, settings };
+    }
+
+    async findOneByEmailWithPassword(email: string) {
+        return this.userRepository.findByEmailWithPassword(email);
+    }
+
+    async findByPhone(phone: Phone) {
+        return this.userRepository.findByPhone(phone.normalized);
+    }
+
+    async findOneById(id: string): Promise<UserDto> {
+        const user = await this.userRepository.findById(id);
+        if (!user) {
+            throw new NotFoundException('error.user.not_found');
+        }
+        return this.toUserDto(user);
+    }
+
+    async markPhoneVerified(userId: string): Promise<UserDto> {
+        return this.toUserDto(await this.userRepository.markPhoneVerified(userId));
+    }
+
+    async createUserWithOAuthProvider(data: OauthCreateUser) {
+        const role = await this.roleService.getDefaultRole();
+
+        return this.userRepository.createUserWithOAuthProvider(data, role.id, BASE_USER_SETTINGS);
+    }
+
+    async getBindings(userId: string) {
+        return this.userRepository.findBindings(userId);
     }
 }

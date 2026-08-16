@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsBoolean, IsUUID, ValidateNested } from 'class-validator';
 import { JsonValue } from '@prisma/client/runtime/library';
-import { BaseEntity } from '../common-entity.dto';
+import { BaseEntity } from '../../../common/types/common-entity.dto';
 
 export class UserSettingsDto {
     @ApiProperty()

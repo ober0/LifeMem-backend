@@ -1,0 +1,29 @@
+enum OAuthProvider {
+  Google
+  Apple
+
+  @@map("oauth_provider")
+}
+
+model UserOAuthProvider {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider OAuthProvider
+
+  providerUserId String @map("provider_user_id")
+
+  providerEmail     String? @map("provider_email")
+  providerUsername  String? @map("provider_username")
+  providerAvatarUrl String? @map("provider_avatar_url")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([provider, providerUserId])
+  @@unique([userId, provider])
+  @@index([userId, provider])
+  @@map("user_oauth_provider")
+}

@@ -15,6 +15,7 @@ export class TranslateFilter implements ExceptionFilter {
     catch(exception: unknown, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
+        // FIXME
         const request = ctx.getRequest<Request & { user?: RequestUser }>();
 
         const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;

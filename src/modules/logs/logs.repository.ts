@@ -1,18 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { LogsSearchDto } from './dto/search.dto';
 import { Prisma } from '@prisma/client';
-import { mapSort } from '../../common/helpers/map.sort';
 import { mapPagination } from '../../common/helpers/map.pagination';
 import { mapSearch } from '../../common/helpers/map.search';
+import { mapSort } from '../../common/helpers/map.sort';
+import { PrismaService } from '../prisma/prisma.service';
 import { LogsCreateDto } from './dto/base.dto';
+import { LogsFilterDto, LogsSearchDto } from './dto/search.dto';
 
 @Injectable()
 export class LogsRepository {
     constructor(private readonly prisma: PrismaService) {}
 
     private buildWhere(dto: LogsSearchDto): Prisma.LogsWhereInput {
-        return mapSearch(dto.filters, [], [], dto.query, ['code', 'path', 'method']);
+        return mapSearch(dto.filters, [], [], dto.query, ['code', 'path', 'method'], LogsFilterDto);
     }
 
     async search(dto: LogsSearchDto) {

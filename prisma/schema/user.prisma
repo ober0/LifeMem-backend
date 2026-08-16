@@ -16,11 +16,19 @@ model User {
 
   nickname String
 
-  password   Password @relation(fields: [passwordId], references: [id])
-  passwordId String   @unique @map("password_id") @db.Uuid
+  // Может отсутствовать для oauth и телефона
+  passwordId String?   @unique @map("password_id") @db.Uuid
+  password   Password? @relation(fields: [passwordId], references: [id])
 
   email       String? @unique
   phoneNumber String? @unique @map("phone_number")
+
+  isEmailVerified Boolean @default(false) @map("is_email_verified")
+  isPhoneVerified Boolean @default(false) @map("is_phone_verified")
+
+  oauthProviders UserOAuthProvider[]
+  confirmCodes   ConfirmCode[]
+  authLogs       AuthLogs[]
 
   role   Role   @relation(fields: [roleId], references: [id])
   roleId String @map("role_id") @db.Uuid
