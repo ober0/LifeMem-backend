@@ -4,7 +4,7 @@ import { AuthType, ConfirmCodeType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { createHmac } from 'crypto';
 import { Phone } from '../../../common/classes/phone';
-import { EMAIL_CODE_LIFETIME_MS, MOBILE_CODE_LIFETIME_MS } from '../../../common/config/contains';
+import { EMAIL_CODE_LIFETIME_MS } from '../../../common/config/contains';
 import { generateCode } from '../../../common/helpers/generate-code';
 import { LangEnum } from '../../../common/types/lang.enum';
 import { AuthLogService } from '../../auth-log/auth-log.service';
@@ -19,7 +19,6 @@ import {
     GeneratedTokens,
     LoginFullResponseDto,
     LoginPhoneCodeResponseDto,
-    LoginResponseDto,
     SaveTokenDto,
     TokenPayload
 } from '../dto/tokens.dto';

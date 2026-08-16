@@ -1,14 +1,4 @@
-import {
-    Body,
-    Controller,
-    HttpCode,
-    HttpStatus,
-    InternalServerErrorException,
-    Post,
-    Req,
-    Res,
-    UseGuards
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import express from 'express';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
@@ -16,7 +6,6 @@ import { AppleAuthDto, AppleLinkAuthDto } from '../dto/apple-auth.dto';
 import { LoginResponseDto } from '../dto/tokens.dto';
 import { JwtAuthGuardHttp } from '../../../common/guards/auth.guard';
 import { AuthAppleService } from '../services/auth-apple.service';
-import { DeviceType, UserDto } from '../../../common/types/user';
 import { CurrentActor } from '../../../common/decorators/current-actor.decorator';
 import { Actor } from '../../../common/classes/actor';
 
@@ -33,9 +22,9 @@ export class AuthAppleController {
     @ApiOkResponse({ type: LoginResponseDto })
     @ApiErrorResponses()
     async login(
-        @Body() dto: AppleAuthDto,
-        @Req() request: express.Request,
-        @Res({ passthrough: true }) response: express.Response
+        @Body() _dto: AppleAuthDto,
+        @Req() _request: express.Request,
+        @Res({ passthrough: true }) _response: express.Response
     ) {
         // FIXME
         return {
@@ -88,7 +77,7 @@ export class AuthAppleController {
     @ApiBearerAuth()
     @ApiOkResponse()
     @ApiErrorResponses()
-    async link(@Body() dto: AppleLinkAuthDto, @CurrentActor() actor: Actor) {
+    async link(@Body() _dto: AppleLinkAuthDto, @CurrentActor() _actor: Actor) {
         // FIXME
         return {
             alert: true,
@@ -103,7 +92,7 @@ export class AuthAppleController {
     @UseGuards(JwtAuthGuardHttp({}))
     @ApiBearerAuth()
     @ApiErrorResponses()
-    async unlink(@CurrentActor() actor: Actor) {
+    async unlink(@CurrentActor() _actor: Actor) {
         // FIXME
         return {
             alert: true,

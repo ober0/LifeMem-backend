@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OAuthProvider } from '@prisma/client';
-import { IsEmail, IsOptional, IsPhoneNumber, IsString, IsStrongPassword, MinLength, ValidateIf } from 'class-validator';
+import { IsEmail, IsOptional, IsString, IsStrongPassword, MinLength, ValidateIf } from 'class-validator';
 
 export class CreateUserDto {
     @ApiProperty({ example: 'alex' })

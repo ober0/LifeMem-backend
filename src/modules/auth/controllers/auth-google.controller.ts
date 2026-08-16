@@ -1,14 +1,4 @@
-import {
-    Body,
-    Controller,
-    HttpCode,
-    HttpStatus,
-    InternalServerErrorException,
-    Post,
-    Req,
-    Res,
-    UseGuards
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import express from 'express';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
@@ -32,9 +22,9 @@ export class AuthGoogleController {
     @ApiOkResponse({ type: LoginResponseDto })
     @ApiErrorResponses()
     async login(
-        @Body() dto: GoogleAuthDto,
-        @Req() request: express.Request,
-        @Res({ passthrough: true }) response: express.Response
+        @Body() _dto: GoogleAuthDto,
+        @Req() _request: express.Request,
+        @Res({ passthrough: true }) _response: express.Response
     ) {
         // FIXME
         return {
@@ -87,7 +77,7 @@ export class AuthGoogleController {
     @ApiBearerAuth()
     @ApiOkResponse()
     @ApiErrorResponses()
-    async link(@Body() dto: GoogleLinkDto, @CurrentActor() actor: Actor) {
+    async link(@Body() _dto: GoogleLinkDto, @CurrentActor() _actor: Actor) {
         // FIXME
         return {
             alert: true,
@@ -103,7 +93,7 @@ export class AuthGoogleController {
     @ApiBearerAuth()
     @ApiOkResponse({ description: 'Google успешно отвязан' })
     @ApiErrorResponses()
-    async unlink(@CurrentActor() actor: Actor) {
+    async unlink(@CurrentActor() _actor: Actor) {
         // FIXME
         return {
             alert: true,
