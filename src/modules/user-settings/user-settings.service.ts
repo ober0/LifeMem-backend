@@ -14,7 +14,14 @@ export class UserSettingsService {
     }
 
     async update(userId: string, dto: UserSettingsDto): Promise<UserSettingsDto> {
-        const settings = await this.repository.upsert(userId, dto);
+        const current = await this.get(userId);
+
+        const updateData = {
+            ...current,
+            ...dto
+        };
+
+        const settings = await this.repository.upsert(userId, updateData);
         return settings.json as unknown as UserSettingsDto;
     }
 }

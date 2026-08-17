@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Actor } from '../../common/classes/actor';
 import { UserSettingsDto } from '../../common/types/user';
@@ -19,7 +19,7 @@ export class UserSettingsController {
         return this.service.get(actor.user!.id);
     }
 
-    @Put()
+    @Patch()
     @ApiOperation({ summary: 'Обновить настройки пользователя' })
     @ApiOkResponse({ type: UserSettingsDto })
     async update(@Body() dto: UserSettingsDto, @CurrentActor() actor: Actor): Promise<UserSettingsDto> {
