@@ -1,16 +1,8 @@
-import {
-    BadRequestException,
-    CanActivate,
-    ExecutionContext,
-    ForbiddenException,
-    Injectable,
-    mixin,
-    Type,
-    UnauthorizedException
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, mixin, Type } from '@nestjs/common';
 import { Request } from 'express';
 import { UserService } from '../../modules/user/user.service';
 import { PermissionKey } from '../config/role-permission';
+import { apiError } from '../errors';
 import { getDeviceType } from '../helpers/get-device-type';
 import { DeviceType } from '../types/user';
 
@@ -27,7 +19,7 @@ export function JwtAuthGuardHttp({
 
         async canActivate(context: ExecutionContext): Promise<boolean> {
             if (context.getType() !== 'http') {
-                throw new BadRequestException('error.auth.invalid_request_type');
+                throw apiError.badRequest('error.auth.invalid_request_type');
             }
 
             const req = context.switchToHttp().getRequest<Request>();
@@ -40,7 +32,7 @@ export function JwtAuthGuardHttp({
                     this.assertPermissions(req, permissions);
                     return true;
                 }
-                throw new UnauthorizedException('error.auth.unauthorized');
+                throw apiError.unauthorized('error.auth.unauthorized');
             }
 
             try {
@@ -88,12 +80,12 @@ export function JwtAuthGuardHttp({
             }
 
             if (!req.actor.isAuthorized()) {
-                throw new UnauthorizedException('error.auth.unauthorized');
+                throw apiError.unauthorized('error.auth.unauthorized');
             }
 
             for (const permission of required) {
                 if (!req.actor.hasPermission(permission)) {
-                    throw new ForbiddenException('error.auth.forbidden');
+                    throw apiError.forbidden('error.auth.forbidden');
                 }
             }
         }

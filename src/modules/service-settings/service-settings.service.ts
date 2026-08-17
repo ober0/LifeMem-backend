@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BASE_SERVICE_SETTINGS } from '../../common/config/base-service-settings.const';
+import { apiError } from '../../common/errors';
 import { ServiceSettingsDto } from './dto/base.dto';
 import { ServiceSettingsJsonDto } from './dto/settings-json.dto';
 import { ServiceSettingsUpdateDto } from './dto/update.dto';
@@ -17,7 +18,7 @@ export class ServiceSettingsService {
     async getServiceSettings(): Promise<ServiceSettingsDto> {
         const data = await this.repository.findByServiceUuid();
         if (!data) {
-            throw new NotFoundException('error.service_settings.not_found');
+            throw apiError.notFound('error.service_settings.not_found');
         }
         return data as unknown as ServiceSettingsDto;
     }

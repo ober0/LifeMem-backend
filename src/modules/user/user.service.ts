@@ -1,16 +1,11 @@
-import {
-    BadRequestException,
-    ConflictException,
-    Injectable,
-    NotFoundException,
-    UnauthorizedException
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfirmCodeType, User } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { Phone } from '../../common/classes/phone';
 import { BASE_USER_SETTINGS } from '../../common/config/base-user-settings.const';
 import { MOBILE_CODE_LIFETIME_MS } from '../../common/config/contains';
+import { apiError } from '../../common/errors';
 import { generateCode } from '../../common/helpers/generate-code';
 import { LangEnum } from '../../common/types/lang.enum';
 import { AuthUserInfo, PermissionDto, UserDto, UserSettingsDto } from '../../common/types/user';
@@ -35,28 +30,35 @@ export class UserService {
 
     async create(dto: CreateUserDto): Promise<RegisterResponseDto> {
         if (dto.phoneNumber && (dto.email || dto.password)) {
-            throw new BadRequestException('error.auth.single_auth_method_required');
+            throw apiError.badRequest('error.auth.single_auth_method_required');
         }
 
         if (dto.email && dto.password) {
-            return this.registerByEmail(dto.nickname, dto.email, dto.password);
+            return this.registerByEmail(dto.nickname, dto.email, dto.password, dto.initSettings);
         }
 
         if (dto.phoneNumber) {
-            return this.registerByPhone(dto.nickname, dto.phoneNumber);
+            return this.registerByPhone(dto.nickname, dto.phoneNumber, dto.initSettings);
         }
 
-        throw new BadRequestException('error.auth.no_auth_data');
+        throw apiError.badRequest('error.auth.no_auth_data');
     }
 
-    private async registerByEmail(nickname: string, email: string, password: string): Promise<RegisterResponseDto> {
+    private async registerByEmail(
+        nickname: string,
+        email: string,
+        password: string,
+        settings: CreateUserSettings
+    ): Promise<RegisterResponseDto> {
         const emailOwner = await this.userRepository.findByEmail(email);
         if (emailOwner) {
-            throw new ConflictException('error.user.email_already_exists');
+            throw apiError.conflict('error.user.email_already_exists');
         }
 
         const role = await this.roleService.getDefaultRole();
         const passwordHash = await bcrypt.hash(password, 10);
+
+        const fullSettings = { ...BASE_USER_SETTINGS, ...settings };
 
         const user = await this.userRepository.create({
             nickname,
@@ -64,7 +66,7 @@ export class UserService {
             phoneNumber: null,
             roleId: role.id,
             passwordHash,
-            settings: BASE_USER_SETTINGS
+            settings: fullSettings
         });
 
         const code = generateCode();
@@ -74,33 +76,40 @@ export class UserService {
             userId: user.id
         });
 
-        await this.smtpService.sendCodeEmail({
-            to: email,
-            code,
-            lang: LangEnum.Ru,
-            expiresMinutes: MOBILE_CODE_LIFETIME_MS / 60_000
+        setImmediate(() => {
+            this.smtpService.sendCodeEmail({
+                to: email,
+                code,
+                lang: fullSettings.lang,
+                expiresMinutes: MOBILE_CODE_LIFETIME_MS / 60_000
+            });
         });
 
+        // FIXME
         return {
             user: this.toUserDto(user),
-            message: 'Код подтверждения отправлен на email',
+            message: `Код подтверждения ${code} отправлен на email`,
             alert: true
         };
     }
 
-    private async registerByPhone(nickname: string, phoneNumber: string): Promise<RegisterResponseDto> {
+    private async registerByPhone(
+        nickname: string,
+        phoneNumber: string,
+        settings: CreateUserSettings
+    ): Promise<RegisterResponseDto> {
         const phone = Phone.tryCreate(phoneNumber);
 
         if (!phone) {
-            throw new BadRequestException('error.user.phone_not_correct');
+            throw apiError.badRequest('error.user.phone_not_correct');
         }
         if (!phone.isAccess) {
-            throw new BadRequestException('error.user.phone_not_access');
+            throw apiError.badRequest('error.user.phone_not_access');
         }
 
         const phoneOwner = await this.userRepository.findByPhoneNumber(phone.normalized);
         if (phoneOwner) {
-            throw new ConflictException('error.user.phone_already_exists');
+            throw apiError.conflict('error.user.phone_already_exists');
         }
 
         const role = await this.roleService.getDefaultRole();
@@ -110,7 +119,7 @@ export class UserService {
             email: null,
             phoneNumber: phone.normalized,
             roleId: role.id,
-            settings: BASE_USER_SETTINGS
+            settings: { ...BASE_USER_SETTINGS, ...settings }
         });
 
         const code = generateCode();
@@ -145,11 +154,11 @@ export class UserService {
     async confirmEmail(dto: ConfirmEmailDto): Promise<UserDto> {
         const user = await this.userRepository.findByEmail(dto.email);
         if (!user) {
-            throw new NotFoundException('error.user.not_found');
+            throw apiError.notFound('error.user.not_found');
         }
 
         if (user.isEmailVerified) {
-            throw new BadRequestException('error.user.already_verified');
+            throw apiError.badRequest('error.user.already_verified');
         }
 
         const confirm = await this.userRepository.consumeValidConfirmationCode(
@@ -159,7 +168,7 @@ export class UserService {
         );
 
         if (!confirm) {
-            throw new BadRequestException('error.auth.invalid_code');
+            throw apiError.badRequest('error.auth.invalid_code');
         }
 
         const updated = await this.userRepository.markEmailVerified(user.id);
@@ -170,19 +179,19 @@ export class UserService {
         const phone = Phone.tryCreate(dto.phone);
 
         if (!phone) {
-            throw new BadRequestException('error.user.phone_not_correct');
+            throw apiError.badRequest('error.user.phone_not_correct');
         }
         if (!phone.isAccess) {
-            throw new BadRequestException('error.user.phone_not_access');
+            throw apiError.badRequest('error.user.phone_not_access');
         }
 
         const user = await this.userRepository.findByPhoneNumber(phone.normalized);
         if (!user) {
-            throw new NotFoundException('error.user.not_found');
+            throw apiError.notFound('error.user.not_found');
         }
 
         if (user.isPhoneVerified) {
-            throw new BadRequestException('error.user.phone_already_verified');
+            throw apiError.badRequest('error.user.phone_already_verified');
         }
 
         const confirm = await this.userRepository.consumeValidConfirmationCode(
@@ -192,7 +201,7 @@ export class UserService {
         );
 
         if (!confirm) {
-            throw new BadRequestException('error.auth.invalid_code');
+            throw apiError.badRequest('error.auth.invalid_code');
         }
 
         const updated = await this.userRepository.markPhoneVerified(user.id);
@@ -205,17 +214,17 @@ export class UserService {
         try {
             payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as { id: string };
         } catch {
-            throw new UnauthorizedException('error.auth.invalid_token');
+            throw apiError.unauthorized('error.auth.invalid_token');
         }
 
         if (!payload?.id) {
-            throw new UnauthorizedException('error.auth.invalid_token');
+            throw apiError.unauthorized('error.auth.invalid_token');
         }
 
         const record = await this.userRepository.findAuthUserById(payload.id);
 
         if (!record) {
-            throw new UnauthorizedException('error.auth.unauthorized');
+            throw apiError.unauthorized('error.auth.unauthorized');
         }
 
         return this.toAuthUserInfo(record);
@@ -266,7 +275,7 @@ export class UserService {
     async findOneById(id: string): Promise<UserDto> {
         const user = await this.userRepository.findById(id);
         if (!user) {
-            throw new NotFoundException('error.user.not_found');
+            throw apiError.notFound('error.user.not_found');
         }
         return this.toUserDto(user);
     }

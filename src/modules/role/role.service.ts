@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { apiError } from '../../common/errors';
 import { RoleDto } from './dto/base.dto';
 import { RoleRepository } from './role.repository';
 
@@ -10,7 +11,7 @@ export class RoleService {
         const data = await this.roleRepository.getRoleById(id);
 
         if (!data) {
-            throw new NotFoundException('error.role.not_found');
+            throw apiError.notFound('error.role.not_found');
         }
 
         return data;
@@ -20,7 +21,7 @@ export class RoleService {
         const data = await this.roleRepository.getDefaultRole();
 
         if (!data) {
-            throw new NotFoundException('error.role.default_not_found');
+            throw apiError.notFound('error.role.default_not_found');
         }
 
         return data;

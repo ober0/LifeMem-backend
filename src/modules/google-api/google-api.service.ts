@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, UnauthorizedException } from '@nestjs/common';
 import { OAuth2Client } from 'google-auth-library';
+import { apiError } from '../../common/errors';
 
 export type GoogleTokenPayload = {
     sub: string;
@@ -33,7 +34,7 @@ export class GoogleApiService implements OnModuleInit {
 
             const payload = ticket.getPayload();
             if (!payload) {
-                throw new UnauthorizedException('error.auth.google_token_payload_error');
+                throw apiError.unauthorized('error.auth.google_token_payload_error');
             }
 
             return {
@@ -47,7 +48,7 @@ export class GoogleApiService implements OnModuleInit {
             if (err instanceof UnauthorizedException) {
                 throw err;
             }
-            throw new UnauthorizedException('error.auth.google_token_invalid');
+            throw apiError.unauthorized('error.auth.google_token_invalid');
         }
     }
 }

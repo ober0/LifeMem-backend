@@ -1,17 +1,7 @@
-import {
-    BadRequestException,
-    Body,
-    Controller,
-    ForbiddenException,
-    HttpCode,
-    HttpStatus,
-    InternalServerErrorException,
-    Post,
-    Req,
-    Res
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
 import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import express from 'express';
+import { apiError } from '../../../common/errors';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
 import { DeviceType } from '../../../common/types/user';
 import { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
@@ -57,7 +47,7 @@ export class AuthController {
         const device = request.actor.device;
 
         if (!device) {
-            throw new InternalServerErrorException('error.auth.device_context_missing');
+            throw apiError.internal('error.auth.device_context_missing');
         }
 
         const data = await this.authService.login(loginDto, device.ip);
@@ -84,7 +74,7 @@ export class AuthController {
         const device = request.actor.device;
 
         if (!device) {
-            throw new InternalServerErrorException('error.auth.device_context_missing');
+            throw apiError.internal('error.auth.device_context_missing');
         }
 
         const data = await this.authService.confirmPhoneLogin(dto, device.ip);
@@ -110,7 +100,7 @@ export class AuthController {
         const device = request.actor.device;
 
         if (!device) {
-            throw new InternalServerErrorException('error.auth.device_context_missing');
+            throw apiError.internal('error.auth.device_context_missing');
         }
 
         const refreshToken =
@@ -119,7 +109,7 @@ export class AuthController {
                 : (request.cookies['refreshToken'] as string | undefined);
 
         if (!refreshToken) {
-            throw new BadRequestException('error.auth.refresh_token_not_found');
+            throw apiError.badRequest('error.auth.refresh_token_not_found');
         }
 
         const data = await this.authService.refresh(refreshToken, device.ip);
@@ -145,7 +135,7 @@ export class AuthController {
         const device = request.actor.device;
 
         if (!device) {
-            throw new InternalServerErrorException('error.auth.device_context_missing');
+            throw apiError.internal('error.auth.device_context_missing');
         }
 
         const refreshToken =
@@ -154,7 +144,7 @@ export class AuthController {
                 : (request.cookies['refreshToken'] as string | undefined);
 
         if (!refreshToken) {
-            throw new ForbiddenException('error.auth.refresh_token_not_found');
+            throw apiError.forbidden('error.auth.refresh_token_not_found');
         }
 
         response.clearCookie('refreshToken');

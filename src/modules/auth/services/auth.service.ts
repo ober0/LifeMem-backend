@@ -1,10 +1,15 @@
-import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import { AuthType, ConfirmCodeType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { createHmac } from 'crypto';
 import { Phone } from '../../../common/classes/phone';
-import { EMAIL_CODE_LIFETIME_MS } from '../../../common/config/contains';
+import {
+    DEFAULT_ERRORS_LANGUAGE,
+    DEFAULT_MESSAGES_LANGUAGE,
+    EMAIL_CODE_LIFETIME_MS
+} from '../../../common/config/contains';
+import { apiError } from '../../../common/errors';
 import { generateCode } from '../../../common/helpers/generate-code';
 import { LangEnum } from '../../../common/types/lang.enum';
 import { AuthLogService } from '../../auth-log/auth-log.service';
@@ -23,6 +28,8 @@ import {
     TokenPayload
 } from '../dto/tokens.dto';
 import { AuthRepository } from '../repo/auth.repository';
+import { UserSettingsService } from '../../user-settings/user-settings.service';
+import { DEFAULT_LANGUAGE } from '@nestjs/schematics';
 
 @Injectable()
 export class AuthService {
@@ -34,7 +41,8 @@ export class AuthService {
         private readonly authLogService: AuthLogService,
         private readonly mobileSmsService: MobileSmsService,
         private readonly notificationService: NotificationsService,
-        private readonly smtpService: SmtpService
+        private readonly smtpService: SmtpService,
+        private readonly userSettingsService: UserSettingsService
     ) {
         if (!this.saltRounds) {
             throw Error('Не указана SALT_ROUNDS в енвах');
@@ -71,28 +79,32 @@ export class AuthService {
         const user = await this.userService.findOneByEmailWithPassword(email);
 
         if (!user?.passwordId || !user.password) {
-            throw new UnauthorizedException('error.auth.invalid_credentials');
+            throw apiError.unauthorized('error.auth.invalid_credentials');
         }
 
         const isPasswordMatching = await this.comparePassword(password, user.password.password);
 
         if (!isPasswordMatching) {
-            throw new UnauthorizedException('error.auth.invalid_credentials');
+            throw apiError.unauthorized('error.auth.invalid_credentials');
         }
 
         if (!user.isEmailVerified) {
             const code = generateCode();
-            await this.createCode({
-                type: ConfirmCodeType.Email,
-                code,
-                userId: user.id
-            });
+
+            const [_, userSettings] = await Promise.all([
+                this.createCode({
+                    type: ConfirmCodeType.Email,
+                    code,
+                    userId: user.id
+                }),
+                this.userSettingsService.get(user.id)
+            ]);
 
             setImmediate(() => {
                 this.smtpService.sendCodeEmail({
                     to: email,
                     code,
-                    lang: LangEnum.Ru,
+                    lang: userSettings.lang ?? DEFAULT_MESSAGES_LANGUAGE,
                     expiresMinutes: EMAIL_CODE_LIFETIME_MS / 60000
                 });
             });
@@ -138,15 +150,15 @@ export class AuthService {
         const phoneObj = Phone.tryCreate(phone);
 
         if (!phoneObj) {
-            throw new BadRequestException('error.user.phone_not_correct');
+            throw apiError.badRequest('error.user.phone_not_correct');
         }
         if (!phoneObj.isAccess) {
-            throw new BadRequestException('error.user.phone_not_access');
+            throw apiError.badRequest('error.user.phone_not_access');
         }
 
         const user = await this.userService.findByPhone(phoneObj);
         if (!user) {
-            throw new UnauthorizedException('error.auth.invalid_credentials');
+            throw apiError.unauthorized('error.auth.invalid_credentials');
         }
 
         const code = generateCode();
@@ -180,15 +192,15 @@ export class AuthService {
         const phoneObj = Phone.tryCreate(dto.phone);
 
         if (!phoneObj) {
-            throw new BadRequestException('error.user.phone_not_correct');
+            throw apiError.badRequest('error.user.phone_not_correct');
         }
         if (!phoneObj.isAccess) {
-            throw new BadRequestException('error.user.phone_not_access');
+            throw apiError.badRequest('error.user.phone_not_access');
         }
 
         const user = await this.userService.findByPhone(phoneObj);
         if (!user) {
-            throw new UnauthorizedException('error.auth.invalid_credentials');
+            throw apiError.unauthorized('error.auth.invalid_credentials');
         }
 
         const confirm = await this.authRepository.consumeValidConfirmationCode(
@@ -198,7 +210,7 @@ export class AuthService {
         );
 
         if (!confirm) {
-            throw new BadRequestException('error.auth.invalid_code');
+            throw apiError.badRequest('error.auth.invalid_code');
         }
 
         const verifiedUser = user.isPhoneVerified ? user : await this.userService.markPhoneVerified(user.id);
@@ -226,7 +238,7 @@ export class AuthService {
 
     async login(dto: LoginDto, ip: string): Promise<LoginFullResponseDto> {
         if (dto.phone && (dto.email || dto.password)) {
-            throw new BadRequestException('error.auth.single_auth_method_required');
+            throw apiError.badRequest('error.auth.single_auth_method_required');
         }
 
         if (dto.phone) {
@@ -237,38 +249,38 @@ export class AuthService {
             return this.authByEmail(dto.email, dto.password, ip);
         }
 
-        throw new BadRequestException('error.auth.no_auth_params');
+        throw apiError.badRequest('error.auth.no_auth_params');
     }
 
     async logout(refreshToken: string) {
         const hashedToken = this.hashRefreshToken(refreshToken);
         const token = await this.authRepository.findTokenByToken(hashedToken);
         if (!token) {
-            throw new ForbiddenException('error.auth.invalid_token');
+            throw apiError.forbidden('error.auth.invalid_token');
         }
         return this.authRepository.deleteToken(token.id);
     }
 
     async refresh(refreshToken: string, ip: string): Promise<GeneratedTokens> {
         if (!refreshToken) {
-            throw new UnauthorizedException('error.auth.refresh_token_not_found');
+            throw apiError.unauthorized('error.auth.refresh_token_not_found');
         }
         const hashedToken = this.hashRefreshToken(refreshToken);
         const tokenInDb = await this.authRepository.findTokenByToken(hashedToken);
 
         if (!tokenInDb) {
-            throw new UnauthorizedException('error.auth.invalid_token');
+            throw apiError.unauthorized('error.auth.invalid_token');
         }
 
         let decodedJwt: TokenPayload;
         try {
             decodedJwt = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as TokenPayload;
         } catch {
-            throw new UnauthorizedException('error.auth.invalid_token');
+            throw apiError.unauthorized('error.auth.invalid_token');
         }
 
         if (tokenInDb.userId !== decodedJwt.id) {
-            throw new UnauthorizedException('error.auth.invalid_token');
+            throw apiError.unauthorized('error.auth.invalid_token');
         }
 
         const { refreshToken: newRefreshToken, accessToken } = this.generateTokens(decodedJwt.id);

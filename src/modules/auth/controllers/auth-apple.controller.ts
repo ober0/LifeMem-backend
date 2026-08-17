@@ -34,7 +34,7 @@ export class AuthAppleController {
         // const device = request.actor.device;
         //
         // if (!device) {
-        //     throw new InternalServerErrorException('error.auth.device_context_missing');
+        //     throw apiError.internal('error.auth.device_context_missing');
         // }
         //
         // const ip = device.ip;

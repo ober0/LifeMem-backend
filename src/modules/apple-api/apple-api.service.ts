@@ -1,5 +1,6 @@
-import { Injectable, OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import appleSignin from 'apple-signin-auth';
+import { apiError } from '../../common/errors';
 
 export type AppleTokenPayload = {
     sub: string;
@@ -40,7 +41,7 @@ export class AppleApiService implements OnModuleInit {
                 name: payload.name ?? undefined
             };
         } catch {
-            throw new UnauthorizedException('error.auth.apple_token_invalid');
+            throw apiError.unauthorized('error.auth.apple_token_invalid');
         }
     }
 }

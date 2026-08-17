@@ -1,4 +1,5 @@
 import { LangEnum } from '../../../common/types/lang.enum';
+import { translateText } from '../../../common/translation/text-translations';
 
 export type CodeEmailTranslation = {
     subject: string;
@@ -11,21 +12,19 @@ export type CodeEmailTranslation = {
 
 export const CODE_EMAIL_TRANSLATIONS: Record<LangEnum, CodeEmailTranslation> = {
     [LangEnum.Ru]: {
-        subject: 'Код подтверждения - LifeMem',
-        title: 'Ваш код подтверждения',
-        message: 'Введите этот код в приложении LifeMem, чтобы продолжить.',
-        tagline: 'Твои воспоминания - в одном месте',
-        expiresHint:
-            'Код действует {{EXPIRES_MINUTES}} мин. Если вы не запрашивали письмо - просто проигнорируйте его.',
-        textBody: '{{TITLE}}\n\nКод: {{CODE}}\n\nДействует {{EXPIRES_MINUTES}} мин.'
+        subject: translateText('code-email.subject', LangEnum.Ru),
+        title: translateText('code-email.title', LangEnum.Ru),
+        message: translateText('code-email.message', LangEnum.Ru),
+        tagline: translateText('code-email.tagline', LangEnum.Ru),
+        expiresHint: translateText('code-email.expiresHint', LangEnum.Ru),
+        textBody: translateText('code-email.textBody', LangEnum.Ru)
     },
     [LangEnum.En]: {
-        subject: 'Verification code - LifeMem',
-        title: 'Your verification code',
-        message: 'Enter this code in the LifeMem app to continue.',
-        tagline: 'Your memories - in one place',
-        expiresHint:
-            'This code is valid for {{EXPIRES_MINUTES}} min. If you did not request this email, you can ignore it.',
-        textBody: '{{TITLE}}\n\nCode: {{CODE}}\n\nValid for {{EXPIRES_MINUTES}} min.'
+        subject: translateText('code-email.subject', LangEnum.En),
+        title: translateText('code-email.title', LangEnum.En),
+        message: translateText('code-email.message', LangEnum.En),
+        tagline: translateText('code-email.tagline', LangEnum.En),
+        expiresHint: translateText('code-email.expiresHint', LangEnum.En),
+        textBody: translateText('code-email.textBody', LangEnum.En)
     }
 };

@@ -20,7 +20,7 @@ export function loadErrorTranslations(): Record<string, unknown> {
 
         try {
             const content = JSON.parse(readFileSync(join(translationsPath, entry.name), 'utf-8'));
-            return mergeDeep(acc, content, name);
+            return mergeDeep(acc, content, `error.${name}`);
         } catch {
             return acc;
         }
@@ -50,25 +50,27 @@ export function loadTextTranslations(): Record<string, unknown> {
 function mergeDeep(
     target: Record<string, unknown>,
     source: Record<string, unknown>,
-    name: string
+    prefix: string
 ): Record<string, unknown> {
     const result = { ...target };
 
     for (const key of Object.keys(source)) {
+        const fullKey = `${prefix}.${key}`;
+
         if (
             typeof source[key] === 'object' &&
             source[key] !== null &&
             !Array.isArray(source[key]) &&
-            typeof result[`error.${name}.${key}`] === 'object' &&
-            result[`error.${name}.${key}`] !== null
+            typeof result[fullKey] === 'object' &&
+            result[fullKey] !== null
         ) {
-            result[`error.${name}.${key}`] = mergeDeep(
-                result[key] as Record<string, unknown>,
+            result[fullKey] = mergeDeep(
+                result[fullKey] as Record<string, unknown>,
                 source[key] as Record<string, unknown>,
-                name
+                fullKey
             );
         } else {
-            result[`error.${name}.${key}`] = source[key];
+            result[fullKey] = source[key];
         }
     }
 

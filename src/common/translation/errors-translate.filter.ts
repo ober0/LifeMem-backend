@@ -1,8 +1,16 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { loadErrorTranslations } from './translation.loader';
-import { LangEnum } from '../types/lang.enum';
 import { DEFAULT_ERRORS_LANGUAGE } from '../config/contains';
+import { ErrorVariables } from '../errors';
+import { LangEnum } from '../types/lang.enum';
+import { loadErrorTranslations } from './translation.loader';
+
+type ErrorItem = {
+    code: string;
+    field?: string;
+    base?: string;
+    variables?: ErrorVariables;
+};
 
 @Catch()
 export class ErrorsTranslateFilter implements ExceptionFilter {
@@ -32,7 +40,6 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
         }
 
         const lang = (userLang ?? headerLang ?? DEFAULT_ERRORS_LANGUAGE).toLowerCase();
-
         const rawMessage = this.extractMessage(exception);
 
         const payload = {
@@ -48,24 +55,20 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
                         code,
                         message: msg
                     };
-                } else if ('field' in el && 'code' in el) {
-                    const isRealKey = this.isRealKey(el.code);
-                    const code = el.code;
-                    const msg = isRealKey
-                        ? this.translate(code, lang, el, [{ name: 'field', value: el.field }])
-                        : el.base;
-
-                    return {
-                        code,
-                        message: msg,
-                        meta: el.base
-                    };
-                } else {
-                    return {
-                        code: 'error.common.unknown',
-                        message: 'Unknown error'
-                    };
                 }
+
+                const isRealKey = this.isRealKey(el.code);
+                const code = isRealKey ? el.code : 'error.common.unknown';
+                const msg = this.translate(code, lang, el.base ?? 'Unknown error', {
+                    ...el.variables,
+                    ...(el.field ? { field: el.field } : {})
+                });
+
+                return {
+                    code,
+                    message: msg,
+                    ...(el.base ? { meta: el.base } : {})
+                };
             })
         };
 
@@ -76,45 +79,49 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
         return el in this.translations;
     }
 
-    private translate(
-        code: string,
-        lang: string,
-        fallback: string | object,
-        variables: { name: string; value: string }[] = []
-    ) {
-        if (!code.startsWith('error.') || Array.isArray(fallback)) {
+    private translate(code: string, lang: string, fallback: string, variables: ErrorVariables = {}): string {
+        if (!code.startsWith('error.')) {
             return fallback;
         }
+
         const entry = this.translations[code];
 
         if (!entry?.[lang]) {
-            return typeof fallback === 'string' ? fallback : 'Unknown error';
+            return fallback;
         }
 
         let text = entry[lang];
 
-        if (variables.length > 0) {
-            variables.forEach((variable) => {
-                text = text.replace(`{{${variable.name}}}`, variable.value);
-            });
+        for (const [name, value] of Object.entries(variables)) {
+            text = text.replaceAll(`{{${name}}}`, String(value));
         }
 
         return text;
     }
 
-    private extractMessage(exception: unknown): string[] | { field: string; code: string }[] {
+    private extractMessage(exception: unknown): (string | ErrorItem)[] {
         if (exception instanceof HttpException) {
             const response = exception.getResponse();
             if (typeof response === 'string') {
                 return [response];
             }
             if (typeof response === 'object' && response !== null) {
-                if ('errors' in response && Array.isArray(response.errors) && response.errors?.length > 0) {
+                if ('errors' in response && Array.isArray(response.errors) && response.errors.length > 0) {
                     return response.errors;
                 }
 
                 if (typeof (response as { code?: unknown }).code === 'string') {
-                    return [(response as { code: string }).code];
+                    return [
+                        {
+                            code: (response as { code: string }).code,
+                            variables:
+                                'variables' in response &&
+                                typeof response.variables === 'object' &&
+                                response.variables !== null
+                                    ? (response.variables as ErrorVariables)
+                                    : undefined
+                        }
+                    ];
                 }
 
                 const message = (response as { message?: unknown }).message;
@@ -133,7 +140,8 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
         }
 
         if (exception instanceof Error) {
-            return [exception.message];
+            Logger.error(exception);
+            return ['error.common.unknown'];
         }
 
         return ['error.common.unknown'];

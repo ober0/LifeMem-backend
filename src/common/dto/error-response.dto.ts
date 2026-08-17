@@ -7,7 +7,7 @@ class ErrorDto {
     code: string;
 
     @ApiProperty({ example: 'Супер сложная ошибка' })
-    msg: string;
+    message: string;
 
     @ApiProperty({ required: false, description: 'Исходная ошибка валидации (для отладки)' })
     @IsOptional()
@@ -24,5 +24,5 @@ export class ErrorResponseDto {
     @ApiProperty({ type: ErrorDto, isArray: true })
     @ValidateNested()
     @Type(() => ErrorDto)
-    errors: ErrorDto;
+    errors: ErrorDto[];
 }

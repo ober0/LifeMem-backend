@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Actor } from '../../common/classes/actor';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
+import { apiError } from '../../common/errors';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { UserDto } from '../../common/types/user';
@@ -57,7 +58,7 @@ export class UserController {
     @ApiErrorResponses(401, 404)
     async info(@CurrentActor() actor: Actor) {
         if (!actor.user) {
-            throw new UnauthorizedException('error.auth.unauthorized');
+            throw apiError.unauthorized('error.auth.unauthorized');
         }
 
         const role = await this.roleService.getRoleById(actor.user.roleId);
@@ -76,7 +77,7 @@ export class UserController {
     @ApiErrorResponses(401)
     async getBindings(@CurrentActor() actor: Actor): Promise<OAuthBindingDto[]> {
         if (!actor.user) {
-            throw new UnauthorizedException('error.auth.unauthorized');
+            throw apiError.unauthorized('error.auth.unauthorized');
         }
 
         return this.userService.getBindings(actor.user.id);

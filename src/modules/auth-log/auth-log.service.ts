@@ -1,6 +1,7 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Actor } from '../../common/classes/actor';
 import { Permission } from '../../common/config/role-permission';
+import { apiError } from '../../common/errors';
 import { AuthLogSearchResponseDto } from './dto/base.dto';
 import { AuthLogSearchDto } from './dto/search.dto';
 import { AuthLogRepository } from './auth-log.repository';
@@ -16,7 +17,7 @@ export class AuthLogService {
 
     async search(dto: AuthLogSearchDto, actor: Actor): Promise<AuthLogSearchResponseDto> {
         if (!actor.user) {
-            throw new UnauthorizedException('error.auth.unauthorized');
+            throw apiError.unauthorized('error.auth.unauthorized');
         }
 
         const requestedUserId = dto.filters?.userId;
@@ -33,7 +34,7 @@ export class AuthLogService {
                 };
             }
         } else if (requestedUserId !== actor.user.id && !canReadOthers) {
-            throw new ForbiddenException('error.auth.forbidden');
+            throw apiError.forbidden('error.auth.forbidden');
         }
 
         const [data, count] = await Promise.all([this.repository.search(dto), this.repository.count(dto)]);

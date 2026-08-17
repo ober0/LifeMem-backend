@@ -1,0 +1,26 @@
+{
+  "subject": {
+    "ru": "Код подтверждения - LifeMem",
+    "en": "Verification code - LifeMem"
+  },
+  "title": {
+    "ru": "Ваш код подтверждения",
+    "en": "Your verification code"
+  },
+  "message": {
+    "ru": "Введите этот код в приложении LifeMem, чтобы продолжить.",
+    "en": "Enter this code in the LifeMem app to continue."
+  },
+  "tagline": {
+    "ru": "Твои воспоминания - в одном месте",
+    "en": "Your memories - in one place"
+  },
+  "expiresHint": {
+    "ru": "Код действует {{EXPIRES_MINUTES}} мин. Если вы не запрашивали письмо - просто проигнорируйте его.",
+    "en": "This code is valid for {{EXPIRES_MINUTES}} min. If you did not request this email, you can ignore it."
+  },
+  "textBody": {
+    "ru": "{{TITLE}}\n\nКод: {{CODE}}\n\nДействует {{EXPIRES_MINUTES}} мин.",
+    "en": "{{TITLE}}\n\nCode: {{CODE}}\n\nValid for {{EXPIRES_MINUTES}} min."
+  }
+}

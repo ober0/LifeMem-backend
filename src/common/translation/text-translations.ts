@@ -1,9 +1,18 @@
-export const TEXT_TRANSLATIONS: Record<string, unknown> = {};
+import { LangEnum } from '../types/lang.enum';
+import { loadTextTranslations } from './translation.loader';
+import { Logger } from '@nestjs/common';
 
-export function setTextTranslations(translations: Record<string, unknown>): void {
-    Object.assign(TEXT_TRANSLATIONS, translations);
-}
+type TextEntry = Record<LangEnum, string>;
 
-export function translateText(key: keyof typeof TEXT_TRANSLATIONS) {
-    return TEXT_TRANSLATIONS[key];
+export const TEXT_TRANSLATIONS = loadTextTranslations() as Record<string, TextEntry>;
+
+export function translateText(key: string, lang: LangEnum): string {
+    const text = TEXT_TRANSLATIONS[key]?.[lang];
+
+    if (!text) {
+        Logger.error(`Нету перевода "${key}" для "${lang}"`);
+        return '';
+    }
+
+    return text;
 }

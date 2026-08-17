@@ -1,5 +1,7 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OAuthProvider } from '@prisma/client';
+import { Actor } from '../../../common/classes/actor';
+import { apiError } from '../../../common/errors';
 import { UserDto } from '../../../common/types/user';
 import { AppleApiService } from '../../apple-api/apple-api.service';
 import { UserService } from '../../user/user.service';
@@ -8,7 +10,6 @@ import { LoginResponseDto } from '../dto/tokens.dto';
 import { AuthRepository } from '../repo/auth.repository';
 import { UserOAuthRepository } from '../repo/user-oauth.repository';
 import { AuthService } from './auth.service';
-import { Actor } from '../../../common/classes/actor';
 
 @Injectable()
 export class AuthAppleService {
@@ -32,15 +33,15 @@ export class AuthAppleService {
         }
 
         if (!dto.initSettings) {
-            throw new BadRequestException('error.auth.no_init_settings');
+            throw apiError.badRequest('error.auth.no_init_settings');
         }
 
         if (!email) {
-            throw new BadRequestException('error.auth.apple_email_not_found');
+            throw apiError.badRequest('error.auth.apple_email_not_found');
         }
 
         if (appleData.email && !appleData.emailVerified) {
-            throw new UnauthorizedException('error.auth.apple_email_not_verified');
+            throw apiError.unauthorized('error.auth.apple_email_not_verified');
         }
 
         const nickname = dto.nickname;
@@ -75,22 +76,22 @@ export class AuthAppleService {
     async link(dto: AppleLinkAuthDto, actor: Actor): Promise<void> {
         const user = actor.user;
         if (!user) {
-            throw new BadRequestException('error.auth.unauthorized');
+            throw apiError.badRequest('error.auth.unauthorized');
         }
 
         const appleData = await this.appleApiService.verifyIdToken(dto.idToken);
 
         if (appleData.email && !appleData.emailVerified) {
-            throw new UnauthorizedException('error.auth.apple_email_not_verified');
+            throw apiError.unauthorized('error.auth.apple_email_not_verified');
         }
 
         const existingProvider = await this.userOAuthRepository.findByProvider(OAuthProvider.Apple, appleData.sub);
 
         if (existingProvider) {
             if (existingProvider.userId === user.id) {
-                throw new BadRequestException('error.auth.apple_account_already_linked');
+                throw apiError.badRequest('error.auth.apple_account_already_linked');
             } else {
-                throw new BadRequestException('error.auth.apple_account_linked_to_other');
+                throw apiError.badRequest('error.auth.apple_account_linked_to_other');
             }
         }
 
@@ -108,12 +109,12 @@ export class AuthAppleService {
     async unlink(actor: Actor): Promise<void> {
         const user = actor.user;
         if (!user) {
-            throw new BadRequestException('error.auth.unauthorized');
+            throw apiError.badRequest('error.auth.unauthorized');
         }
 
         const providersCount = await this.userOAuthRepository.countByUserId(user.id);
         if (providersCount <= 1 && !user.passwordId) {
-            throw new BadRequestException('error.auth.cannot_unlink_only_auth');
+            throw apiError.badRequest('error.auth.cannot_unlink_only_auth');
         }
         await this.userOAuthRepository.deleteByUserAndProvider(user.id, OAuthProvider.Apple);
     }
