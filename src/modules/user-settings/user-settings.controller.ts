@@ -5,6 +5,7 @@ import { UserSettingsDto } from '../../common/types/user';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
 import { UserSettingsService } from './user-settings.service';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
+import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 
 @ApiTags('User settings')
 @UseGuards(JwtAuthGuardHttp({}))
@@ -15,6 +16,7 @@ export class UserSettingsController {
     @Get()
     @ApiOperation({ summary: 'Получить настройки пользователя' })
     @ApiOkResponse({ type: UserSettingsDto })
+    @ApiErrorResponses(401)
     async get(@CurrentActor() actor: Actor): Promise<UserSettingsDto> {
         return this.service.get(actor.user!.id);
     }
@@ -22,6 +24,7 @@ export class UserSettingsController {
     @Patch()
     @ApiOperation({ summary: 'Обновить настройки пользователя' })
     @ApiOkResponse({ type: UserSettingsDto })
+    @ApiErrorResponses(401)
     async update(@Body() dto: UserSettingsDto, @CurrentActor() actor: Actor): Promise<UserSettingsDto> {
         return this.service.update(actor.user!.id, dto);
     }

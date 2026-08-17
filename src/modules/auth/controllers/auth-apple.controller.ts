@@ -20,7 +20,6 @@ export class AuthAppleController {
     @HttpCode(HttpStatus.OK)
     @Post('login')
     @ApiOkResponse({ type: LoginResponseDto })
-    @ApiErrorResponses()
     async login(
         @Body() _dto: AppleAuthDto,
         @Req() _request: express.Request,
@@ -76,7 +75,7 @@ export class AuthAppleController {
     @UseGuards(JwtAuthGuardHttp({}))
     @ApiBearerAuth()
     @ApiOkResponse()
-    @ApiErrorResponses()
+    @ApiErrorResponses(401)
     async link(@Body() _dto: AppleLinkAuthDto, @CurrentActor() _actor: Actor) {
         // FIXME
         return {
@@ -91,7 +90,7 @@ export class AuthAppleController {
     @Post('unlink')
     @UseGuards(JwtAuthGuardHttp({}))
     @ApiBearerAuth()
-    @ApiErrorResponses()
+    @ApiErrorResponses(401)
     async unlink(@CurrentActor() _actor: Actor) {
         // FIXME
         return {

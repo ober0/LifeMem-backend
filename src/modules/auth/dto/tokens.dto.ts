@@ -29,6 +29,13 @@ export class OptionalRefreshTokenDto {
     refreshToken?: string;
 }
 
+export class WebLoginResponseDto {
+    @ApiProperty({ type: UserDto })
+    @ValidateNested()
+    @Type(() => UserDto)
+    user: UserDto;
+}
+
 export class LoginResponseDto {
     @ApiProperty({ type: UserDto })
     @ValidateNested()

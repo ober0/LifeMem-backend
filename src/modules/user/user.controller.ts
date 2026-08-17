@@ -27,7 +27,7 @@ export class UserController {
         summary: 'Регистрация'
     })
     @ApiCreatedResponse({ type: RegisterResponseDto })
-    @ApiErrorResponses()
+    @ApiErrorResponses(400, 409)
     async create(@Body() dto: CreateUserDto): Promise<RegisterResponseDto> {
         return this.userService.create(dto);
     }
@@ -36,7 +36,7 @@ export class UserController {
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Подтверждение email' })
     @ApiOkResponse({ type: UserDto })
-    @ApiErrorResponses()
+    @ApiErrorResponses(400, 404)
     async confirmEmail(@Body() dto: ConfirmEmailDto): Promise<UserDto> {
         return this.userService.confirmEmail(dto);
     }
@@ -45,7 +45,7 @@ export class UserController {
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Подтверждение телефона' })
     @ApiOkResponse({ type: UserDto })
-    @ApiErrorResponses()
+    @ApiErrorResponses(400, 404)
     async confirmPhone(@Body() dto: ConfirmPhoneDto): Promise<UserDto> {
         return this.userService.confirmPhone(dto);
     }
@@ -54,7 +54,7 @@ export class UserController {
     @UseGuards(JwtAuthGuardHttp({}))
     @ApiOperation({ summary: 'Получение информации о себе' })
     @ApiOkResponse({ type: SelfDto })
-    @ApiErrorResponses()
+    @ApiErrorResponses(401, 404)
     async info(@CurrentActor() actor: Actor) {
         if (!actor.user) {
             throw new UnauthorizedException('error.auth.unauthorized');
@@ -73,7 +73,7 @@ export class UserController {
     @Get('me/bindings')
     @UseGuards(JwtAuthGuardHttp({}))
     @ApiOkResponse({ type: OAuthBindingDto, isArray: true })
-    @ApiErrorResponses()
+    @ApiErrorResponses(401)
     async getBindings(@CurrentActor() actor: Actor): Promise<OAuthBindingDto[]> {
         if (!actor.user) {
             throw new UnauthorizedException('error.auth.unauthorized');

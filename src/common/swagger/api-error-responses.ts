@@ -2,12 +2,7 @@ import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import { ErrorResponseDto } from '../dto/error-response.dto';
 
-const DEFAULT_STATUSES = [
-    HttpStatus.BAD_REQUEST,
-    HttpStatus.UNAUTHORIZED,
-    HttpStatus.FORBIDDEN,
-    HttpStatus.INTERNAL_SERVER_ERROR
-] as const;
+const DEFAULT_STATUSES = [HttpStatus.BAD_REQUEST, HttpStatus.UNAUTHORIZED] as const;
 
 export function ApiErrorResponses(...statuses: number[]) {
     const list = statuses.length > 0 ? statuses : [...DEFAULT_STATUSES];

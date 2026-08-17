@@ -22,7 +22,8 @@ import {
     LoginPhoneCodeResponseDto,
     LoginResponseDto,
     LoginTokensResult,
-    OptionalRefreshTokenDto
+    OptionalRefreshTokenDto,
+    WebLoginResponseDto
 } from '../dto/tokens.dto';
 import { AuthService } from '../services/auth.service';
 
@@ -40,10 +41,14 @@ export class AuthController {
     @ApiOkResponse({
         description: 'Успешно',
         schema: {
-            oneOf: [{ $ref: getSchemaPath(LoginResponseDto) }, { $ref: getSchemaPath(LoginPhoneCodeResponseDto) }]
+            oneOf: [
+                { $ref: getSchemaPath(LoginResponseDto) },
+                { $ref: getSchemaPath(WebLoginResponseDto) },
+                { $ref: getSchemaPath(LoginPhoneCodeResponseDto) }
+            ]
         }
     })
-    @ApiErrorResponses()
+    @ApiErrorResponses(400, 401, 500)
     async login(
         @Body() loginDto: LoginDto,
         @Req() request: express.Request,
@@ -70,7 +75,7 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @Post('confirm-phone')
     @ApiOkResponse({ type: LoginResponseDto })
-    @ApiErrorResponses()
+    @ApiErrorResponses(400, 401, 500)
     async confirmPhone(
         @Body() dto: ConfirmPhoneDto,
         @Req() request: express.Request,
@@ -96,7 +101,7 @@ export class AuthController {
             oneOf: [{ $ref: getSchemaPath(GeneratedTokens) }, { type: 'object', properties: {} }]
         }
     })
-    @ApiErrorResponses()
+    @ApiErrorResponses(400, 401, 500)
     async refresh(
         @Req() request: express.Request,
         @Res({ passthrough: true }) response: express.Response,
@@ -131,7 +136,7 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @Post('logout')
     @ApiOkResponse()
-    @ApiErrorResponses()
+    @ApiErrorResponses(403, 500)
     async logout(
         @Req() request: express.Request,
         @Res({ passthrough: true }) response: express.Response,

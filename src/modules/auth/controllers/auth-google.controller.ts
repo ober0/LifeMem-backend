@@ -20,7 +20,6 @@ export class AuthGoogleController {
     @HttpCode(HttpStatus.OK)
     @Post('login')
     @ApiOkResponse({ type: LoginResponseDto })
-    @ApiErrorResponses()
     async login(
         @Body() _dto: GoogleAuthDto,
         @Req() _request: express.Request,
@@ -76,7 +75,7 @@ export class AuthGoogleController {
     @UseGuards(JwtAuthGuardHttp({}))
     @ApiBearerAuth()
     @ApiOkResponse()
-    @ApiErrorResponses()
+    @ApiErrorResponses(401)
     async link(@Body() _dto: GoogleLinkDto, @CurrentActor() _actor: Actor) {
         // FIXME
         return {
@@ -92,7 +91,7 @@ export class AuthGoogleController {
     @UseGuards(JwtAuthGuardHttp({}))
     @ApiBearerAuth()
     @ApiOkResponse({ description: 'Google успешно отвязан' })
-    @ApiErrorResponses()
+    @ApiErrorResponses(401)
     async unlink(@CurrentActor() _actor: Actor) {
         // FIXME
         return {
