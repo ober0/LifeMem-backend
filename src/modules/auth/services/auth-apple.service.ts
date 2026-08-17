@@ -31,6 +31,10 @@ export class AuthAppleService {
             return this.issueTokensAndSave(user, ip);
         }
 
+        if (!dto.initSettings) {
+            throw new BadRequestException('error.auth.no_init_settings');
+        }
+
         if (!email) {
             throw new BadRequestException('error.auth.apple_email_not_found');
         }
@@ -41,13 +45,16 @@ export class AuthAppleService {
 
         const nickname = dto.nickname;
 
-        const user = await this.userService.createUserWithOAuthProvider({
-            nickname,
-            provider: OAuthProvider.Apple,
-            providerUserId: appleData.sub,
-            providerEmail: email,
-            providerUsername: appleData.name ?? nickname
-        });
+        const user = await this.userService.createUserWithOAuthProvider(
+            {
+                nickname,
+                provider: OAuthProvider.Apple,
+                providerUserId: appleData.sub,
+                providerEmail: email,
+                providerUsername: appleData.name ?? nickname
+            },
+            dto.initSettings
+        );
 
         return this.issueTokensAndSave(user, ip);
     }

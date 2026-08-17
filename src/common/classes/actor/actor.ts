@@ -1,7 +1,7 @@
 import { DeviceDto } from '../../types/user/device.dto';
 import { PermissionDto } from '../../types/user/permission.dto';
 import { UserDto } from '../../../modules/user/dto/user.dto';
-import { UserSettingsDto } from '../../../modules/user/dto/user-settings.dto';
+import { UserSettingsDto } from '../../../modules/user-settings/dto/user-settings.dto';
 
 export class Actor {
     private _user: UserDto | null = null;

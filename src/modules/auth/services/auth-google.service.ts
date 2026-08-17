@@ -38,14 +38,21 @@ export class AuthGoogleService {
             return this.issueTokensAndSave(user, ip);
         }
 
-        const user = await this.userService.createUserWithOAuthProvider({
-            nickname: dto.nickname,
-            provider: OAuthProvider.Google,
-            providerUserId: googleData.sub,
-            providerEmail: googleData.email,
-            providerUsername: googleData.name,
-            providerAvatarUrl: googleData.picture
-        });
+        if (!dto.initSettings) {
+            throw new BadRequestException('error.auth.no_init_settings');
+        }
+
+        const user = await this.userService.createUserWithOAuthProvider(
+            {
+                nickname: dto.nickname,
+                provider: OAuthProvider.Google,
+                providerUserId: googleData.sub,
+                providerEmail: googleData.email,
+                providerUsername: googleData.name,
+                providerAvatarUrl: googleData.picture
+            },
+            dto.initSettings
+        );
 
         return this.issueTokensAndSave(user, ip);
     }

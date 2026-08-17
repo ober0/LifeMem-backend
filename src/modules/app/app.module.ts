@@ -1,10 +1,8 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ActorMiddleware } from '../../common/classes/actor';
 import { LoggerMiddleware } from '../../common/middlewares/logger.middleware';
 import { ServerSettingsMiddleware } from '../../common/classes/server-settings';
-import { TranslateFilter } from '../../common/translation/translate.filter';
 import { AuthModule } from '../auth/auth.module';
 import { HealthModule } from '../health/health.module';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -35,12 +33,6 @@ import { MobileSmsModule } from '../mobile-sms/mobile-sms.module';
         LogsModule,
         AuthLogModule,
         MobileSmsModule
-    ],
-    providers: [
-        {
-            provide: APP_FILTER,
-            useClass: TranslateFilter
-        }
     ]
 })
 export class AppModule implements NestModule {

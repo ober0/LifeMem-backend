@@ -6,6 +6,8 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 import cookieParser from 'cookie-parser';
 import basicAuth from 'express-basic-auth';
 import { AppModule } from './modules/app/app.module';
+import { ValidationException } from './common/translation/validation-exception';
+import { ErrorsTranslateFilter } from './common/translation/errors-translate.filter';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -21,8 +23,13 @@ async function bootstrap() {
         defaultVersion: '1'
     });
 
+    app.useGlobalFilters(new ErrorsTranslateFilter());
+
     app.useGlobalPipes(
         new ValidationPipe({
+            exceptionFactory: (errors) => {
+                return new ValidationException(errors);
+            },
             transform: true,
             whitelist: true
         })
@@ -62,7 +69,7 @@ async function bootstrap() {
             {
                 name: 'x-client-type',
                 in: 'header',
-                required: false,
+                required: true,
                 description: 'Тип клиента',
                 schema: {
                     type: 'string',
@@ -71,7 +78,7 @@ async function bootstrap() {
                 }
             },
             {
-                name: 'accept-language',
+                name: 'x-accept-language',
                 in: 'header',
                 required: false,
                 description: 'Язык',

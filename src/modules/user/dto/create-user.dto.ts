@@ -1,6 +1,18 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType, PickType } from '@nestjs/swagger';
 import { OAuthProvider } from '@prisma/client';
-import { IsEmail, IsOptional, IsString, IsStrongPassword, MinLength, ValidateIf } from 'class-validator';
+import {
+    IsEmail,
+    IsOptional,
+    IsString,
+    IsStrongPassword,
+    MinLength,
+    ValidateIf,
+    ValidateNested
+} from 'class-validator';
+import { UserSettingsDto } from '../../user-settings/dto/user-settings.dto';
+import { Type } from 'class-transformer';
+
+export class CreateUserSettings extends PartialType(PickType(UserSettingsDto, ['lang'])) {}
 
 export class CreateUserDto {
     @ApiProperty({ example: 'alex' })
@@ -24,6 +36,11 @@ export class CreateUserDto {
     // не юзать IsPhone так как не маппит 8800
     @IsString()
     phoneNumber?: string;
+
+    @ApiProperty({ type: CreateUserSettings })
+    @ValidateNested()
+    @Type(() => CreateUserSettings)
+    initSettings: CreateUserSettings;
 }
 
 export interface OauthCreateUser {

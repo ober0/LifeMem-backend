@@ -1,0 +1,282 @@
+{
+  "isDefined": {
+    "ru": "Поле {{field}} обязательно",
+    "en": "The {{field}} field is required"
+  },
+  "isNotEmpty": {
+    "ru": "Поле {{field}} не может быть пустым",
+    "en": "The {{field}} field should not be empty"
+  },
+  "isEmail": {
+    "ru": "В поле {{field}} передан некорректный email",
+    "en": "The {{field}} field must contain a valid email address"
+  },
+  "isURL": {
+    "ru": "В поле {{field}} передан некорректный URL",
+    "en": "The {{field}} field must contain a valid URL"
+  },
+  "isUUID": {
+    "ru": "В поле {{field}} передан некорректный UUID",
+    "en": "The {{field}} field must contain a valid UUID"
+  },
+  "isJWT": {
+    "ru": "В поле {{field}} передан некорректный JWT",
+    "en": "The {{field}} field must contain a valid JWT"
+  },
+  "isJSON": {
+    "ru": "В поле {{field}} передан некорректный JSON",
+    "en": "The {{field}} field must contain valid JSON"
+  },
+  "isDate": {
+    "ru": "В поле {{field}} передана некорректная дата",
+    "en": "The {{field}} field must contain a valid date"
+  },
+  "isDateString": {
+    "ru": "В поле {{field}} передана некорректная дата",
+    "en": "The {{field}} field must contain a valid date string"
+  },
+  "isBoolean": {
+    "ru": "Поле {{field}} должно содержать логическое значение",
+    "en": "The {{field}} field must be a boolean"
+  },
+  "isNumber": {
+    "ru": "Поле {{field}} должно содержать число",
+    "en": "The {{field}} field must be a number"
+  },
+  "isInt": {
+    "ru": "Поле {{field}} должно содержать целое число",
+    "en": "The {{field}} field must be an integer"
+  },
+  "isPositive": {
+    "ru": "Поле {{field}} должно содержать положительное число",
+    "en": "The {{field}} field must be a positive number"
+  },
+  "isNegative": {
+    "ru": "Поле {{field}} должно содержать отрицательное число",
+    "en": "The {{field}} field must be a negative number"
+  },
+  "isDecimal": {
+    "ru": "Поле {{field}} должно содержать десятичное число",
+    "en": "The {{field}} field must be a decimal number"
+  },
+  "isString": {
+    "ru": "Поле {{field}} должно содержать строку",
+    "en": "The {{field}} field must be a string"
+  },
+  "isArray": {
+    "ru": "Поле {{field}} должно содержать массив",
+    "en": "The {{field}} field must be an array"
+  },
+  "isObject": {
+    "ru": "Поле {{field}} должно содержать объект",
+    "en": "The {{field}} field must be an object"
+  },
+  "isBooleanString": {
+    "ru": "Поле {{field}} должно содержать строковое представление логического значения",
+    "en": "The {{field}} field must be a boolean string"
+  },
+  "isNumberString": {
+    "ru": "Поле {{field}} должно содержать строковое представление числа",
+    "en": "The {{field}} field must be a numeric string"
+  },
+  "isAlpha": {
+    "ru": "Поле {{field}} должно содержать только буквы",
+    "en": "The {{field}} field must contain only letters"
+  },
+  "isAlphanumeric": {
+    "ru": "Поле {{field}} должно содержать только буквы и цифры",
+    "en": "The {{field}} field must contain only letters and numbers"
+  },
+  "isAscii": {
+    "ru": "Поле {{field}} должно содержать только ASCII-символы",
+    "en": "The {{field}} field must contain only ASCII characters"
+  },
+  "isBase64": {
+    "ru": "Поле {{field}} должно содержать корректную строку Base64",
+    "en": "The {{field}} field must contain a valid Base64 string"
+  },
+  "isHexadecimal": {
+    "ru": "Поле {{field}} должно содержать шестнадцатеричное значение",
+    "en": "The {{field}} field must contain a hexadecimal value"
+  },
+  "isIP": {
+    "ru": "Поле {{field}} должно содержать корректный IP-адрес",
+    "en": "The {{field}} field must contain a valid IP address"
+  },
+  "isPort": {
+    "ru": "Поле {{field}} должно содержать корректный номер порта",
+    "en": "The {{field}} field must contain a valid port number"
+  },
+  "isMACAddress": {
+    "ru": "Поле {{field}} должно содержать корректный MAC-адрес",
+    "en": "The {{field}} field must contain a valid MAC address"
+  },
+  "isMobilePhone": {
+    "ru": "Поле {{field}} должно содержать корректный номер телефона",
+    "en": "The {{field}} field must contain a valid phone number"
+  },
+  "isISO31661Alpha2": {
+    "ru": "Поле {{field}} должно содержать корректный код страны",
+    "en": "The {{field}} field must contain a valid country code"
+  },
+  "isEnum": {
+    "ru": "В поле {{field}} передано некорректное значение",
+    "en": "The {{field}} field contains an invalid value"
+  },
+  "isIn": {
+    "ru": "Поле {{field}} содержит недопустимое значение",
+    "en": "The {{field}} field contains an invalid value"
+  },
+  "isNotIn": {
+    "ru": "Поле {{field}} содержит недопустимое значение",
+    "en": "The {{field}} field contains a forbidden value"
+  },
+  "isNotEmptyObject": {
+    "ru": "Поле {{field}} не должно быть пустым объектом",
+    "en": "The {{field}} field should not be an empty object"
+  },
+  "isStrongPassword": {
+    "ru": "Пароль недостаточно сложный",
+    "en": "Password is not strong enough"
+  },
+  "contains": {
+    "ru": "Поле {{field}} должно содержать указанное значение",
+    "en": "The {{field}} field must contain the specified value"
+  },
+  "notContains": {
+    "ru": "Поле {{field}} не должно содержать указанное значение",
+    "en": "The {{field}} field should not contain the specified value"
+  },
+  "notEquals": {
+    "ru": "Поле {{field}} не должно соответствовать указанному значению",
+    "en": "The {{field}} field should not equal the specified value"
+  },
+  "length": {
+    "ru": "Некорректная длина поля {{field}}",
+    "en": "The length of the {{field}} field is invalid"
+  },
+  "minLength": {
+    "ru": "Некорректная длина поля {{field}}",
+    "en": "The length of the {{field}} field is invalid"
+  },
+  "maxLength": {
+    "ru": "Некорректная длина поля {{field}}",
+    "en": "The length of the {{field}} field is invalid"
+  },
+  "arrayMinSize": {
+    "ru": "Некорректное количество элементов в поле {{field}}",
+    "en": "The number of elements in the {{field}} field is invalid"
+  },
+  "arrayMaxSize": {
+    "ru": "Некорректное количество элементов в поле {{field}}",
+    "en": "The number of elements in the {{field}} field is invalid"
+  },
+  "arrayUnique": {
+    "ru": "Поле {{field}} не должно содержать повторяющиеся значения",
+    "en": "The {{field}} field must not contain duplicate values"
+  },
+  "min": {
+    "ru": "Некорректное значение поля {{field}}",
+    "en": "The value of the {{field}} field is invalid"
+  },
+  "max": {
+    "ru": "Некорректное значение поля {{field}}",
+    "en": "The value of the {{field}} field is invalid"
+  },
+  "equals": {
+    "ru": "Поле {{field}} содержит некорректное значение",
+    "en": "The {{field}} field contains an invalid value"
+  },
+  "isCreditCard": {
+    "ru": "Поле {{field}} должно содержать корректный номер карты",
+    "en": "The {{field}} field must contain a valid credit card number"
+  },
+  "isCurrency": {
+    "ru": "Поле {{field}} должно содержать корректное значение валюты",
+    "en": "The {{field}} field must contain a valid currency value"
+  },
+  "isEthereumAddress": {
+    "ru": "Поле {{field}} должно содержать корректный Ethereum-адрес",
+    "en": "The {{field}} field must contain a valid Ethereum address"
+  },
+  "isBtcAddress": {
+    "ru": "Поле {{field}} должно содержать корректный Bitcoin-адрес",
+    "en": "The {{field}} field must contain a valid Bitcoin address"
+  },
+  "isLatitude": {
+    "ru": "Поле {{field}} должно содержать корректную широту",
+    "en": "The {{field}} field must contain a valid latitude"
+  },
+  "isLongitude": {
+    "ru": "Поле {{field}} должно содержать корректную долготу",
+    "en": "The {{field}} field must contain a valid longitude"
+  },
+  "isMilitaryTime": {
+    "ru": "Поле {{field}} должно содержать корректное время",
+    "en": "The {{field}} field must contain a valid time"
+  },
+  "isTimeZone": {
+    "ru": "Поле {{field}} должно содержать корректный часовой пояс",
+    "en": "The {{field}} field must contain a valid time zone"
+  },
+  "isMimeType": {
+    "ru": "Поле {{field}} содержит некорректный MIME-тип",
+    "en": "The {{field}} field contains an invalid MIME type"
+  },
+  "isHash": {
+    "ru": "Поле {{field}} должно содержать корректный хеш",
+    "en": "The {{field}} field must contain a valid hash"
+  },
+  "matches": {
+    "ru": "Поле {{field}} имеет некорректный формат",
+    "en": "The {{field}} field has an invalid format"
+  },
+  "isFQDN": {
+    "ru": "Поле {{field}} должно содержать корректное доменное имя",
+    "en": "The {{field}} field must contain a valid domain name"
+  },
+  "isDataURI": {
+    "ru": "Поле {{field}} должно содержать корректный Data URI",
+    "en": "The {{field}} field must contain a valid Data URI"
+  },
+  "isISIN": {
+    "ru": "Поле {{field}} должно содержать корректный ISIN",
+    "en": "The {{field}} field must contain a valid ISIN"
+  },
+  "isISBN": {
+    "ru": "Поле {{field}} должно содержать корректный ISBN",
+    "en": "The {{field}} field must contain a valid ISBN"
+  },
+  "isEAN": {
+    "ru": "Поле {{field}} должно содержать корректный EAN",
+    "en": "The {{field}} field must contain a valid EAN"
+  },
+  "isISSN": {
+    "ru": "Поле {{field}} должно содержать корректный ISSN",
+    "en": "The {{field}} field must contain a valid ISSN"
+  },
+  "isPostalCode": {
+    "ru": "Поле {{field}} должно содержать корректный почтовый индекс",
+    "en": "The {{field}} field must contain a valid postal code"
+  },
+  "isPhoneNumber": {
+    "ru": "Поле {{field}} должно содержать корректный номер телефона",
+    "en": "The {{field}} field must contain a valid phone number"
+  },
+  "isISO8601": {
+    "ru": "Поле {{field}} должно содержать корректную дату и время",
+    "en": "The {{field}} field must contain a valid ISO 8601 date"
+  },
+  "isAlphaNumeric": {
+    "ru": "Поле {{field}} должно содержать только буквы и цифры",
+    "en": "The {{field}} field must contain only letters and numbers"
+  },
+  "isLowercase": {
+    "ru": "Поле {{field}} должно содержать только строчные символы",
+    "en": "The {{field}} field must contain only lowercase characters"
+  },
+  "isUppercase": {
+    "ru": "Поле {{field}} должно содержать только заглавные символы",
+    "en": "The {{field}} field must contain only uppercase characters"
+  }
+}

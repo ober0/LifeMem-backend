@@ -20,7 +20,7 @@ import { SmtpService } from '../smtp/smtp.service';
 import { AuthUserRecord } from './consts/user.constants';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
 import { ConfirmPhoneDto } from './dto/confirm-phone.dto';
-import { CreateUserDto, OauthCreateUser } from './dto/create-user.dto';
+import { CreateUserDto, CreateUserSettings, OauthCreateUser } from './dto/create-user.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
 import { UserRepository } from './user.repository';
 
@@ -247,8 +247,9 @@ export class UserService {
             updatedAt: permission.updatedAt
         }));
 
-        const settings: UserSettingsDto = (record.userSettings?.json as unknown as UserSettingsDto | null) ?? {
-            ...BASE_USER_SETTINGS
+        const settings: UserSettingsDto = {
+            ...BASE_USER_SETTINGS,
+            ...((record.userSettings?.json as unknown as UserSettingsDto) ?? {})
         };
 
         return { user, permissions, settings };
@@ -274,10 +275,13 @@ export class UserService {
         return this.toUserDto(await this.userRepository.markPhoneVerified(userId));
     }
 
-    async createUserWithOAuthProvider(data: OauthCreateUser) {
+    async createUserWithOAuthProvider(data: OauthCreateUser, initSettings: CreateUserSettings) {
         const role = await this.roleService.getDefaultRole();
 
-        return this.userRepository.createUserWithOAuthProvider(data, role.id, BASE_USER_SETTINGS);
+        return this.userRepository.createUserWithOAuthProvider(data, role.id, {
+            ...BASE_USER_SETTINGS,
+            ...initSettings
+        });
     }
 
     async getBindings(userId: string) {

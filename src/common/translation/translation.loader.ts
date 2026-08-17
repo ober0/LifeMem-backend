@@ -7,8 +7,28 @@ export function getTranslationsPath(): string {
         : join(process.cwd(), 'src', 'translations');
 }
 
-export function loadTranslations(): Record<string, unknown> {
-    const translationsPath = getTranslationsPath();
+export function loadErrorTranslations(): Record<string, unknown> {
+    const translationsPath = join(getTranslationsPath(), 'errors');
+    const entries = readdirSync(translationsPath, { withFileTypes: true });
+
+    return entries.reduce<Record<string, unknown>>((acc, entry) => {
+        if (!entry.isFile() || !entry.name.endsWith('.json')) {
+            return acc;
+        }
+
+        const name = entry.name.split('.json')[0];
+
+        try {
+            const content = JSON.parse(readFileSync(join(translationsPath, entry.name), 'utf-8'));
+            return mergeDeep(acc, content, name);
+        } catch {
+            return acc;
+        }
+    }, {});
+}
+
+export function loadTextTranslations(): Record<string, unknown> {
+    const translationsPath = join(getTranslationsPath(), 'texts');
     const entries = readdirSync(translationsPath, { withFileTypes: true });
 
     return entries.reduce<Record<string, unknown>>((acc, entry) => {
