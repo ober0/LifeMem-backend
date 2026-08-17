@@ -4,14 +4,9 @@ import { AuthType, ConfirmCodeType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { createHmac } from 'crypto';
 import { Phone } from '../../../common/classes/phone';
-import {
-    DEFAULT_ERRORS_LANGUAGE,
-    DEFAULT_MESSAGES_LANGUAGE,
-    EMAIL_CODE_LIFETIME_MS
-} from '../../../common/config/contains';
+import { DEFAULT_MESSAGES_LANGUAGE, EMAIL_CODE_LIFETIME_MS } from '../../../common/config/contains';
 import { apiError } from '../../../common/errors';
 import { generateCode } from '../../../common/helpers/generate-code';
-import { LangEnum } from '../../../common/types/lang.enum';
 import { AuthLogService } from '../../auth-log/auth-log.service';
 import { MobileSmsService } from '../../mobile-sms/mobile-sms.service';
 import { NotificationMessage, NotificationType } from '../../notifications/const/messages';
@@ -29,7 +24,6 @@ import {
 } from '../dto/tokens.dto';
 import { AuthRepository } from '../repo/auth.repository';
 import { UserSettingsService } from '../../user-settings/user-settings.service';
-import { DEFAULT_LANGUAGE } from '@nestjs/schematics';
 
 @Injectable()
 export class AuthService {

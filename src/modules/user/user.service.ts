@@ -7,7 +7,6 @@ import { BASE_USER_SETTINGS } from '../../common/config/base-user-settings.const
 import { MOBILE_CODE_LIFETIME_MS } from '../../common/config/contains';
 import { apiError } from '../../common/errors';
 import { generateCode } from '../../common/helpers/generate-code';
-import { LangEnum } from '../../common/types/lang.enum';
 import { AuthUserInfo, PermissionDto, UserDto, UserSettingsDto } from '../../common/types/user';
 import { MobileSmsService } from '../mobile-sms/mobile-sms.service';
 import { RoleService } from '../role/role.service';
