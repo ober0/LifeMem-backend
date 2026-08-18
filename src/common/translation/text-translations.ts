@@ -1,6 +1,7 @@
 import { LangEnum } from '../types/lang.enum';
 import { loadTextTranslations } from './translation.loader';
 import { Logger } from '@nestjs/common';
+import { TextsTranslationKey } from '../../translations/generated';
 
 type TextEntry = Record<LangEnum, string>;
 
@@ -12,7 +13,7 @@ export const translations = {
         lang = LangEnum.En,
         variables
     }: {
-        key: string;
+        key: TextsTranslationKey;
         lang?: LangEnum;
         variables?: Record<string, string | number>;
     }) => {
