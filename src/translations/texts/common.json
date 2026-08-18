@@ -1,0 +1,14 @@
+{
+    "inDevelopment": {
+        "ru": "В разработке",
+        "en": "In development"
+    },
+    "codeSentEmail": {
+        "ru": "Код подтверждения {{code}} отправлен на email",
+        "en": "Verification code {{code}} has been sent to email"
+    },
+    "codeSentPhone": {
+        "ru": "Код {{code}} отправлен",
+        "en": "Code {{code}} has been sent"
+    }
+}

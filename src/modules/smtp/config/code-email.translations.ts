@@ -1,5 +1,5 @@
 import { LangEnum } from '../../../common/types/lang.enum';
-import { translateText } from '../../../common/translation/text-translations';
+import { translations } from '../../../common/translation/text-translations';
 
 export type CodeEmailTranslation = {
     subject: string;
@@ -12,19 +12,19 @@ export type CodeEmailTranslation = {
 
 export const CODE_EMAIL_TRANSLATIONS: Record<LangEnum, CodeEmailTranslation> = {
     [LangEnum.Ru]: {
-        subject: translateText('code-email.subject', LangEnum.Ru),
-        title: translateText('code-email.title', LangEnum.Ru),
-        message: translateText('code-email.message', LangEnum.Ru),
-        tagline: translateText('code-email.tagline', LangEnum.Ru),
-        expiresHint: translateText('code-email.expiresHint', LangEnum.Ru),
-        textBody: translateText('code-email.textBody', LangEnum.Ru)
+        subject: translations.byTextKey({ key: 'code-email.subject', lang: LangEnum.Ru }),
+        title: translations.byTextKey({ key: 'code-email.title', lang: LangEnum.Ru }),
+        message: translations.byTextKey({ key: 'code-email.message', lang: LangEnum.Ru }),
+        tagline: translations.byTextKey({ key: 'code-email.tagline', lang: LangEnum.Ru }),
+        expiresHint: translations.byTextKey({ key: 'code-email.expiresHint', lang: LangEnum.Ru }),
+        textBody: translations.byTextKey({ key: 'code-email.textBody', lang: LangEnum.Ru })
     },
     [LangEnum.En]: {
-        subject: translateText('code-email.subject', LangEnum.En),
-        title: translateText('code-email.title', LangEnum.En),
-        message: translateText('code-email.message', LangEnum.En),
-        tagline: translateText('code-email.tagline', LangEnum.En),
-        expiresHint: translateText('code-email.expiresHint', LangEnum.En),
-        textBody: translateText('code-email.textBody', LangEnum.En)
+        subject: translations.byTextKey({ key: 'code-email.subject', lang: LangEnum.En }),
+        title: translations.byTextKey({ key: 'code-email.title', lang: LangEnum.En }),
+        message: translations.byTextKey({ key: 'code-email.message', lang: LangEnum.En }),
+        tagline: translations.byTextKey({ key: 'code-email.tagline', lang: LangEnum.En }),
+        expiresHint: translations.byTextKey({ key: 'code-email.expiresHint', lang: LangEnum.En }),
+        textBody: translations.byTextKey({ key: 'code-email.textBody', lang: LangEnum.En })
     }
 };

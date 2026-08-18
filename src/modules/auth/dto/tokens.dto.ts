@@ -56,7 +56,7 @@ export type LoginTokensResult = {
 };
 
 export class LoginPhoneCodeResponseDto {
-    @ApiProperty({ example: 'Код 123456 отправлен' })
+    @ApiProperty()
     message: string;
 
     @ApiProperty({ example: true })

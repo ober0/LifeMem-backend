@@ -9,7 +9,7 @@ export class RegisterResponseDto {
     @Type(() => UserDto)
     user: UserDto;
 
-    @ApiProperty({ example: 'Код отправлен' })
+    @ApiProperty()
     @IsString()
     message: string;
 

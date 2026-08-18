@@ -7,6 +7,7 @@ import { BASE_USER_SETTINGS } from '../../common/config/base-user-settings.const
 import { MOBILE_CODE_LIFETIME_MS } from '../../common/config/contains';
 import { apiError } from '../../common/errors';
 import { generateCode } from '../../common/helpers/generate-code';
+import { translations } from '../../common/translation/text-translations';
 import { AuthUserInfo, PermissionDto, UserDto, UserSettingsDto } from '../../common/types/user';
 import { MobileSmsService } from '../mobile-sms/mobile-sms.service';
 import { RoleService } from '../role/role.service';
@@ -87,7 +88,11 @@ export class UserService {
         // FIXME
         return {
             user: this.toUserDto(user),
-            message: `Код подтверждения ${code} отправлен на email`,
+            message: translations.byTextKey({
+                key: 'common.codeSentEmail',
+                lang: fullSettings.lang,
+                variables: { code }
+            }),
             alert: true
         };
     }
@@ -113,12 +118,14 @@ export class UserService {
 
         const role = await this.roleService.getDefaultRole();
 
+        const fullSettings = { ...BASE_USER_SETTINGS, ...settings };
+
         const user = await this.userRepository.create({
             nickname,
             email: null,
             phoneNumber: phone.normalized,
             roleId: role.id,
-            settings: { ...BASE_USER_SETTINGS, ...settings }
+            settings: fullSettings
         });
 
         const code = generateCode();
@@ -138,14 +145,22 @@ export class UserService {
             // FIXME
             return {
                 user: this.toUserDto(user),
-                message: `Код ${code} отправлен`,
+                message: translations.byTextKey({
+                    key: 'common.codeSentPhone',
+                    lang: fullSettings.lang,
+                    variables: { code }
+                }),
                 alert: true
             };
         }
 
         return {
             user: this.toUserDto(user),
-            message: `Код ${code} отправлен`,
+            message: translations.byTextKey({
+                key: 'common.codeSentPhone',
+                lang: fullSettings.lang,
+                variables: { code }
+            }),
             alert: true
         };
     }

@@ -7,6 +7,7 @@ import { Phone } from '../../../common/classes/phone';
 import { DEFAULT_MESSAGES_LANGUAGE, EMAIL_CODE_LIFETIME_MS } from '../../../common/config/contains';
 import { apiError } from '../../../common/errors';
 import { generateCode } from '../../../common/helpers/generate-code';
+import { translations } from '../../../common/translation/text-translations';
 import { AuthLogService } from '../../auth-log/auth-log.service';
 import { MobileSmsService } from '../../mobile-sms/mobile-sms.service';
 import { NotificationMessage, NotificationType } from '../../notifications/const/messages';
@@ -106,12 +107,20 @@ export class AuthService {
             // FIXME
             if (process.env.NODE_ENV === 'production') {
                 return {
-                    message: `Код подтверждения ${code} отправлен на email`,
+                    message: translations.byTextKey({
+                        key: 'common.codeSentEmail',
+                        lang: userSettings.lang ?? DEFAULT_MESSAGES_LANGUAGE,
+                        variables: { code }
+                    }),
                     alert: true
                 };
             }
             return {
-                message: `Код подтверждения ${code} отправлен на email`,
+                message: translations.byTextKey({
+                    key: 'common.codeSentEmail',
+                    lang: userSettings.lang ?? DEFAULT_MESSAGES_LANGUAGE,
+                    variables: { code }
+                }),
                 alert: true
             };
         }
@@ -172,12 +181,20 @@ export class AuthService {
         if (process.env.NODE_ENV === 'production') {
             // TODO убрать потом
             return {
-                message: `Код ${code} отправлен`,
+                message: translations.byTextKey({
+                    key: 'common.codeSentPhone',
+                    lang: DEFAULT_MESSAGES_LANGUAGE,
+                    variables: { code }
+                }),
                 alert: true
             };
         }
         return {
-            message: `Код ${code} отправлен`,
+            message: translations.byTextKey({
+                key: 'common.codeSentPhone',
+                lang: DEFAULT_MESSAGES_LANGUAGE,
+                variables: { code }
+            }),
             alert: true
         };
     }
