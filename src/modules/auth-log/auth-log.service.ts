@@ -17,7 +17,7 @@ export class AuthLogService {
 
     async search(dto: AuthLogSearchDto, actor: Actor): Promise<AuthLogSearchResponseDto> {
         if (!actor.user) {
-            throw apiError.unauthorized('error.auth.unauthorized');
+            throw apiError.unauthorized('auth.unauthorized');
         }
 
         const requestedUserId = dto.filters?.userId;
@@ -34,7 +34,7 @@ export class AuthLogService {
                 };
             }
         } else if (requestedUserId !== actor.user.id && !canReadOthers) {
-            throw apiError.forbidden('error.auth.forbidden');
+            throw apiError.forbidden('auth.forbidden');
         }
 
         const [data, count] = await Promise.all([this.repository.search(dto), this.repository.count(dto)]);

@@ -34,7 +34,7 @@ export class GoogleApiService implements OnModuleInit {
 
             const payload = ticket.getPayload();
             if (!payload) {
-                throw apiError.unauthorized('error.auth.google_token_payload_error');
+                throw apiError.unauthorized('auth.google_token_payload_error');
             }
 
             return {
@@ -48,7 +48,7 @@ export class GoogleApiService implements OnModuleInit {
             if (err instanceof UnauthorizedException) {
                 throw err;
             }
-            throw apiError.unauthorized('error.auth.google_token_invalid');
+            throw apiError.unauthorized('auth.google_token_invalid');
         }
     }
 }

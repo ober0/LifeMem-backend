@@ -7,7 +7,7 @@ export function flattenValidationErrors(errors: ValidationError[], parentPath = 
 
         const currentErrors = Object.keys(error.constraints ?? {}).map((constraint) => ({
             field,
-            code: `error.validation.${constraint}`,
+            code: `validation.${constraint}`,
             base: error.constraints?.[constraint] ?? 'Validation error'
         }));
 

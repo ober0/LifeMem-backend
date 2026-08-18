@@ -1,19 +1,18 @@
 import { Request } from 'express';
+import { LangEnum } from '../types/lang.enum';
 
-export type SupportedLanguage = 'en' | 'ru';
+const acceptedValues: string[] = Object.values(LangEnum);
 
-export function getLanguageFromRequest(request: Request, fallback: SupportedLanguage = 'en'): SupportedLanguage {
-    const header =
-        typeof request.headers['accept-language'] === 'string'
-            ? (request.headers['accept-language'] as string)
-            : Array.isArray(request.headers['accept-language'])
-              ? request.headers['accept-language']?.[0]
-              : undefined;
+export function getLanguageFromRequest(request: Request): LangEnum {
+    const header = request.headers['x-accept-language'];
 
-    if (!header) {
-        return fallback;
+    if (typeof header !== 'string') {
+        return LangEnum.En;
     }
 
-    const normalized = header.split(',')[0].trim().toLowerCase();
-    return normalized === 'ru' ? 'ru' : fallback;
+    if (!acceptedValues.includes(header)) {
+        return LangEnum.En;
+    }
+
+    return header as LangEnum;
 }

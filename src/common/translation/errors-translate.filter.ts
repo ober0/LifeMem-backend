@@ -2,7 +2,6 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logge
 import { Request, Response } from 'express';
 import { DEFAULT_ERRORS_LANGUAGE } from '../config/contains';
 import { ErrorVariables } from '../errors';
-import { LangEnum } from '../types/lang.enum';
 import { loadErrorTranslations } from './translation.loader';
 
 type ErrorItem = {
@@ -32,14 +31,9 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
             }
         }
 
-        const userLang = request.actor?.settings?.lang;
-        let headerLang = request.headers['x-accept-language'] as LangEnum | undefined;
+        console.log(request.actor?.requestLang);
 
-        if (!Object.values(LangEnum).includes(headerLang as LangEnum)) {
-            headerLang = undefined;
-        }
-
-        const lang = (userLang ?? headerLang ?? DEFAULT_ERRORS_LANGUAGE).toLowerCase();
+        const lang = request.actor?.requestLang ?? DEFAULT_ERRORS_LANGUAGE;
         const rawMessage = this.extractMessage(exception);
 
         const payload = {
@@ -48,7 +42,7 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
             errors: rawMessage.map((el) => {
                 if (typeof el === 'string') {
                     const isRealKey = this.isRealKey(el);
-                    const code = isRealKey ? el : 'error.common.unknown';
+                    const code = isRealKey ? el : 'common.unknown';
                     const msg = isRealKey ? this.translate(code, lang, el) : el;
 
                     return {
@@ -58,7 +52,7 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
                 }
 
                 const isRealKey = this.isRealKey(el.code);
-                const code = isRealKey ? el.code : 'error.common.unknown';
+                const code = isRealKey ? el.code : 'common.unknown';
                 const msg = this.translate(code, lang, el.base ?? 'Unknown error', {
                     ...el.variables,
                     ...(el.field ? { field: el.field } : {})
@@ -80,10 +74,6 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
     }
 
     private translate(code: string, lang: string, fallback: string, variables: ErrorVariables = {}): string {
-        if (!code.startsWith('error.')) {
-            return fallback;
-        }
-
         const entry = this.translations[code];
 
         if (!entry?.[lang]) {
@@ -141,9 +131,9 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
 
         if (exception instanceof Error) {
             Logger.error(exception);
-            return ['error.common.unknown'];
+            return ['common.unknown'];
         }
 
-        return ['error.common.unknown'];
+        return ['common.unknown'];
     }
 }

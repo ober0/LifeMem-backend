@@ -3,7 +3,7 @@ import { IsOptional, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class ErrorDto {
-    @ApiProperty({ example: 'error.auth.aboba' })
+    @ApiProperty({ example: 'auth.aboba' })
     code: string;
 
     @ApiProperty({ example: 'Супер сложная ошибка' })

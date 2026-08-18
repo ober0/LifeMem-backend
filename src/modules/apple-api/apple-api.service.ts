@@ -41,7 +41,7 @@ export class AppleApiService implements OnModuleInit {
                 name: payload.name ?? undefined
             };
         } catch {
-            throw apiError.unauthorized('error.auth.apple_token_invalid');
+            throw apiError.unauthorized('auth.apple_token_invalid');
         }
     }
 }

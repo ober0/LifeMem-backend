@@ -8,53 +8,54 @@ import {
     ServiceUnavailableException,
     UnauthorizedException
 } from '@nestjs/common';
+import { ErrorsTranslationKey } from '../translations/generated';
 
 export type ErrorVariables = Record<string, string | number>;
 
 export const apiError = {
-    badRequest: (code: string, variables?: ErrorVariables) =>
+    badRequest: (code: ErrorsTranslationKey, variables?: ErrorVariables) =>
         new BadRequestException({
             code,
             ...(variables && { variables })
         }),
 
-    unauthorized: (code: string, variables?: ErrorVariables) =>
+    unauthorized: (code: ErrorsTranslationKey, variables?: ErrorVariables) =>
         new UnauthorizedException({
             code,
             ...(variables && { variables })
         }),
 
-    forbidden: (code: string, variables?: ErrorVariables) =>
+    forbidden: (code: ErrorsTranslationKey, variables?: ErrorVariables) =>
         new ForbiddenException({
             code,
             ...(variables && { variables })
         }),
 
-    notFound: (code: string, variables?: ErrorVariables) =>
+    notFound: (code: ErrorsTranslationKey, variables?: ErrorVariables) =>
         new NotFoundException({
             code,
             ...(variables && { variables })
         }),
 
-    conflict: (code: string, variables?: ErrorVariables) =>
+    conflict: (code: ErrorsTranslationKey, variables?: ErrorVariables) =>
         new ConflictException({
             code,
             ...(variables && { variables })
         }),
 
-    internal: (code: string, variables?: ErrorVariables) =>
+    internal: (code: ErrorsTranslationKey, variables?: ErrorVariables) =>
         new InternalServerErrorException({
             code,
             ...(variables && { variables })
         }),
 
-    serviceUnavailable: (code: string, variables?: ErrorVariables) =>
+    serviceUnavailable: (code: ErrorsTranslationKey, variables?: ErrorVariables) =>
         new ServiceUnavailableException({
             code,
             ...(variables && { variables })
         }),
 
-    gatewayTimeout: (code: string, variables?: ErrorVariables) =>
+    gatewayTimeout: (code: ErrorsTranslationKey, variables?: ErrorVariables) =>
         new GatewayTimeoutException({
             code,
             ...(variables && { variables })

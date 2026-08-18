@@ -25,11 +25,11 @@ export class AuthGoogleService {
         const googleData = await this.googleApiService.verifyIdToken(dto.idToken);
 
         if (!googleData.email) {
-            throw apiError.badRequest('error.auth.google_email_not_found');
+            throw apiError.badRequest('auth.google_email_not_found');
         }
 
         if (!googleData.emailVerified) {
-            throw apiError.unauthorized('error.auth.google_email_not_verified');
+            throw apiError.unauthorized('auth.google_email_not_verified');
         }
 
         const oauthProvider = await this.userOAuthRepository.findByProvider(OAuthProvider.Google, googleData.sub);
@@ -40,7 +40,7 @@ export class AuthGoogleService {
         }
 
         if (!dto.initSettings) {
-            throw apiError.badRequest('error.auth.no_init_settings');
+            throw apiError.badRequest('auth.no_init_settings');
         }
 
         const user = await this.userService.createUserWithOAuthProvider(
@@ -74,26 +74,26 @@ export class AuthGoogleService {
     async link(dto: GoogleLinkDto, actor: Actor): Promise<void> {
         const user = actor.user;
         if (!user) {
-            throw apiError.badRequest('error.auth.unauthorized');
+            throw apiError.badRequest('auth.unauthorized');
         }
 
         const googleData = await this.googleApiService.verifyIdToken(dto.idToken);
 
         if (!googleData.email) {
-            throw apiError.badRequest('error.auth.google_email_not_found');
+            throw apiError.badRequest('auth.google_email_not_found');
         }
 
         if (!googleData.emailVerified) {
-            throw apiError.unauthorized('error.auth.google_email_not_verified');
+            throw apiError.unauthorized('auth.google_email_not_verified');
         }
 
         const existingProvider = await this.userOAuthRepository.findByProvider(OAuthProvider.Google, googleData.sub);
 
         if (existingProvider) {
             if (existingProvider.userId === user.id) {
-                throw apiError.badRequest('error.auth.google_account_already_linked');
+                throw apiError.badRequest('auth.google_account_already_linked');
             } else {
-                throw apiError.badRequest('error.auth.google_account_linked_to_other');
+                throw apiError.badRequest('auth.google_account_linked_to_other');
             }
         }
 
@@ -112,12 +112,12 @@ export class AuthGoogleService {
     async unlink(actor: Actor): Promise<void> {
         const user = actor.user;
         if (!user) {
-            throw apiError.badRequest('error.auth.unauthorized');
+            throw apiError.badRequest('auth.unauthorized');
         }
 
         const providersCount = await this.userOAuthRepository.countByUserId(user.id);
         if (providersCount <= 1 && !user.passwordId) {
-            throw apiError.badRequest('error.auth.cannot_unlink_only_auth');
+            throw apiError.badRequest('auth.cannot_unlink_only_auth');
         }
         await this.userOAuthRepository.deleteByUserAndProvider(user.id, OAuthProvider.Google);
     }

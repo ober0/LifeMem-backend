@@ -33,15 +33,15 @@ export class AuthAppleService {
         }
 
         if (!dto.initSettings) {
-            throw apiError.badRequest('error.auth.no_init_settings');
+            throw apiError.badRequest('auth.no_init_settings');
         }
 
         if (!email) {
-            throw apiError.badRequest('error.auth.apple_email_not_found');
+            throw apiError.badRequest('auth.apple_email_not_found');
         }
 
         if (appleData.email && !appleData.emailVerified) {
-            throw apiError.unauthorized('error.auth.apple_email_not_verified');
+            throw apiError.unauthorized('auth.apple_email_not_verified');
         }
 
         const nickname = dto.nickname;
@@ -76,22 +76,22 @@ export class AuthAppleService {
     async link(dto: AppleLinkAuthDto, actor: Actor): Promise<void> {
         const user = actor.user;
         if (!user) {
-            throw apiError.badRequest('error.auth.unauthorized');
+            throw apiError.badRequest('auth.unauthorized');
         }
 
         const appleData = await this.appleApiService.verifyIdToken(dto.idToken);
 
         if (appleData.email && !appleData.emailVerified) {
-            throw apiError.unauthorized('error.auth.apple_email_not_verified');
+            throw apiError.unauthorized('auth.apple_email_not_verified');
         }
 
         const existingProvider = await this.userOAuthRepository.findByProvider(OAuthProvider.Apple, appleData.sub);
 
         if (existingProvider) {
             if (existingProvider.userId === user.id) {
-                throw apiError.badRequest('error.auth.apple_account_already_linked');
+                throw apiError.badRequest('auth.apple_account_already_linked');
             } else {
-                throw apiError.badRequest('error.auth.apple_account_linked_to_other');
+                throw apiError.badRequest('auth.apple_account_linked_to_other');
             }
         }
 
@@ -109,12 +109,12 @@ export class AuthAppleService {
     async unlink(actor: Actor): Promise<void> {
         const user = actor.user;
         if (!user) {
-            throw apiError.badRequest('error.auth.unauthorized');
+            throw apiError.badRequest('auth.unauthorized');
         }
 
         const providersCount = await this.userOAuthRepository.countByUserId(user.id);
         if (providersCount <= 1 && !user.passwordId) {
-            throw apiError.badRequest('error.auth.cannot_unlink_only_auth');
+            throw apiError.badRequest('auth.cannot_unlink_only_auth');
         }
         await this.userOAuthRepository.deleteByUserAndProvider(user.id, OAuthProvider.Apple);
     }

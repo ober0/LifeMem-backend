@@ -58,7 +58,7 @@ export class UserController {
     @ApiErrorResponses(401, 404)
     async info(@CurrentActor() actor: Actor) {
         if (!actor.user) {
-            throw apiError.unauthorized('error.auth.unauthorized');
+            throw apiError.unauthorized('auth.unauthorized');
         }
 
         const role = await this.roleService.getRoleById(actor.user.roleId);
@@ -77,7 +77,7 @@ export class UserController {
     @ApiErrorResponses(401)
     async getBindings(@CurrentActor() actor: Actor): Promise<OAuthBindingDto[]> {
         if (!actor.user) {
-            throw apiError.unauthorized('error.auth.unauthorized');
+            throw apiError.unauthorized('auth.unauthorized');
         }
 
         return this.userService.getBindings(actor.user.id);

@@ -20,7 +20,7 @@ export function loadErrorTranslations(): Record<string, unknown> {
 
         try {
             const content = JSON.parse(readFileSync(join(translationsPath, entry.name), 'utf-8'));
-            return mergeDeep(acc, content, `error.${name}`);
+            return mergeDeep(acc, content, name);
         } catch {
             return acc;
         }

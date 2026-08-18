@@ -13,18 +13,9 @@ import { UserOAuthRepository } from './repo/user-oauth.repository';
 import { AuthAppleService } from './services/auth-apple.service';
 import { AuthGoogleService } from './services/auth-google.service';
 import { AuthService } from './services/auth.service';
-import { UserSettingsModule } from '../user-settings/user-settings.module';
 
 @Module({
-    imports: [
-        GoogleApiModule,
-        AppleApiModule,
-        AuthLogModule,
-        MobileSmsModule,
-        NotificationsModule,
-        SmtpModule,
-        UserSettingsModule
-    ],
+    imports: [GoogleApiModule, AppleApiModule, AuthLogModule, MobileSmsModule, NotificationsModule, SmtpModule],
     controllers: [AuthController, AuthGoogleController, AuthAppleController],
     providers: [AuthService, AuthGoogleService, AuthAppleService, AuthRepository, UserOAuthRepository],
     exports: [AuthService]

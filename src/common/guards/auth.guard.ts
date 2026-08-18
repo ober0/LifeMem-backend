@@ -19,7 +19,7 @@ export function JwtAuthGuardHttp({
 
         async canActivate(context: ExecutionContext): Promise<boolean> {
             if (context.getType() !== 'http') {
-                throw apiError.badRequest('error.auth.invalid_request_type');
+                throw apiError.badRequest('auth.invalid_request_type');
             }
 
             const req = context.switchToHttp().getRequest<Request>();
@@ -32,7 +32,7 @@ export function JwtAuthGuardHttp({
                     this.assertPermissions(req, permissions);
                     return true;
                 }
-                throw apiError.unauthorized('error.auth.unauthorized');
+                throw apiError.unauthorized('auth.unauthorized');
             }
 
             try {
@@ -80,12 +80,12 @@ export function JwtAuthGuardHttp({
             }
 
             if (!req.actor.isAuthorized()) {
-                throw apiError.unauthorized('error.auth.unauthorized');
+                throw apiError.unauthorized('auth.unauthorized');
             }
 
             for (const permission of required) {
                 if (!req.actor.hasPermission(permission)) {
-                    throw apiError.forbidden('error.auth.forbidden');
+                    throw apiError.forbidden('auth.forbidden');
                 }
             }
         }

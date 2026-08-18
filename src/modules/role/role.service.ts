@@ -11,7 +11,7 @@ export class RoleService {
         const data = await this.roleRepository.getRoleById(id);
 
         if (!data) {
-            throw apiError.notFound('error.role.not_found');
+            throw apiError.notFound('role.not_found');
         }
 
         return data;
@@ -21,7 +21,7 @@ export class RoleService {
         const data = await this.roleRepository.getDefaultRole();
 
         if (!data) {
-            throw apiError.notFound('error.role.default_not_found');
+            throw apiError.notFound('role.default_not_found');
         }
 
         return data;

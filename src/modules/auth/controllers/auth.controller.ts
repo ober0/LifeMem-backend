@@ -47,10 +47,10 @@ export class AuthController {
         const device = request.actor.device;
 
         if (!device) {
-            throw apiError.internal('error.auth.device_context_missing');
+            throw apiError.internal('auth.device_context_missing');
         }
 
-        const data = await this.authService.login(loginDto, device.ip);
+        const data = await this.authService.login(loginDto, request.actor);
 
         if ('alert' in data) {
             return data;
@@ -74,7 +74,7 @@ export class AuthController {
         const device = request.actor.device;
 
         if (!device) {
-            throw apiError.internal('error.auth.device_context_missing');
+            throw apiError.internal('auth.device_context_missing');
         }
 
         const data = await this.authService.confirmPhoneLogin(dto, device.ip);
@@ -100,7 +100,7 @@ export class AuthController {
         const device = request.actor.device;
 
         if (!device) {
-            throw apiError.internal('error.auth.device_context_missing');
+            throw apiError.internal('auth.device_context_missing');
         }
 
         const refreshToken =
@@ -109,7 +109,7 @@ export class AuthController {
                 : (request.cookies['refreshToken'] as string | undefined);
 
         if (!refreshToken) {
-            throw apiError.badRequest('error.auth.refresh_token_not_found');
+            throw apiError.badRequest('auth.refresh_token_not_found');
         }
 
         const data = await this.authService.refresh(refreshToken, device.ip);
@@ -135,7 +135,7 @@ export class AuthController {
         const device = request.actor.device;
 
         if (!device) {
-            throw apiError.internal('error.auth.device_context_missing');
+            throw apiError.internal('auth.device_context_missing');
         }
 
         const refreshToken =
@@ -144,7 +144,7 @@ export class AuthController {
                 : (request.cookies['refreshToken'] as string | undefined);
 
         if (!refreshToken) {
-            throw apiError.forbidden('error.auth.refresh_token_not_found');
+            throw apiError.forbidden('auth.refresh_token_not_found');
         }
 
         response.clearCookie('refreshToken');

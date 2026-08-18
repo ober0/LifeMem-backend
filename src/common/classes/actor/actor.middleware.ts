@@ -13,6 +13,7 @@ export class ActorMiddleware implements NestMiddleware {
         const ip = getRequestIp(req);
 
         req.actor.setDevice({ ip, type: deviceType });
+        req.actor.setHeaderLang(req);
 
         next();
     }

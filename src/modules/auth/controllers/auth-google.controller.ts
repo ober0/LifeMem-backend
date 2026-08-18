@@ -2,9 +2,7 @@ import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } fro
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import express from 'express';
 import { Actor } from '../../../common/classes/actor';
-import { LangEnum } from '../../../common/types/lang.enum';
 import { translations } from '../../../common/translation/text-translations';
-import { getLanguageFromRequest } from '../../../common/helpers/get-language';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
 import { GoogleAuthDto, GoogleLinkDto } from '../dto/google-auth.dto';
 import { LoginResponseDto } from '../dto/tokens.dto';
@@ -28,7 +26,7 @@ export class AuthGoogleController {
         @Req() request: express.Request,
         @Res({ passthrough: true }) _response: express.Response
     ) {
-        const lang = (request.actor?.settings?.lang ?? getLanguageFromRequest(request)) as LangEnum;
+        const lang = request.actor?.requestLang;
         return {
             alert: true,
             message: translations.byTextKey({ key: 'common.inDevelopment', lang })
@@ -37,7 +35,7 @@ export class AuthGoogleController {
         // const device = request.actor.device;
         //
         // if (!device) {
-        //     throw apiError.internal('error.auth.device_context_missing');
+        //     throw apiError.internal('auth.device_context_missing');
         // }
         //
         // const ip = device.ip;

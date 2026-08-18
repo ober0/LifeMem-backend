@@ -18,7 +18,7 @@ export class ServiceSettingsService {
     async getServiceSettings(): Promise<ServiceSettingsDto> {
         const data = await this.repository.findByServiceUuid();
         if (!data) {
-            throw apiError.notFound('error.service_settings.not_found');
+            throw apiError.notFound('service_settings.not_found');
         }
         return data as unknown as ServiceSettingsDto;
     }

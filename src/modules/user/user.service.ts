@@ -30,7 +30,7 @@ export class UserService {
 
     async create(dto: CreateUserDto): Promise<RegisterResponseDto> {
         if (dto.phoneNumber && (dto.email || dto.password)) {
-            throw apiError.badRequest('error.auth.single_auth_method_required');
+            throw apiError.badRequest('auth.single_auth_method_required');
         }
 
         if (dto.email && dto.password) {
@@ -41,7 +41,7 @@ export class UserService {
             return this.registerByPhone(dto.nickname, dto.phoneNumber, dto.initSettings);
         }
 
-        throw apiError.badRequest('error.auth.no_auth_data');
+        throw apiError.badRequest('auth.no_auth_data');
     }
 
     private async registerByEmail(
@@ -52,7 +52,7 @@ export class UserService {
     ): Promise<RegisterResponseDto> {
         const emailOwner = await this.userRepository.findByEmail(email);
         if (emailOwner) {
-            throw apiError.conflict('error.user.email_already_exists');
+            throw apiError.conflict('user.email_already_exists');
         }
 
         const role = await this.roleService.getDefaultRole();
@@ -105,15 +105,15 @@ export class UserService {
         const phone = Phone.tryCreate(phoneNumber);
 
         if (!phone) {
-            throw apiError.badRequest('error.user.phone_not_correct');
+            throw apiError.badRequest('user.phone_not_correct');
         }
         if (!phone.isAccess) {
-            throw apiError.badRequest('error.user.phone_not_access');
+            throw apiError.badRequest('user.phone_not_access');
         }
 
         const phoneOwner = await this.userRepository.findByPhoneNumber(phone.normalized);
         if (phoneOwner) {
-            throw apiError.conflict('error.user.phone_already_exists');
+            throw apiError.conflict('user.phone_already_exists');
         }
 
         const role = await this.roleService.getDefaultRole();
@@ -168,11 +168,11 @@ export class UserService {
     async confirmEmail(dto: ConfirmEmailDto): Promise<UserDto> {
         const user = await this.userRepository.findByEmail(dto.email);
         if (!user) {
-            throw apiError.notFound('error.user.not_found');
+            throw apiError.notFound('user.not_found');
         }
 
         if (user.isEmailVerified) {
-            throw apiError.badRequest('error.user.already_verified');
+            throw apiError.badRequest('user.already_verified');
         }
 
         const confirm = await this.userRepository.consumeValidConfirmationCode(
@@ -182,7 +182,7 @@ export class UserService {
         );
 
         if (!confirm) {
-            throw apiError.badRequest('error.auth.invalid_code');
+            throw apiError.badRequest('auth.invalid_code');
         }
 
         const updated = await this.userRepository.markEmailVerified(user.id);
@@ -193,19 +193,19 @@ export class UserService {
         const phone = Phone.tryCreate(dto.phone);
 
         if (!phone) {
-            throw apiError.badRequest('error.user.phone_not_correct');
+            throw apiError.badRequest('user.phone_not_correct');
         }
         if (!phone.isAccess) {
-            throw apiError.badRequest('error.user.phone_not_access');
+            throw apiError.badRequest('user.phone_not_access');
         }
 
         const user = await this.userRepository.findByPhoneNumber(phone.normalized);
         if (!user) {
-            throw apiError.notFound('error.user.not_found');
+            throw apiError.notFound('user.not_found');
         }
 
         if (user.isPhoneVerified) {
-            throw apiError.badRequest('error.user.phone_already_verified');
+            throw apiError.badRequest('user.phone_already_verified');
         }
 
         const confirm = await this.userRepository.consumeValidConfirmationCode(
@@ -215,7 +215,7 @@ export class UserService {
         );
 
         if (!confirm) {
-            throw apiError.badRequest('error.auth.invalid_code');
+            throw apiError.badRequest('auth.invalid_code');
         }
 
         const updated = await this.userRepository.markPhoneVerified(user.id);
@@ -228,17 +228,17 @@ export class UserService {
         try {
             payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as { id: string };
         } catch {
-            throw apiError.unauthorized('error.auth.invalid_token');
+            throw apiError.unauthorized('auth.invalid_token');
         }
 
         if (!payload?.id) {
-            throw apiError.unauthorized('error.auth.invalid_token');
+            throw apiError.unauthorized('auth.invalid_token');
         }
 
         const record = await this.userRepository.findAuthUserById(payload.id);
 
         if (!record) {
-            throw apiError.unauthorized('error.auth.unauthorized');
+            throw apiError.unauthorized('auth.unauthorized');
         }
 
         return this.toAuthUserInfo(record);
@@ -289,7 +289,7 @@ export class UserService {
     async findOneById(id: string): Promise<UserDto> {
         const user = await this.userRepository.findById(id);
         if (!user) {
-            throw apiError.notFound('error.user.not_found');
+            throw apiError.notFound('user.not_found');
         }
         return this.toUserDto(user);
     }

@@ -24,7 +24,7 @@ import {
     TokenPayload
 } from '../dto/tokens.dto';
 import { AuthRepository } from '../repo/auth.repository';
-import { UserSettingsService } from '../../user-settings/user-settings.service';
+import { Actor } from 'src/common/classes/actor';
 
 @Injectable()
 export class AuthService {
@@ -36,8 +36,7 @@ export class AuthService {
         private readonly authLogService: AuthLogService,
         private readonly mobileSmsService: MobileSmsService,
         private readonly notificationService: NotificationsService,
-        private readonly smtpService: SmtpService,
-        private readonly userSettingsService: UserSettingsService
+        private readonly smtpService: SmtpService
     ) {
         if (!this.saltRounds) {
             throw Error('Не указана SALT_ROUNDS в енвах');
@@ -70,36 +69,32 @@ export class AuthService {
         });
     }
 
-    async authByEmail(email: string, password: string, ip: string): Promise<LoginFullResponseDto> {
+    async authByEmail(email: string, password: string, actor: Actor): Promise<LoginFullResponseDto> {
         const user = await this.userService.findOneByEmailWithPassword(email);
 
         if (!user?.passwordId || !user.password) {
-            throw apiError.unauthorized('error.auth.invalid_credentials');
+            throw apiError.unauthorized('auth.invalid_credentials');
         }
 
         const isPasswordMatching = await this.comparePassword(password, user.password.password);
 
         if (!isPasswordMatching) {
-            throw apiError.unauthorized('error.auth.invalid_credentials');
+            throw apiError.unauthorized('auth.invalid_credentials');
         }
 
         if (!user.isEmailVerified) {
             const code = generateCode();
 
-            const [_, userSettings] = await Promise.all([
-                this.createCode({
-                    type: ConfirmCodeType.Email,
-                    code,
-                    userId: user.id
-                }),
-                this.userSettingsService.get(user.id)
-            ]);
-
+            await this.createCode({
+                type: ConfirmCodeType.Email,
+                code,
+                userId: user.id
+            });
             setImmediate(() => {
                 this.smtpService.sendCodeEmail({
                     to: email,
                     code,
-                    lang: userSettings.lang ?? DEFAULT_MESSAGES_LANGUAGE,
+                    lang: actor.requestLang,
                     expiresMinutes: EMAIL_CODE_LIFETIME_MS / 60000
                 });
             });
@@ -109,7 +104,7 @@ export class AuthService {
                 return {
                     message: translations.byTextKey({
                         key: 'common.codeSentEmail',
-                        lang: userSettings.lang ?? DEFAULT_MESSAGES_LANGUAGE,
+                        lang: actor.requestLang,
                         variables: { code }
                     }),
                     alert: true
@@ -118,7 +113,7 @@ export class AuthService {
             return {
                 message: translations.byTextKey({
                     key: 'common.codeSentEmail',
-                    lang: userSettings.lang ?? DEFAULT_MESSAGES_LANGUAGE,
+                    lang: actor.requestLang,
                     variables: { code }
                 }),
                 alert: true
@@ -126,6 +121,8 @@ export class AuthService {
         }
 
         const { refreshToken, accessToken } = this.generateTokens(user.id);
+
+        const ip = actor.device?.ip ?? '';
 
         setImmediate(() => {
             void this.notificationService.create({
@@ -153,15 +150,15 @@ export class AuthService {
         const phoneObj = Phone.tryCreate(phone);
 
         if (!phoneObj) {
-            throw apiError.badRequest('error.user.phone_not_correct');
+            throw apiError.badRequest('user.phone_not_correct');
         }
         if (!phoneObj.isAccess) {
-            throw apiError.badRequest('error.user.phone_not_access');
+            throw apiError.badRequest('user.phone_not_access');
         }
 
         const user = await this.userService.findByPhone(phoneObj);
         if (!user) {
-            throw apiError.unauthorized('error.auth.invalid_credentials');
+            throw apiError.unauthorized('auth.invalid_credentials');
         }
 
         const code = generateCode();
@@ -203,15 +200,15 @@ export class AuthService {
         const phoneObj = Phone.tryCreate(dto.phone);
 
         if (!phoneObj) {
-            throw apiError.badRequest('error.user.phone_not_correct');
+            throw apiError.badRequest('user.phone_not_correct');
         }
         if (!phoneObj.isAccess) {
-            throw apiError.badRequest('error.user.phone_not_access');
+            throw apiError.badRequest('user.phone_not_access');
         }
 
         const user = await this.userService.findByPhone(phoneObj);
         if (!user) {
-            throw apiError.unauthorized('error.auth.invalid_credentials');
+            throw apiError.unauthorized('auth.invalid_credentials');
         }
 
         const confirm = await this.authRepository.consumeValidConfirmationCode(
@@ -221,7 +218,7 @@ export class AuthService {
         );
 
         if (!confirm) {
-            throw apiError.badRequest('error.auth.invalid_code');
+            throw apiError.badRequest('auth.invalid_code');
         }
 
         const verifiedUser = user.isPhoneVerified ? user : await this.userService.markPhoneVerified(user.id);
@@ -247,9 +244,9 @@ export class AuthService {
         return { accessToken, refreshToken, user: verifiedUser };
     }
 
-    async login(dto: LoginDto, ip: string): Promise<LoginFullResponseDto> {
+    async login(dto: LoginDto, actor: Actor): Promise<LoginFullResponseDto> {
         if (dto.phone && (dto.email || dto.password)) {
-            throw apiError.badRequest('error.auth.single_auth_method_required');
+            throw apiError.badRequest('auth.single_auth_method_required');
         }
 
         if (dto.phone) {
@@ -257,41 +254,41 @@ export class AuthService {
         }
 
         if (dto.email && dto.password) {
-            return this.authByEmail(dto.email, dto.password, ip);
+            return this.authByEmail(dto.email, dto.password, actor);
         }
 
-        throw apiError.badRequest('error.auth.no_auth_params');
+        throw apiError.badRequest('auth.no_auth_params');
     }
 
     async logout(refreshToken: string) {
         const hashedToken = this.hashRefreshToken(refreshToken);
         const token = await this.authRepository.findTokenByToken(hashedToken);
         if (!token) {
-            throw apiError.forbidden('error.auth.invalid_token');
+            throw apiError.forbidden('auth.invalid_token');
         }
         return this.authRepository.deleteToken(token.id);
     }
 
     async refresh(refreshToken: string, ip: string): Promise<GeneratedTokens> {
         if (!refreshToken) {
-            throw apiError.unauthorized('error.auth.refresh_token_not_found');
+            throw apiError.unauthorized('auth.refresh_token_not_found');
         }
         const hashedToken = this.hashRefreshToken(refreshToken);
         const tokenInDb = await this.authRepository.findTokenByToken(hashedToken);
 
         if (!tokenInDb) {
-            throw apiError.unauthorized('error.auth.invalid_token');
+            throw apiError.unauthorized('auth.invalid_token');
         }
 
         let decodedJwt: TokenPayload;
         try {
             decodedJwt = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as TokenPayload;
         } catch {
-            throw apiError.unauthorized('error.auth.invalid_token');
+            throw apiError.unauthorized('auth.invalid_token');
         }
 
         if (tokenInDb.userId !== decodedJwt.id) {
-            throw apiError.unauthorized('error.auth.invalid_token');
+            throw apiError.unauthorized('auth.invalid_token');
         }
 
         const { refreshToken: newRefreshToken, accessToken } = this.generateTokens(decodedJwt.id);
