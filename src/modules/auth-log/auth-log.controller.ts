@@ -5,7 +5,7 @@ import type { Actor } from '../../common/classes/actor';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
-import type { AuthLogService } from './auth-log.service';
+import { AuthLogService } from './auth-log.service';
 import { AuthLogSearchResponseDto } from './dto/base.dto';
 import type { AuthLogSearchDto } from './dto/search.dto';
 

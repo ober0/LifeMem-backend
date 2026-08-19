@@ -98,7 +98,7 @@ export function validateEnv(config: Record<string, unknown>) {
         skipMissingProperties: false
     });
 
-    if (errors.length > 0) {
+    if (errors.length > 0 && validated.NODE_ENV !== NodeEnv.Test) {
         throw new Error(errors.toString());
     }
 

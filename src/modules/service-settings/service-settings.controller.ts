@@ -6,7 +6,7 @@ import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { ServiceSettingsDto } from './dto/base.dto';
 import type { ServiceSettingsUpdateDto } from './dto/update.dto';
-import type { ServiceSettingsService } from './service-settings.service';
+import { ServiceSettingsService } from './service-settings.service';
 
 @ApiTags('Service Settings')
 @Controller('settings')

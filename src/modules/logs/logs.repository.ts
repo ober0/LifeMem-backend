@@ -4,7 +4,7 @@ import type { Prisma } from '@prisma/client';
 import { mapPagination } from '../../common/helpers/map.pagination';
 import { mapSearch } from '../../common/helpers/map.search';
 import { mapSort } from '../../common/helpers/map.sort';
-import type { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import type { LogsCreateDto } from './dto/base.dto';
 import type { LogsSearchDto } from './dto/search.dto';
 import { LogsFilterDto } from './dto/search.dto';

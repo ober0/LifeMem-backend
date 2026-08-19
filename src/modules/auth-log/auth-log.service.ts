@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import type { Actor } from '../../common/classes/actor';
 import { Permission } from '../../common/config/role-permission';
 import { apiError } from '../../common/helpers/errors';
-import type { AuthLogRepository } from './auth-log.repository';
+import { AuthLogRepository } from './auth-log.repository';
 import type { AuthLogSearchResponseDto } from './dto/base.dto';
 import type { AuthLogCreate } from './dto/create';
 import type { AuthLogSearchDto } from './dto/search.dto';

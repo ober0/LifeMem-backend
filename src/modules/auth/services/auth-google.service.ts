@@ -4,13 +4,13 @@ import { OAuthProvider } from '@prisma/client';
 import type { Actor } from '../../../common/classes/actor';
 import { apiError } from '../../../common/helpers/errors';
 import type { UserDto } from '../../../common/types/user';
-import type { GoogleApiService } from '../../google-api/google-api.service';
-import type { UserService } from '../../user/user.service';
+import { GoogleApiService } from '../../google-api/google-api.service';
+import { UserService } from '../../user/user.service';
 import type { GoogleAuthDto, GoogleLinkDto } from '../dto/google-auth.dto';
 import type { LoginResponseDto } from '../dto/tokens.dto';
-import type { AuthRepository } from '../repo/auth.repository';
-import type { UserOAuthRepository } from '../repo/user-oauth.repository';
-import type { AuthService } from './auth.service';
+import { AuthRepository } from '../repo/auth.repository';
+import { UserOAuthRepository } from '../repo/user-oauth.repository';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class AuthGoogleService {

@@ -17,7 +17,7 @@ import {
     LoginResponseDto,
     WebLoginResponseDto
 } from '../dto/tokens.dto';
-import type { AuthService } from '../services/auth.service';
+import { AuthService } from '../services/auth.service';
 
 @ApiTags('Auth')
 @ApiExtraModels(LoginResponseDto, LoginPhoneCodeResponseDto, GeneratedTokens, AccessTokenDto)

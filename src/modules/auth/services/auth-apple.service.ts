@@ -4,13 +4,13 @@ import { OAuthProvider } from '@prisma/client';
 import type { Actor } from '../../../common/classes/actor';
 import { apiError } from '../../../common/helpers/errors';
 import type { UserDto } from '../../../common/types/user';
-import type { AppleApiService } from '../../apple-api/apple-api.service';
-import type { UserService } from '../../user/user.service';
+import { AppleApiService } from '../../apple-api/apple-api.service';
+import { UserService } from '../../user/user.service';
 import type { AppleAuthDto, AppleLinkAuthDto } from '../dto/apple-auth.dto';
 import type { LoginResponseDto } from '../dto/tokens.dto';
-import type { AuthRepository } from '../repo/auth.repository';
-import type { UserOAuthRepository } from '../repo/user-oauth.repository';
-import type { AuthService } from './auth.service';
+import { AuthRepository } from '../repo/auth.repository';
+import { UserOAuthRepository } from '../repo/user-oauth.repository';
+import { AuthService } from './auth.service';
 
 @Injectable()
 export class AuthAppleService {

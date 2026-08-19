@@ -9,7 +9,7 @@ import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
 import { translations } from '../../../common/translation/text-translations';
 import type { AppleAuthDto, AppleLinkAuthDto } from '../dto/apple-auth.dto';
 import { LoginResponseDto } from '../dto/tokens.dto';
-import type { AuthAppleService } from '../services/auth-apple.service';
+import { AuthAppleService } from '../services/auth-apple.service';
 
 @ApiTags('Auth Apple')
 @Controller('auth/apple')

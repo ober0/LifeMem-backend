@@ -2,7 +2,7 @@ import type { CanActivate, ExecutionContext, Type } from '@nestjs/common';
 import { Injectable, mixin } from '@nestjs/common';
 import type { Request } from 'express';
 
-import type { UserService } from '../../modules/user/user.service';
+import { UserService } from '../../modules/user/user.service';
 import type { PermissionKey } from '../config/role-permission';
 import { apiError } from '../helpers/errors';
 import { getDeviceType } from '../helpers/get-device-type';

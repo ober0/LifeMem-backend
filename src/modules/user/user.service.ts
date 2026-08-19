@@ -12,15 +12,15 @@ import { apiError } from '../../common/helpers/errors';
 import { generateCode } from '../../common/helpers/generate-code';
 import { translations } from '../../common/translation/text-translations';
 import type { AuthUserInfo, PermissionDto, UserDto, UserSettingsDto } from '../../common/types/user';
-import type { MobileSmsService } from '../mobile-sms/mobile-sms.service';
-import type { RoleService } from '../role/role.service';
-import type { SmtpService } from '../smtp/smtp.service';
+import { MobileSmsService } from '../mobile-sms/mobile-sms.service';
+import { RoleService } from '../role/role.service';
+import { SmtpService } from '../smtp/smtp.service';
 import type { AuthUserRecord } from './consts/user.constants';
 import type { ConfirmEmailDto } from './dto/confirm-email.dto';
 import type { ConfirmPhoneDto } from './dto/confirm-phone.dto';
 import type { CreateUserDto, CreateUserSettings, OauthCreateUser } from './dto/create-user.dto';
 import type { RegisterResponseDto } from './dto/register-response.dto';
-import type { UserRepository } from './user.repository';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {

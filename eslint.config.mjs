@@ -49,13 +49,6 @@ export default defineConfig([
             '@typescript-eslint/no-duplicate-enum-values': 'off',
             '@typescript-eslint/no-unsafe-function-type': 'warn',
 
-            '@typescript-eslint/consistent-type-imports': [
-                'error',
-                {
-                    prefer: 'type-imports'
-                }
-            ],
-
             'prefer-promise-reject-errors': 'error',
             'prefer-const': ['error', { destructuring: 'all' }],
             curly: ['error', 'all'],

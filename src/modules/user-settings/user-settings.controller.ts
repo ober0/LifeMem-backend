@@ -7,7 +7,7 @@ import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { UserSettingsDto } from '../../common/types/user';
 import type { UserSettingsUpdateDto } from './dto/user-settings.dto';
-import type { UserSettingsService } from './user-settings.service';
+import { UserSettingsService } from './user-settings.service';
 
 @ApiTags('User settings')
 @UseGuards(JwtAuthGuardHttp({}))

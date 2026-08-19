@@ -9,7 +9,7 @@ import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
 import { translations } from '../../../common/translation/text-translations';
 import type { GoogleAuthDto, GoogleLinkDto } from '../dto/google-auth.dto';
 import { LoginResponseDto } from '../dto/tokens.dto';
-import type { AuthGoogleService } from '../services/auth-google.service';
+import { AuthGoogleService } from '../services/auth-google.service';
 
 @ApiTags('Auth Google')
 @Controller('auth/google')

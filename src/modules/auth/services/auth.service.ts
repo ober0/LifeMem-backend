@@ -12,12 +12,12 @@ import { appConfig, authConfig } from '../../../common/config/env';
 import { apiError } from '../../../common/helpers/errors';
 import { generateCode } from '../../../common/helpers/generate-code';
 import { translations } from '../../../common/translation/text-translations';
-import type { AuthLogService } from '../../auth-log/auth-log.service';
-import type { MobileSmsService } from '../../mobile-sms/mobile-sms.service';
+import { AuthLogService } from '../../auth-log/auth-log.service';
+import { MobileSmsService } from '../../mobile-sms/mobile-sms.service';
 import { NotificationMessage, NotificationType } from '../../notifications/const/messages';
-import type { NotificationsService } from '../../notifications/notifications.service';
-import type { SmtpService } from '../../smtp/smtp.service';
-import type { UserService } from '../../user/user.service';
+import { NotificationsService } from '../../notifications/notifications.service';
+import { SmtpService } from '../../smtp/smtp.service';
+import { UserService } from '../../user/user.service';
 import type { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
 import type { LoginDto } from '../dto/login.dto';
 import type {
@@ -27,7 +27,7 @@ import type {
     SaveTokenDto,
     TokenPayload
 } from '../dto/tokens.dto';
-import type { AuthRepository } from '../repo/auth.repository';
+import { AuthRepository } from '../repo/auth.repository';
 
 @Injectable()
 export class AuthService {

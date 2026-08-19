@@ -6,7 +6,7 @@ import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { LogsSearchResponseDto } from './dto/base.dto';
 import type { LogsSearchDto } from './dto/search.dto';
-import type { LogsService } from './logs.service';
+import { LogsService } from './logs.service';
 
 @Controller('logs')
 @ApiTags('Logs')

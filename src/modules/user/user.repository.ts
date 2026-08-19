@@ -3,7 +3,7 @@ import type { ConfirmCodeType, User } from '@prisma/client';
 
 import { appConstants } from '../../common/config/app.constants';
 import type { UserSettingsDto } from '../../common/types/user';
-import type { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import type { AuthUserRecord } from './consts/user.constants';
 import { authUserInclude } from './consts/user.constants';
 import type { OauthCreateUser } from './dto/create-user.dto';

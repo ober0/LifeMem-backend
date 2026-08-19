@@ -7,14 +7,14 @@ import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { apiError } from '../../common/helpers/errors';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { UserDto } from '../../common/types/user';
-import type { RoleService } from '../role/role.service';
+import { RoleService } from '../role/role.service';
 import { OAuthBindingDto } from './dto/bindings.dto';
 import type { ConfirmEmailDto } from './dto/confirm-email.dto';
 import type { ConfirmPhoneDto } from './dto/confirm-phone.dto';
 import type { CreateUserDto } from './dto/create-user.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
 import { SelfDto } from './dto/self.dto';
-import type { UserService } from './user.service';
+import { UserService } from './user.service';
 
 @ApiTags('User')
 @Controller('user')

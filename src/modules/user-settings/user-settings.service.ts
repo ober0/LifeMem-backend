@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { appConstants } from '../../common/config/app.constants';
 import type { UserSettingsDto } from '../../common/types/user';
 import type { UserSettingsUpdateDto } from './dto/user-settings.dto';
-import type { UserSettingsRepository } from './user-settings.repository';
+import { UserSettingsRepository } from './user-settings.repository';
 
 @Injectable()
 export class UserSettingsService {

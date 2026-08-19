@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { ConfirmCodeType } from '@prisma/client';
 
 import { appConstants } from '../../../common/config/app.constants';
-import type { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 import type { SaveTokenDto } from '../dto/tokens.dto';
 
 @Injectable()

@@ -4,7 +4,7 @@ import type { HttpMethod } from '@prisma/client';
 import type { NextFunction,Request, Response } from 'express';
 
 import type { LogsCreateDto } from '../../modules/logs/dto/base.dto';
-import type { LogsService } from '../../modules/logs/logs.service';
+import { LogsService } from '../../modules/logs/logs.service';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
