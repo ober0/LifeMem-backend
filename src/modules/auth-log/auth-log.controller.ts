@@ -1,12 +1,13 @@
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Actor } from '../../common/classes/actor';
-import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
+
+import type { Actor } from '../../common/classes/actor';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
+import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
+import type { AuthLogService } from './auth-log.service';
 import { AuthLogSearchResponseDto } from './dto/base.dto';
-import { AuthLogSearchDto } from './dto/search.dto';
-import { AuthLogService } from './auth-log.service';
+import type { AuthLogSearchDto } from './dto/search.dto';
 
 @ApiTags('Auth logs')
 @ApiBearerAuth()

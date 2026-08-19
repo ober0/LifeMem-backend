@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 
 export function CommonSearchResponseDto<T extends new(...args: any[]) => any>(ItemClass: T) {
     class SearchResponseDto {

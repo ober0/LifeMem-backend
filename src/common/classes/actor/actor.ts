@@ -1,10 +1,11 @@
-import { DeviceDto } from '../../types/user/device.dto';
-import { PermissionDto } from '../../types/user/permission.dto';
-import { UserDto } from '../../../modules/user/dto/user.dto';
-import { UserSettingsDto } from '../../../modules/user-settings/dto/user-settings.dto';
-import { LangEnum } from '../../types/lang.enum';
-import { Request } from 'express';
+import type { Request } from 'express';
+
+import type { UserDto } from '../../../modules/user/dto/user.dto';
+import type { UserSettingsDto } from '../../../modules/user-settings/dto/user-settings.dto';
 import { getLanguageFromRequest } from '../../helpers/get-language';
+import { LangEnum } from '../../types/common/lang.enum';
+import type { DeviceDto } from '../../types/user';
+import type { PermissionDto } from '../../types/user';
 
 export class Actor {
     private _user: UserDto | null = null;

@@ -1,16 +1,21 @@
-import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
-import { NestExpressApplication } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import cookieParser from 'cookie-parser';
 import basicAuth from 'express-basic-auth';
-import { AppModule } from './modules/app/app.module';
-import { ValidationException } from './common/translation/validation-exception';
+
+import type { AppConfig } from './common/config/env';
 import { ErrorsTranslateFilter } from './common/translation/errors-translate.filter';
+import { ValidationException } from './common/translation/validation-exception';
+import { AppModule } from './modules/app/app.module';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
+    const configService = app.get(ConfigService);
+    const appConfig = configService.getOrThrow<AppConfig>('app');
 
     app.set('trust proxy', true);
     app.setGlobalPrefix('api', {
@@ -37,17 +42,17 @@ async function bootstrap() {
 
     app.enableShutdownHooks();
 
-    if (process.env.NODE_ENV === 'production') {
+    if (appConfig.isProduction) {
         app.use(
             ['/docs'],
             basicAuth({
-                users: { [process.env.SWAGGER_USER!]: process.env.SWAGGER_PASS! },
+                users: { [appConfig.swaggerUser]: appConfig.swaggerPass },
                 challenge: true
             })
         );
     }
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (!appConfig.isProduction) {
         app.enableCors({
             origin: true,
             credentials: true
@@ -58,8 +63,6 @@ async function bootstrap() {
             credentials: true
         });
     }
-
-    const port = process.env.PORT || 3000;
 
     const config = new DocumentBuilder()
         .setTitle(`Api документация`)
@@ -101,7 +104,7 @@ async function bootstrap() {
         })
     );
 
-    await app.listen(port);
+    await app.listen(appConfig.port);
 }
 
 bootstrap();

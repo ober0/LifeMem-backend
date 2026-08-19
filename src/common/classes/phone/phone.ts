@@ -1,6 +1,8 @@
-import { CountryCode, parsePhoneNumberFromString } from 'libphonenumber-js';
+import type { CountryCode} from 'libphonenumber-js';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
+
 import { PHONE_BLACKLIST, PHONE_DEFAULT_COUNTRY, PHONE_WHITELIST } from '../../config/phone.config';
-import { PhoneData } from './phone.type';
+import type { PhoneData } from './phone.type';
 
 export class Phone {
     private readonly _data: PhoneData;

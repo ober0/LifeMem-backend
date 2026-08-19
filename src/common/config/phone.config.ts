@@ -1,4 +1,4 @@
-import { CountryCode } from 'libphonenumber-js';
+import type { CountryCode } from 'libphonenumber-js';
 
 export const PHONE_DEFAULT_COUNTRY: CountryCode = 'RU';
 

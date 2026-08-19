@@ -1,9 +1,10 @@
-import { ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { JsonValue } from '@prisma/client/runtime/wasm-compiler-edge';
-import { ServiceSettingsJsonDto } from './settings-json.dto';
+import type { JsonValue } from '@prisma/client/runtime/wasm-compiler-edge';
 import { Type } from 'class-transformer';
-import { BaseEntity } from '../../../common/types/common-entity.dto';
+import { ValidateNested } from 'class-validator';
+
+import { BaseEntity } from '../../../common/types/common/common-entity.dto';
+import { ServiceSettingsJsonDto } from './settings-json.dto';
 
 export class ServiceSettingsDto extends BaseEntity {
     @ApiProperty({ type: ServiceSettingsJsonDto })

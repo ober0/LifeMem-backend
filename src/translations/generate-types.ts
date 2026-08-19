@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { LangEnum } from '../common/types/lang.enum';
+
+import { LangEnum } from '../common/types/common/lang.enum';
 
 const LOCALES_DIR = path.resolve('src/translations');
 const OUTPUT_FILE = path.resolve('src/translations/generated.d.ts');

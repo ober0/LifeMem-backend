@@ -1,4 +1,4 @@
-import { CountryCode } from 'libphonenumber-js';
+import type { CountryCode } from 'libphonenumber-js';
 
 export type PhoneData = {
     /** Единый формат без +, например 79261483460 */

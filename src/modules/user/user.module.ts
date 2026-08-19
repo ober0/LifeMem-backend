@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+
 import { MobileSmsModule } from '../mobile-sms/mobile-sms.module';
 import { RoleModule } from '../role/role.module';
 import { SmtpModule } from '../smtp/smtp.module';

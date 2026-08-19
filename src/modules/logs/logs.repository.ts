@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
+
 import { mapPagination } from '../../common/helpers/map.pagination';
 import { mapSearch } from '../../common/helpers/map.search';
 import { mapSort } from '../../common/helpers/map.sort';
-import { PrismaService } from '../prisma/prisma.service';
-import { LogsCreateDto } from './dto/base.dto';
-import { LogsFilterDto, LogsSearchDto } from './dto/search.dto';
+import type { PrismaService } from '../prisma/prisma.service';
+import type { LogsCreateDto } from './dto/base.dto';
+import type { LogsSearchDto } from './dto/search.dto';
+import { LogsFilterDto } from './dto/search.dto';
 
 @Injectable()
 export class LogsRepository {

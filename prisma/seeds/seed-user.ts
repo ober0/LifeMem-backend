@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const ADMIN_ROLE_NAME = 'admin';

@@ -1,9 +1,11 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
-import Redis from 'ioredis';
-import { PrismaService } from '../prisma/prisma.service';
+import type Redis from 'ioredis';
+
+import type { PrismaService } from '../prisma/prisma.service';
 import { REDIS_CLIENT } from '../redis/redis.constants';
-import { S3Service } from '../s3/s3.service';
-import { HealthServiceName, HealthServiceStatusDto, HealthStatus } from './dto/health-status.dto';
+import type { S3Service } from '../s3/s3.service';
+import type { HealthServiceStatusDto} from './dto/health-status.dto';
+import { HealthServiceName, HealthStatus } from './dto/health-status.dto';
 
 @Injectable()
 export class HealthService {

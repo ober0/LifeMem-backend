@@ -1,11 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { readFileSync } from 'fs';
-import { join } from 'path';
 import * as nodemailer from 'nodemailer';
-import * as process from 'node:process';
-import { LangEnum } from '../../common/types/lang.enum';
+import { join } from 'path';
+
+import type { SmtpConfig} from '../../common/config/env';
+import { smtpConfig } from '../../common/config/env';
+import { LangEnum } from '../../common/types/common/lang.enum';
 import { CODE_EMAIL_TRANSLATIONS } from './config/code-email.translations';
-import { SendCodeEmailParams } from './dto/send-code-email.dto';
+import type { SendCodeEmailParams } from './dto/send-code-email.dto';
 
 @Injectable()
 export class SmtpService {
@@ -13,17 +15,12 @@ export class SmtpService {
     private _transporter: nodemailer.Transporter;
     private readonly codeTemplate: string;
 
-    constructor() {
+    constructor(@Inject(smtpConfig.KEY) private readonly smtp: SmtpConfig) {
         this.createTransporter();
         this.codeTemplate = this.loadTemplate('code.html');
     }
 
-    async sendCodeEmail({
-        to,
-        code,
-        lang = LangEnum.Ru,
-        expiresMinutes = 5
-    }: SendCodeEmailParams): Promise<void> {
+    async sendCodeEmail({ to, code, lang = LangEnum.Ru, expiresMinutes = 5 }: SendCodeEmailParams): Promise<void> {
         const t = CODE_EMAIL_TRANSLATIONS[lang];
         const expires = String(expiresMinutes);
 
@@ -42,7 +39,7 @@ export class SmtpService {
             .replaceAll('{{EXPIRES_MINUTES}}', expires);
 
         await this._transporter.sendMail({
-            from: process.env.SMTP_USER,
+            from: this.smtp.user,
             to,
             subject: t.subject,
             html,
@@ -54,12 +51,12 @@ export class SmtpService {
 
     private createTransporter() {
         this._transporter = nodemailer.createTransport({
-            host: process.env.SMTP_SERVICE_HOST,
-            port: Number(process.env.SMTP_PORT),
+            host: this.smtp.host,
+            port: this.smtp.port,
             secure: true,
             auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
+                user: this.smtp.user,
+                pass: this.smtp.pass
             }
         });
     }

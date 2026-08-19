@@ -49,6 +49,7 @@
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.1",
         "cookie-parser": "^1.4.7",
+        "eslint-plugin-simple-import-sort": "^14.0.0",
         "express": "^5.1.0",
         "express-basic-auth": "^1.2.1",
         "google-auth-library": "^11.0.2",

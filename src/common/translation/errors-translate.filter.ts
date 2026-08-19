@@ -1,7 +1,9 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { ArgumentsHost, ExceptionFilter} from '@nestjs/common';
+import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import type { Request, Response } from 'express';
+
 import { DEFAULT_ERRORS_LANGUAGE } from '../config/contains';
-import { ErrorVariables } from '../errors';
+import type { ErrorVariables } from '../helpers/errors';
 import { loadErrorTranslations } from './translation.loader';
 
 type ErrorItem = {
@@ -30,8 +32,6 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
                 return;
             }
         }
-
-        console.log(request.actor?.requestLang);
 
         const lang = request.actor?.requestLang ?? DEFAULT_ERRORS_LANGUAGE;
         const rawMessage = this.extractMessage(exception);

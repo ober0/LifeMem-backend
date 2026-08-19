@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Actor } from '../../common/classes/actor';
+
+import type { Actor } from '../../common/classes/actor';
 import { Permission } from '../../common/config/role-permission';
-import { apiError } from '../../common/errors';
-import { AuthLogSearchResponseDto } from './dto/base.dto';
-import { AuthLogSearchDto } from './dto/search.dto';
-import { AuthLogRepository } from './auth-log.repository';
-import { AuthLogCreate } from './dto/create';
+import { apiError } from '../../common/helpers/errors';
+import type { AuthLogRepository } from './auth-log.repository';
+import type { AuthLogSearchResponseDto } from './dto/base.dto';
+import type { AuthLogCreate } from './dto/create';
+import type { AuthLogSearchDto } from './dto/search.dto';
 
 @Injectable()
 export class AuthLogService {

@@ -8,7 +8,8 @@ import {
     ServiceUnavailableException,
     UnauthorizedException
 } from '@nestjs/common';
-import { ErrorsTranslationKey } from '../translations/generated';
+
+import type { ErrorsTranslationKey } from '../../translations/generated';
 
 export type ErrorVariables = Record<string, string | number>;
 

@@ -1,4 +1,5 @@
-import { Request } from 'express';
+import type { Request } from 'express';
+
 import { DeviceType } from '../types/user';
 
 export function getDeviceType(req: Request): DeviceType {

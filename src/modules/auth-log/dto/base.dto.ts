@@ -2,7 +2,8 @@ import { ApiProperty, PickType } from '@nestjs/swagger';
 import { AuthType } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
-import { BaseEntity } from '../../../common/types/common-entity.dto';
+
+import { BaseEntity } from '../../../common/types/common/common-entity.dto';
 import { CommonSearchResponseDto } from '../../../common/types/search/search-response.dto';
 import { UserDto } from '../../../common/types/user';
 

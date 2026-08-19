@@ -1,8 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, mixin, Type } from '@nestjs/common';
-import { Request } from 'express';
-import { UserService } from '../../modules/user/user.service';
-import { PermissionKey } from '../config/role-permission';
-import { apiError } from '../errors';
+import type { CanActivate, ExecutionContext, Type } from '@nestjs/common';
+import { Injectable, mixin } from '@nestjs/common';
+import type { Request } from 'express';
+
+import type { UserService } from '../../modules/user/user.service';
+import type { PermissionKey } from '../config/role-permission';
+import { apiError } from '../helpers/errors';
 import { getDeviceType } from '../helpers/get-device-type';
 import { DeviceType } from '../types/user';
 

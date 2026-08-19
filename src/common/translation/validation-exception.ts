@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { ValidationError } from 'class-validator';
+import type { ValidationError } from 'class-validator';
 
 export function flattenValidationErrors(errors: ValidationError[], parentPath = '') {
     return errors.flatMap((error) => {

@@ -1,60 +1,49 @@
-import { Injectable } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
+import { Inject, Injectable } from '@nestjs/common';
 import { AuthType, ConfirmCodeType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { createHmac } from 'crypto';
+import * as jwt from 'jsonwebtoken';
+import type { Actor } from 'src/common/classes/actor';
+
 import { Phone } from '../../../common/classes/phone';
-import { DEFAULT_MESSAGES_LANGUAGE, EMAIL_CODE_LIFETIME_MS } from '../../../common/config/contains';
-import { apiError } from '../../../common/errors';
+import { EMAIL_CODE_LIFETIME_MS } from '../../../common/config/contains';
+import type { AppConfig,AuthConfig} from '../../../common/config/env';
+import { appConfig, authConfig } from '../../../common/config/env';
+import { apiError } from '../../../common/helpers/errors';
 import { generateCode } from '../../../common/helpers/generate-code';
 import { translations } from '../../../common/translation/text-translations';
-import { AuthLogService } from '../../auth-log/auth-log.service';
-import { MobileSmsService } from '../../mobile-sms/mobile-sms.service';
+import type { AuthLogService } from '../../auth-log/auth-log.service';
+import type { MobileSmsService } from '../../mobile-sms/mobile-sms.service';
 import { NotificationMessage, NotificationType } from '../../notifications/const/messages';
-import { NotificationsService } from '../../notifications/notifications.service';
-import { SmtpService } from '../../smtp/smtp.service';
-import { UserService } from '../../user/user.service';
-import { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
-import { LoginDto } from '../dto/login.dto';
-import {
+import type { NotificationsService } from '../../notifications/notifications.service';
+import type { SmtpService } from '../../smtp/smtp.service';
+import type { UserService } from '../../user/user.service';
+import type { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
+import type { LoginDto } from '../dto/login.dto';
+import type {
     GeneratedTokens,
     LoginFullResponseDto,
     LoginPhoneCodeResponseDto,
     SaveTokenDto,
     TokenPayload
 } from '../dto/tokens.dto';
-import { AuthRepository } from '../repo/auth.repository';
-import { Actor } from 'src/common/classes/actor';
+import type { AuthRepository } from '../repo/auth.repository';
 
 @Injectable()
 export class AuthService {
-    private readonly saltRounds = process.env.SALT_ROUNDS;
-
     constructor(
+        @Inject(authConfig.KEY) private readonly auth: AuthConfig,
+        @Inject(appConfig.KEY) private readonly app: AppConfig,
         private readonly userService: UserService,
         private readonly authRepository: AuthRepository,
         private readonly authLogService: AuthLogService,
         private readonly mobileSmsService: MobileSmsService,
         private readonly notificationService: NotificationsService,
         private readonly smtpService: SmtpService
-    ) {
-        if (!this.saltRounds) {
-            throw Error('Не указана SALT_ROUNDS в енвах');
-        }
-    }
-
-    onModuleInit() {
-        if (!process.env.JWT_REFRESH_SECRET) {
-            throw new Error('Не указан JWT_REFRESH_SECRET');
-        }
-
-        if (!process.env.JWT_ACCESS_SECRET) {
-            throw new Error('Не указан JWT_ACCESS_SECRET');
-        }
-    }
+    ) {}
 
     private hashRefreshToken(refreshToken: string): string {
-        return createHmac('sha256', process.env.JWT_REFRESH_SECRET!).update(refreshToken).digest('hex');
+        return createHmac('sha256', this.auth.jwtRefreshSecret).update(refreshToken).digest('hex');
     }
 
     async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
@@ -99,17 +88,6 @@ export class AuthService {
                 });
             });
 
-            // FIXME
-            if (process.env.NODE_ENV === 'production') {
-                return {
-                    message: translations.byTextKey({
-                        key: 'common.codeSentEmail',
-                        lang: actor.requestLang,
-                        variables: { code }
-                    }),
-                    alert: true
-                };
-            }
             return {
                 message: translations.byTextKey({
                     key: 'common.codeSentEmail',
@@ -146,7 +124,7 @@ export class AuthService {
         return { accessToken, refreshToken, user: restUser };
     }
 
-    async sendPhoneCode(phone: string): Promise<LoginPhoneCodeResponseDto> {
+    async sendPhoneCode(phone: string, lang: Actor['requestLang']): Promise<LoginPhoneCodeResponseDto> {
         const phoneObj = Phone.tryCreate(phone);
 
         if (!phoneObj) {
@@ -169,27 +147,16 @@ export class AuthService {
             userId: user.id
         });
 
-        if (process.env.NODE_ENV === 'production') {
+        if (this.app.isProduction) {
             setImmediate(() => {
                 void this.mobileSmsService.sendMessage(phoneObj, code);
             });
         }
 
-        if (process.env.NODE_ENV === 'production') {
-            // TODO убрать потом
-            return {
-                message: translations.byTextKey({
-                    key: 'common.codeSentPhone',
-                    lang: DEFAULT_MESSAGES_LANGUAGE,
-                    variables: { code }
-                }),
-                alert: true
-            };
-        }
         return {
             message: translations.byTextKey({
                 key: 'common.codeSentPhone',
-                lang: DEFAULT_MESSAGES_LANGUAGE,
+                lang,
                 variables: { code }
             }),
             alert: true
@@ -250,7 +217,7 @@ export class AuthService {
         }
 
         if (dto.phone) {
-            return this.sendPhoneCode(dto.phone);
+            return this.sendPhoneCode(dto.phone, actor.requestLang);
         }
 
         if (dto.email && dto.password) {
@@ -282,7 +249,7 @@ export class AuthService {
 
         let decodedJwt: TokenPayload;
         try {
-            decodedJwt = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as TokenPayload;
+            decodedJwt = jwt.verify(refreshToken, this.auth.jwtRefreshSecret) as TokenPayload;
         } catch {
             throw apiError.unauthorized('auth.invalid_token');
         }
@@ -304,11 +271,11 @@ export class AuthService {
     generateTokens(userId: string): GeneratedTokens {
         const payload: TokenPayload = { id: userId };
 
-        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, {
+        const accessToken = jwt.sign(payload, this.auth.jwtAccessSecret, {
             expiresIn: '1h'
         }) as string;
 
-        const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, {
+        const refreshToken = jwt.sign(payload, this.auth.jwtRefreshSecret, {
             expiresIn: '7d'
         }) as string;
 

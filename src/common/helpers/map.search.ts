@@ -1,5 +1,5 @@
-import { isContains } from './contains.decorator';
 import { DateMinMaxFilterDto, NumberMinMaxFilterDto } from '../types/search/min-max.filter.dto';
+import { isContains } from './contains.decorator';
 
 // Обходит дто, делает из него фильтры для призмы.
 // Массивы айдишников должны иметь название как в бд с окончанием Ids,

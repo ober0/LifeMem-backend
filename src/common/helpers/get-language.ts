@@ -1,5 +1,6 @@
-import { Request } from 'express';
-import { LangEnum } from '../types/lang.enum';
+import type { Request } from 'express';
+
+import { LangEnum } from '../types/common/lang.enum';
 
 const acceptedValues: string[] = Object.values(LangEnum);
 

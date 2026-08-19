@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
+
 import { BASE_SERVICE_SETTINGS } from '../../common/config/base-service-settings.const';
-import { apiError } from '../../common/errors';
-import { ServiceSettingsDto } from './dto/base.dto';
-import { ServiceSettingsJsonDto } from './dto/settings-json.dto';
-import { ServiceSettingsUpdateDto } from './dto/update.dto';
-import { ServiceSettingsRepository } from './service-settings.repository';
+import { apiError } from '../../common/helpers/errors';
+import type { ServiceSettingsDto } from './dto/base.dto';
+import type { ServiceSettingsJsonDto } from './dto/settings-json.dto';
+import type { ServiceSettingsUpdateDto } from './dto/update.dto';
+import type { ServiceSettingsRepository } from './service-settings.repository';
 
 @Injectable()
 export class ServiceSettingsService {

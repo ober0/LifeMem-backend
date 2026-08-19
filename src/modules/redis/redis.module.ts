@@ -1,17 +1,21 @@
-import { Module, Global } from '@nestjs/common';
+import { Global,Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
-import { RedisService } from './redis.service';
+
+import type { RedisConfig } from '../../common/config/env';
 import { REDIS_CLIENT } from './redis.constants';
+import { RedisService } from './redis.service';
 
 @Global()
 @Module({
     providers: [
         {
             provide: REDIS_CLIENT,
-            useFactory: () => {
-                const redisUrl = process.env.REDIS_URL ?? 'redis://127.0.0.1:6379';
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => {
+                const redis = configService.getOrThrow<RedisConfig>('redis');
 
-                return new Redis(redisUrl, {
+                return new Redis(redis.url, {
                     maxRetriesPerRequest: 1,
                     connectTimeout: 1000,
                     enableOfflineQueue: false,

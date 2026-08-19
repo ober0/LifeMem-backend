@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional, PartialType, PickType } from '@nestjs/swagger';
-import { OAuthProvider } from '@prisma/client';
+import type { OAuthProvider } from '@prisma/client';
+import { Type } from 'class-transformer';
 import {
     IsEmail,
     IsOptional,
@@ -9,8 +10,8 @@ import {
     ValidateIf,
     ValidateNested
 } from 'class-validator';
+
 import { UserSettingsDto } from '../../user-settings/dto/user-settings.dto';
-import { Type } from 'class-transformer';
 
 export class CreateUserSettings extends PartialType(PickType(UserSettingsDto, ['lang'])) {}
 

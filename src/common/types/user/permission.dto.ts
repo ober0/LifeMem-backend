@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsUUID } from 'class-validator';
-import { BaseEntity } from '../common-entity.dto';
+
+import { BaseEntity } from '../common/common-entity.dto';
 
 export class PermissionDto extends BaseEntity {
     @ApiProperty({ example: 'users.read' })

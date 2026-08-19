@@ -1,6 +1,10 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import type { OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import appleSignin from 'apple-signin-auth';
-import { apiError } from '../../common/errors';
+
+import type { OauthConfig} from '../../common/config/env';
+import { oauthConfig } from '../../common/config/env';
+import { apiError } from '../../common/helpers/errors';
 
 export type AppleTokenPayload = {
     sub: string;
@@ -13,13 +17,10 @@ export type AppleTokenPayload = {
 export class AppleApiService implements OnModuleInit {
     private clientId!: string;
 
+    constructor(@Inject(oauthConfig.KEY) private readonly oauth: OauthConfig) {}
+
     onModuleInit() {
-        // FIXME
-        const clientId = process.env.APPLE_CLIENT_ID || 'test';
-        if (!clientId) {
-            throw new Error('Не указан APPLE_CLIENT_ID');
-        }
-        this.clientId = clientId;
+        this.clientId = this.oauth.appleClientId;
     }
 
     async verifyIdToken(idToken: string): Promise<AppleTokenPayload> {

@@ -1,4 +1,4 @@
-import { LangEnum } from '../../../common/types/lang.enum';
+import type { LangEnum } from '../../../common/types/common/lang.enum';
 
 export type SendCodeEmailParams = {
     to: string;

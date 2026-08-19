@@ -1,14 +1,15 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import express from 'express';
-import { Actor } from '../../../common/classes/actor';
-import { translations } from '../../../common/translation/text-translations';
-import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
-import { GoogleAuthDto, GoogleLinkDto } from '../dto/google-auth.dto';
-import { LoginResponseDto } from '../dto/tokens.dto';
-import { JwtAuthGuardHttp } from '../../../common/guards/auth.guard';
-import { AuthGoogleService } from '../services/auth-google.service';
+import type express from 'express';
+
+import type { Actor } from '../../../common/classes/actor';
 import { CurrentActor } from '../../../common/decorators/current-actor.decorator';
+import { JwtAuthGuardHttp } from '../../../common/guards/auth.guard';
+import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
+import { translations } from '../../../common/translation/text-translations';
+import type { GoogleAuthDto, GoogleLinkDto } from '../dto/google-auth.dto';
+import { LoginResponseDto } from '../dto/tokens.dto';
+import type { AuthGoogleService } from '../services/auth-google.service';
 
 @ApiTags('Auth Google')
 @Controller('auth/google')

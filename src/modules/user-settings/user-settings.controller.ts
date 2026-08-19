@@ -1,12 +1,13 @@
 import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Actor } from '../../common/classes/actor';
-import { UserSettingsDto } from '../../common/types/user';
+
+import type { Actor } from '../../common/classes/actor';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
-import { UserSettingsService } from './user-settings.service';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
-import { UserSettingsUpdateDto } from './dto/user-settings.dto';
+import { UserSettingsDto } from '../../common/types/user';
+import type { UserSettingsUpdateDto } from './dto/user-settings.dto';
+import type { UserSettingsService } from './user-settings.service';
 
 @ApiTags('User settings')
 @UseGuards(JwtAuthGuardHttp({}))

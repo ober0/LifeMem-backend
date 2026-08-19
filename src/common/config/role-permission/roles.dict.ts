@@ -1,4 +1,5 @@
-import { ALL_PERMISSION_KEYS, PermissionKey } from './permissions.dict';
+import type { PermissionKey } from './permissions.dict';
+import { ALL_PERMISSION_KEYS } from './permissions.dict';
 
 export type RoleCatalogItem = {
     name: string;

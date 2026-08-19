@@ -1,5 +1,5 @@
-import { LangEnum } from '../../../common/types/lang.enum';
 import { translations } from '../../../common/translation/text-translations';
+import { LangEnum } from '../../../common/types/common/lang.enum';
 
 export type CodeEmailTranslation = {
     subject: string;

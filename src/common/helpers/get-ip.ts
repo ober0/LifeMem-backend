@@ -1,4 +1,4 @@
-import { Request } from 'express';
+import type { Request } from 'express';
 
 export function getRequestIp(request: Request): string {
     const forwardedFor = request.headers['x-forwarded-for'];

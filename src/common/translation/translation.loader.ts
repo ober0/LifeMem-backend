@@ -1,10 +1,11 @@
-import { join } from 'path';
 import { readdirSync, readFileSync } from 'fs';
+import { join } from 'path';
+
+import { appConfig } from '../config/env';
 
 export function getTranslationsPath(): string {
-    return process.env.NODE_ENV === 'production'
-        ? join(process.cwd(), 'dist', 'translations')
-        : join(process.cwd(), 'src', 'translations');
+    const app = appConfig();
+    return app.isProduction ? join(process.cwd(), 'dist', 'translations') : join(process.cwd(), 'src', 'translations');
 }
 
 export function loadErrorTranslations(): Record<string, unknown> {

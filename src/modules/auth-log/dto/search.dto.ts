@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AuthType } from '@prisma/client';
 import { IsEnum, IsOptional, IsUUID } from 'class-validator';
+
 import { Contains } from '../../../common/helpers/contains.decorator';
 import { GenerateSearchDto } from '../../../common/types/search/base-search.dto';
 import { SortTypes } from '../../../common/types/search/sort-types.dto';

@@ -1,6 +1,7 @@
-import { BaseEntity } from '../../../common/types/common-entity.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+
+import { BaseEntity } from '../../../common/types/common/common-entity.dto';
 
 export enum FileType {
     IMAGE = 'IMAGE',

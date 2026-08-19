@@ -1,6 +1,6 @@
-import { IsOptional, IsNumber } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+import { IsNumber,IsOptional } from 'class-validator';
 
 export class NumberMinMaxFilterDto {
     @ApiPropertyOptional({ type: Number })

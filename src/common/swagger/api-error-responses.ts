@@ -1,6 +1,7 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { ErrorResponseDto } from '../dto/error-response.dto';
+
+import { ErrorResponseDto } from '../types/common/error-response.dto';
 
 const DEFAULT_STATUSES = [HttpStatus.BAD_REQUEST, HttpStatus.UNAUTHORIZED] as const;
 

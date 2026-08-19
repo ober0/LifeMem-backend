@@ -1,6 +1,10 @@
-import { Injectable, OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import type { OnModuleInit} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { OAuth2Client } from 'google-auth-library';
-import { apiError } from '../../common/errors';
+
+import type { OauthConfig} from '../../common/config/env';
+import { oauthConfig } from '../../common/config/env';
+import { apiError } from '../../common/helpers/errors';
 
 export type GoogleTokenPayload = {
     sub: string;
@@ -15,14 +19,11 @@ export class GoogleApiService implements OnModuleInit {
     private client!: OAuth2Client;
     private clientId!: string;
 
+    constructor(@Inject(oauthConfig.KEY) private readonly oauth: OauthConfig) {}
+
     onModuleInit() {
-        // FIXME
-        const googleClientId = process.env.GOOGLE_CLIENT_ID || 'test';
-        if (!googleClientId) {
-            throw new Error('Не указан GOOGLE_CLIENT_ID');
-        }
-        this.clientId = googleClientId;
-        this.client = new OAuth2Client(googleClientId);
+        this.clientId = this.oauth.googleClientId;
+        this.client = new OAuth2Client(this.clientId);
     }
 
     async verifyIdToken(idToken: string): Promise<GoogleTokenPayload> {

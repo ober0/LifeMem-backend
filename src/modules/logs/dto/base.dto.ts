@@ -1,10 +1,11 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
+import type { HttpMethod } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
-import { UserDto } from '../../../common/types/user';
-import { BaseEntity } from '../../../common/types/common-entity.dto';
+
+import { BaseEntity } from '../../../common/types/common/common-entity.dto';
 import { CommonSearchResponseDto } from '../../../common/types/search/search-response.dto';
-import { HttpMethod } from '@prisma/client';
+import { UserDto } from '../../../common/types/user';
 
 class UserLogsDto extends PickType(UserDto, ['id', 'nickname', 'phoneNumber', 'email']) {}
 

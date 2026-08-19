@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
+
 import { BASE_USER_SETTINGS } from '../../common/config/base-user-settings.const';
-import { UserSettingsDto } from '../../common/types/user';
-import { UserSettingsRepository } from './user-settings.repository';
-import { UserSettingsUpdateDto } from './dto/user-settings.dto';
+import type { UserSettingsDto } from '../../common/types/user';
+import type { UserSettingsUpdateDto } from './dto/user-settings.dto';
+import type { UserSettingsRepository } from './user-settings.repository';
 
 @Injectable()
 export class UserSettingsService {

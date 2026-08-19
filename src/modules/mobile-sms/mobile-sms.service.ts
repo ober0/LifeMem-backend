@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Phone } from '../../common/classes/phone';
+
+import type { Phone } from '../../common/classes/phone';
 
 @Injectable()
 export class MobileSmsService {

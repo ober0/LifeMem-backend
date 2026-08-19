@@ -1,7 +1,8 @@
-import { LangEnum } from '../types/lang.enum';
-import { loadTextTranslations } from './translation.loader';
 import { Logger } from '@nestjs/common';
-import { TextsTranslationKey } from '../../translations/generated';
+
+import type { TextsTranslationKey } from '../../translations/generated';
+import { LangEnum } from '../types/common/lang.enum';
+import { loadTextTranslations } from './translation.loader';
 
 type TextEntry = Record<LangEnum, string>;
 

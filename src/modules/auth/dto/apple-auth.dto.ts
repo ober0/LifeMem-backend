@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, ValidateNested } from 'class-validator';
-import { OAuthTokenDto } from './oauth.dto';
 import { Type } from 'class-transformer';
+import { IsOptional, IsString, ValidateNested } from 'class-validator';
+
 import { CreateUserSettings } from '../../user/dto/create-user.dto';
+import { OAuthTokenDto } from './oauth.dto';
 
 export class AppleAuthDto extends OAuthTokenDto {
     @ApiProperty({ required: true })

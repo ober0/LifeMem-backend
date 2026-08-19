@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ValidateNested, IsObject, IsOptional, IsString } from 'class-validator';
-
 import { Type } from 'class-transformer';
-import { PaginationDto } from '../pagination-dto';
+import { IsObject, IsOptional, IsString,ValidateNested } from 'class-validator';
+
+import { PaginationDto } from '../common/pagination-dto';
 
 export function GenerateSearchDto<T extends object, I extends object>(
     FilterClass: new () => T,

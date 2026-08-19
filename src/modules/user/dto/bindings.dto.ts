@@ -1,6 +1,7 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { OAuthProvider } from '@prisma/client';
-import { BaseEntity } from '../../../common/types/common-entity.dto';
+
+import { BaseEntity } from '../../../common/types/common/common-entity.dto';
 
 export class OAuthBindingDto extends OmitType(BaseEntity, ['id']) {
     @ApiProperty({ enum: OAuthProvider })

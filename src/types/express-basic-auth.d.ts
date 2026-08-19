@@ -1,5 +1,5 @@
 declare module 'express-basic-auth' {
-    import { RequestHandler } from 'express';
+    import type { RequestHandler } from 'express';
 
     interface BasicAuthOptions {
         users: Record<string, string>;

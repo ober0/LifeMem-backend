@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ConfirmCodeType } from '@prisma/client';
+import type { ConfirmCodeType } from '@prisma/client';
+
 import { MOBILE_CODE_LIFETIME_MS } from '../../../common/config/contains';
-import { PrismaService } from '../../prisma/prisma.service';
-import { SaveTokenDto } from '../dto/tokens.dto';
+import type { PrismaService } from '../../prisma/prisma.service';
+import type { SaveTokenDto } from '../dto/tokens.dto';
 
 @Injectable()
 export class AuthRepository {
@@ -37,23 +38,6 @@ export class AuthRepository {
     async findUserToken(userId: string) {
         return this.prisma.refreshToken.findFirst({
             where: { userId }
-        });
-    }
-
-    async deleteAllConfirmationCodes(type: ConfirmCodeType, userId: string) {
-        return this.prisma.confirmCode.deleteMany({
-            where: { userId, type }
-        });
-    }
-
-    async findValidConfirmationCode(userId: string, type: ConfirmCodeType, code: number) {
-        return this.prisma.confirmCode.findFirst({
-            where: {
-                userId,
-                type,
-                code,
-                expiresAt: { gt: new Date() }
-            }
         });
     }
 

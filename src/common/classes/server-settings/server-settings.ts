@@ -1,5 +1,5 @@
+import type { ServiceSettingsJsonDto } from '../../../modules/service-settings/dto/settings-json.dto';
 import { BASE_SERVICE_SETTINGS } from '../../config/base-service-settings.const';
-import { ServiceSettingsJsonDto } from '../../../modules/service-settings/dto/settings-json.dto';
 
 export class ServerSettings {
     private _json: ServiceSettingsJsonDto;

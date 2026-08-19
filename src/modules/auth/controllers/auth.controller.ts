@@ -1,21 +1,23 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
 import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiTags, getSchemaPath } from '@nestjs/swagger';
-import express from 'express';
-import { apiError } from '../../../common/errors';
+import type express from 'express';
+
+import { apiError } from '../../../common/helpers/errors';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
 import { DeviceType } from '../../../common/types/user';
-import { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
-import { LoginDto } from '../dto/login.dto';
+import type { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
+import type { LoginDto } from '../dto/login.dto';
+import type {
+    LoginTokensResult,
+    OptionalRefreshTokenDto} from '../dto/tokens.dto';
 import {
     AccessTokenDto,
     GeneratedTokens,
     LoginPhoneCodeResponseDto,
     LoginResponseDto,
-    LoginTokensResult,
-    OptionalRefreshTokenDto,
     WebLoginResponseDto
 } from '../dto/tokens.dto';
-import { AuthService } from '../services/auth.service';
+import type { AuthService } from '../services/auth.service';
 
 @ApiTags('Auth')
 @ApiExtraModels(LoginResponseDto, LoginPhoneCodeResponseDto, GeneratedTokens, AccessTokenDto)

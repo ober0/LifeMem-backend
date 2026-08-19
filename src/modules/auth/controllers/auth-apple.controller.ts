@@ -1,14 +1,15 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import express from 'express';
-import { Actor } from '../../../common/classes/actor';
-import { translations } from '../../../common/translation/text-translations';
-import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
-import { AppleAuthDto, AppleLinkAuthDto } from '../dto/apple-auth.dto';
-import { LoginResponseDto } from '../dto/tokens.dto';
-import { JwtAuthGuardHttp } from '../../../common/guards/auth.guard';
-import { AuthAppleService } from '../services/auth-apple.service';
+import type express from 'express';
+
+import type { Actor } from '../../../common/classes/actor';
 import { CurrentActor } from '../../../common/decorators/current-actor.decorator';
+import { JwtAuthGuardHttp } from '../../../common/guards/auth.guard';
+import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
+import { translations } from '../../../common/translation/text-translations';
+import type { AppleAuthDto, AppleLinkAuthDto } from '../dto/apple-auth.dto';
+import { LoginResponseDto } from '../dto/tokens.dto';
+import type { AuthAppleService } from '../services/auth-apple.service';
 
 @ApiTags('Auth Apple')
 @Controller('auth/apple')

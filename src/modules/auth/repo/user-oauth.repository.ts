@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { OAuthProvider } from '@prisma/client';
-import { OauthCreateUser } from '../../user/dto/create-user.dto';
+import type { OAuthProvider } from '@prisma/client';
+
+import type { PrismaService } from '../../prisma/prisma.service';
+import type { OauthCreateUser } from '../../user/dto/create-user.dto';
 
 @Injectable()
 export class UserOAuthRepository {

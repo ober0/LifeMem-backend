@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ConfirmCodeType, User } from '@prisma/client';
+import type { ConfirmCodeType, User } from '@prisma/client';
+
 import { MOBILE_CODE_LIFETIME_MS } from '../../common/config/contains';
-import { UserSettingsDto } from '../../common/types/user';
-import { PrismaService } from '../prisma/prisma.service';
-import { authUserInclude, AuthUserRecord } from './consts/user.constants';
-import { OauthCreateUser } from './dto/create-user.dto';
+import type { UserSettingsDto } from '../../common/types/user';
+import type { PrismaService } from '../prisma/prisma.service';
+import type { AuthUserRecord } from './consts/user.constants';
+import { authUserInclude } from './consts/user.constants';
+import type { OauthCreateUser } from './dto/create-user.dto';
 
 export type CreateUserData = {
     nickname: string;

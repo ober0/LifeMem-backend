@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsDate, IsUUID } from 'class-validator';
 
 export class BaseEntity {
     @ApiProperty()

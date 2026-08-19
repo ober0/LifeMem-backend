@@ -1,27 +1,33 @@
-import { Injectable } from '@nestjs/common';
-import { ConfirmCodeType, User } from '@prisma/client';
+import { Inject, Injectable } from '@nestjs/common';
+import type { User } from '@prisma/client';
+import { ConfirmCodeType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+
 import { Phone } from '../../common/classes/phone';
 import { BASE_USER_SETTINGS } from '../../common/config/base-user-settings.const';
 import { MOBILE_CODE_LIFETIME_MS } from '../../common/config/contains';
-import { apiError } from '../../common/errors';
+import type { AppConfig, AuthConfig} from '../../common/config/env';
+import { appConfig, authConfig } from '../../common/config/env';
+import { apiError } from '../../common/helpers/errors';
 import { generateCode } from '../../common/helpers/generate-code';
 import { translations } from '../../common/translation/text-translations';
-import { AuthUserInfo, PermissionDto, UserDto, UserSettingsDto } from '../../common/types/user';
-import { MobileSmsService } from '../mobile-sms/mobile-sms.service';
-import { RoleService } from '../role/role.service';
-import { SmtpService } from '../smtp/smtp.service';
-import { AuthUserRecord } from './consts/user.constants';
-import { ConfirmEmailDto } from './dto/confirm-email.dto';
-import { ConfirmPhoneDto } from './dto/confirm-phone.dto';
-import { CreateUserDto, CreateUserSettings, OauthCreateUser } from './dto/create-user.dto';
-import { RegisterResponseDto } from './dto/register-response.dto';
-import { UserRepository } from './user.repository';
+import type { AuthUserInfo, PermissionDto, UserDto, UserSettingsDto } from '../../common/types/user';
+import type { MobileSmsService } from '../mobile-sms/mobile-sms.service';
+import type { RoleService } from '../role/role.service';
+import type { SmtpService } from '../smtp/smtp.service';
+import type { AuthUserRecord } from './consts/user.constants';
+import type { ConfirmEmailDto } from './dto/confirm-email.dto';
+import type { ConfirmPhoneDto } from './dto/confirm-phone.dto';
+import type { CreateUserDto, CreateUserSettings, OauthCreateUser } from './dto/create-user.dto';
+import type { RegisterResponseDto } from './dto/register-response.dto';
+import type { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
     constructor(
+        @Inject(authConfig.KEY) private readonly auth: AuthConfig,
+        @Inject(appConfig.KEY) private readonly app: AppConfig,
         private readonly userRepository: UserRepository,
         private readonly roleService: RoleService,
         private readonly smtpService: SmtpService,
@@ -135,23 +141,10 @@ export class UserService {
             userId: user.id
         });
 
-        if (process.env.NODE_ENV === 'production') {
+        if (this.app.isProduction) {
             setImmediate(() => {
                 void this.mobileSmsService.sendMessage(phone, code);
             });
-        }
-
-        if (process.env.NODE_ENV === 'production') {
-            // FIXME
-            return {
-                user: this.toUserDto(user),
-                message: translations.byTextKey({
-                    key: 'common.codeSentPhone',
-                    lang: fullSettings.lang,
-                    variables: { code }
-                }),
-                alert: true
-            };
         }
 
         return {
@@ -226,7 +219,7 @@ export class UserService {
         let payload: { id: string };
 
         try {
-            payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as { id: string };
+            payload = jwt.verify(token, this.auth.jwtAccessSecret) as { id: string };
         } catch {
             throw apiError.unauthorized('auth.invalid_token');
         }

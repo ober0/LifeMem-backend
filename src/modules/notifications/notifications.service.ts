@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { NotificationType } from './const/messages';
+
+import type { NotificationType } from './const/messages';
 
 export type CreateNotificationDto = {
     userId: string;

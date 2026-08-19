@@ -1,4 +1,4 @@
-import { AuthType } from '@prisma/client';
+import type { AuthType } from '@prisma/client';
 
 export type AuthLogCreate = {
     userId: string;

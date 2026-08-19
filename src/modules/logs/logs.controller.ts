@@ -1,11 +1,12 @@
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+
 import { Permission } from '../../common/config/role-permission';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { LogsSearchResponseDto } from './dto/base.dto';
-import { LogsSearchDto } from './dto/search.dto';
-import { LogsService } from './logs.service';
+import type { LogsSearchDto } from './dto/search.dto';
+import type { LogsService } from './logs.service';
 
 @Controller('logs')
 @ApiTags('Logs')

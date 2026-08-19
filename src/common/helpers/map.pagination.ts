@@ -1,4 +1,4 @@
-import { PaginationDto } from '../types/pagination-dto';
+import type { PaginationDto } from '../types/common/pagination-dto';
 
 export const mapPagination = (dto?: PaginationDto) => {
     return {
