@@ -6,7 +6,7 @@ import * as jwt from 'jsonwebtoken';
 import type { Actor } from 'src/common/classes/actor';
 
 import { Phone } from '../../../common/classes/phone';
-import { EMAIL_CODE_LIFETIME_MS } from '../../../common/config/contains';
+import { appConstants } from '../../../common/config/app.constants';
 import type { AppConfig,AuthConfig} from '../../../common/config/env';
 import { appConfig, authConfig } from '../../../common/config/env';
 import { apiError } from '../../../common/helpers/errors';
@@ -84,7 +84,7 @@ export class AuthService {
                     to: email,
                     code,
                     lang: actor.requestLang,
-                    expiresMinutes: EMAIL_CODE_LIFETIME_MS / 60000
+                    expiresMinutes: appConstants.code.emailLifetimeMs / 60000
                 });
             });
 

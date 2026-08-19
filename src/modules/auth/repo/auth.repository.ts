@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { ConfirmCodeType } from '@prisma/client';
 
-import { MOBILE_CODE_LIFETIME_MS } from '../../../common/config/contains';
+import { appConstants } from '../../../common/config/app.constants';
 import type { PrismaService } from '../../prisma/prisma.service';
 import type { SaveTokenDto } from '../dto/tokens.dto';
 
@@ -77,7 +77,7 @@ export class AuthRepository {
                 data: {
                     type: data.type,
                     code,
-                    expiresAt: new Date(Date.now() + MOBILE_CODE_LIFETIME_MS),
+                    expiresAt: new Date(Date.now() + appConstants.code.mobileLifetimeMs),
                     user: {
                         connect: { id: data.userId }
                     }

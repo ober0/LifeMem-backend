@@ -5,8 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 
 import { Phone } from '../../common/classes/phone';
-import { BASE_USER_SETTINGS } from '../../common/config/base-user-settings.const';
-import { MOBILE_CODE_LIFETIME_MS } from '../../common/config/contains';
+import { appConstants } from '../../common/config/app.constants';
 import type { AppConfig, AuthConfig} from '../../common/config/env';
 import { appConfig, authConfig } from '../../common/config/env';
 import { apiError } from '../../common/helpers/errors';
@@ -64,7 +63,7 @@ export class UserService {
         const role = await this.roleService.getDefaultRole();
         const passwordHash = await bcrypt.hash(password, 10);
 
-        const fullSettings = { ...BASE_USER_SETTINGS, ...settings };
+        const fullSettings = { ...appConstants.userSettings.base, ...settings };
 
         const user = await this.userRepository.create({
             nickname,
@@ -87,7 +86,7 @@ export class UserService {
                 to: email,
                 code,
                 lang: fullSettings.lang,
-                expiresMinutes: MOBILE_CODE_LIFETIME_MS / 60_000
+                expiresMinutes: appConstants.code.mobileLifetimeMs / 60_000
             });
         });
 
@@ -124,7 +123,7 @@ export class UserService {
 
         const role = await this.roleService.getDefaultRole();
 
-        const fullSettings = { ...BASE_USER_SETTINGS, ...settings };
+        const fullSettings = { ...appConstants.userSettings.base, ...settings };
 
         const user = await this.userRepository.create({
             nickname,
@@ -264,7 +263,7 @@ export class UserService {
         }));
 
         const settings: UserSettingsDto = {
-            ...BASE_USER_SETTINGS,
+            ...appConstants.userSettings.base,
             ...((record.userSettings?.json as unknown as UserSettingsDto) ?? {})
         };
 
@@ -295,7 +294,7 @@ export class UserService {
         const role = await this.roleService.getDefaultRole();
 
         return this.userRepository.createUserWithOAuthProvider(data, role.id, {
-            ...BASE_USER_SETTINGS,
+            ...appConstants.userSettings.base,
             ...initSettings
         });
     }

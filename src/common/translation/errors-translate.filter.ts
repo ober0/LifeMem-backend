@@ -2,7 +2,7 @@ import type { ArgumentsHost, ExceptionFilter} from '@nestjs/common';
 import { Catch, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
-import { DEFAULT_ERRORS_LANGUAGE } from '../config/contains';
+import { appConstants } from '../config/app.constants';
 import type { ErrorVariables } from '../helpers/errors';
 import { loadErrorTranslations } from './translation.loader';
 
@@ -33,7 +33,7 @@ export class ErrorsTranslateFilter implements ExceptionFilter {
             }
         }
 
-        const lang = request.actor?.requestLang ?? DEFAULT_ERRORS_LANGUAGE;
+        const lang = request.actor?.requestLang ?? appConstants.language.defaultErrors;
         const rawMessage = this.extractMessage(exception);
 
         const payload = {

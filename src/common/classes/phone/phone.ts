@@ -1,7 +1,7 @@
 import type { CountryCode} from 'libphonenumber-js';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
-import { PHONE_BLACKLIST, PHONE_DEFAULT_COUNTRY, PHONE_WHITELIST } from '../../config/phone.config';
+import { appConstants } from '../../config/app.constants';
 import type { PhoneData } from './phone.type';
 
 export class Phone {
@@ -15,7 +15,7 @@ export class Phone {
 
     static tryCreate(phone: string): Phone | null {
         const input = phone.trim();
-        const parsed = parsePhoneNumberFromString(input, PHONE_DEFAULT_COUNTRY);
+        const parsed = parsePhoneNumberFromString(input, appConstants.phone.defaultCountry);
 
         if (!parsed?.isValid() || !parsed.country) {
             return null;
@@ -41,11 +41,11 @@ export class Phone {
     }
 
     private resolveAccess(country: CountryCode): boolean {
-        if (PHONE_BLACKLIST?.includes(country)) {
+        if (appConstants.phone.blacklist?.includes(country)) {
             return false;
         }
 
-        if (PHONE_WHITELIST && !PHONE_WHITELIST.includes(country)) {
+        if (appConstants.phone.whitelist && !appConstants.phone.whitelist.includes(country)) {
             return false;
         }
 

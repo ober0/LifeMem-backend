@@ -1,8 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 
-const BASE_SERVICE_SETTINGS = {
-    appVersion: 1
-};
+import { appConstants } from '../../src/common/config/app.constants';
 
 export async function seedServiceSettings(prisma: PrismaClient): Promise<void> {
     const existing = await prisma.serviceSettings.findFirst();
@@ -14,7 +12,7 @@ export async function seedServiceSettings(prisma: PrismaClient): Promise<void> {
 
     await prisma.serviceSettings.create({
         data: {
-            json: BASE_SERVICE_SETTINGS
+            json: appConstants.serviceSettings.base
         }
     });
 

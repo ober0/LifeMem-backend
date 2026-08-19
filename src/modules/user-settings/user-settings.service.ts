@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { BASE_USER_SETTINGS } from '../../common/config/base-user-settings.const';
+import { appConstants } from '../../common/config/app.constants';
 import type { UserSettingsDto } from '../../common/types/user';
 import type { UserSettingsUpdateDto } from './dto/user-settings.dto';
 import type { UserSettingsRepository } from './user-settings.repository';
@@ -13,7 +13,7 @@ export class UserSettingsService {
         const settings = await this.repository.findByUserId(userId);
 
         return {
-            ...BASE_USER_SETTINGS,
+            ...appConstants.userSettings.base,
             ...(settings?.json ? (settings.json as Record<string, unknown>) : {})
         };
     }
@@ -22,7 +22,7 @@ export class UserSettingsService {
         const current = await this.get(userId);
 
         const updateData = {
-            ...BASE_USER_SETTINGS,
+            ...appConstants.userSettings.base,
             ...current,
             ...dto
         };

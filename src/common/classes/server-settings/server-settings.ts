@@ -1,5 +1,5 @@
 import type { ServiceSettingsJsonDto } from '../../../modules/service-settings/dto/settings-json.dto';
-import { BASE_SERVICE_SETTINGS } from '../../config/base-service-settings.const';
+import { appConstants } from '../../config/app.constants';
 
 export class ServerSettings {
     private _json: ServiceSettingsJsonDto;
@@ -9,7 +9,7 @@ export class ServerSettings {
     }
 
     static create(json?: ServiceSettingsJsonDto | null): ServerSettings {
-        return new ServerSettings(json ?? { ...BASE_SERVICE_SETTINGS });
+        return new ServerSettings(json ?? { ...appConstants.serviceSettings.base });
     }
 
     get json(): Readonly<ServiceSettingsJsonDto> {

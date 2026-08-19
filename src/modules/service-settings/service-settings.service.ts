@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { BASE_SERVICE_SETTINGS } from '../../common/config/base-service-settings.const';
+import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
 import type { ServiceSettingsDto } from './dto/base.dto';
 import type { ServiceSettingsJsonDto } from './dto/settings-json.dto';
@@ -13,7 +13,7 @@ export class ServiceSettingsService {
 
     async getJsonForRequest(): Promise<ServiceSettingsJsonDto> {
         const data = await this.repository.findByServiceUuid();
-        return (data?.json as unknown as ServiceSettingsJsonDto | null) ?? { ...BASE_SERVICE_SETTINGS };
+        return (data?.json as unknown as ServiceSettingsJsonDto | null) ?? { ...appConstants.serviceSettings.base };
     }
 
     async getServiceSettings(): Promise<ServiceSettingsDto> {
@@ -29,7 +29,7 @@ export class ServiceSettingsService {
 
         if (!current) {
             const created = await this.repository.upsert({
-                ...BASE_SERVICE_SETTINGS,
+                ...appConstants.serviceSettings.base,
                 ...Object.fromEntries(Object.entries(dto).filter(([_, v]) => v !== undefined))
             });
             return created.json as unknown as ServiceSettingsJsonDto;
