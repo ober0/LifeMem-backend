@@ -3,7 +3,6 @@ import type { MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import Redis from 'ioredis';
 
@@ -67,7 +66,6 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
             load: envConfigs,
             validate: validateEnv
         }),
-        ScheduleModule.forRoot(),
         PrismaModule,
         RedisModule,
         SmtpModule,
