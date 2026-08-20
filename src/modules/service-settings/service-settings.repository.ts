@@ -1,13 +1,13 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from "../prisma/prisma.service";
-import type { ServiceSettingsJsonDto } from "./dto/settings-json.dto";
+import { PrismaService } from '../prisma/prisma.service';
+import type { ServiceSettingsJsonDto } from './dto/settings-json.dto';
 
 @Injectable()
 export class ServiceSettingsRepository {
     constructor(private readonly prisma: PrismaService) {}
 
-    async findByServiceUuid() {
+    async get() {
         return this.prisma.serviceSettings.findFirst();
     }
 

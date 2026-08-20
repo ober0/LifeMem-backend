@@ -18,31 +18,53 @@ export class RedisService implements OnModuleDestroy {
         }
     }
 
-    async set(key: string, value: string | number, ttl?: number): Promise<void> {
+    async set<T extends string | number | object>({
+        key,
+        value,
+        ttl
+    }: {
+        key: string;
+        value: T;
+        ttl?: number;
+    }): Promise<void> {
+        let input = String(value);
+        if (typeof value === 'object') {
+            input = JSON.stringify(value);
+        }
+
         try {
             if (ttl) {
-                await this.redisClient.set(key, value, 'EX', ttl);
+                await this.redisClient.set(key, input, 'EX', ttl);
             } else {
-                await this.redisClient.set(key, value);
+                await this.redisClient.set(key, input);
             }
         } catch (error) {
             this.logger.error(`Ошибка при записи в Redis для ключа: ${key}`, error);
         }
     }
 
-    async get(key: string): Promise<string | number | null> {
+    async get<T extends string | number | object>(key: string): Promise<T | null> {
         try {
             const result = await this.redisClient.get(key);
-            return result ? (isNaN(Number(result)) ? result : Number(result)) : null;
+
+            if (result === null) {
+                return null;
+            }
+
+            try {
+                return JSON.parse(result) as T;
+            } catch {
+                return (isNaN(Number(result)) ? result : Number(result)) as T;
+            }
         } catch (error) {
             this.logger.error(`Ошибка при получении из Redis для ключа: ${key}`, error);
             return null;
         }
     }
 
-    async del(key: string | string[]): Promise<number | number[]> {
+    async del(key: string | string[]) {
         if (typeof key === 'string') {
-            return this.redisClient.del(key);
+            await this.redisClient.del(key);
         } else {
             const data: number[] = await Promise.all(key.map(async (item: string) => this.redisClient.del(item)));
             return data;

@@ -1,3 +1,4 @@
+import { cacheConstants } from './constants/cache.constants';
 import { codeConstants } from './constants/code.constants';
 import { languageConstants } from './constants/language.constants';
 import { phoneConstants } from './constants/phone.constants';
@@ -11,5 +12,6 @@ export const appConstants = {
     userSettings: userSettingsConstants,
     serviceSettings: serviceSettingsConstants,
     phone: phoneConstants,
-    throttle: throttleConstants
+    throttle: throttleConstants,
+    cache: cacheConstants
 } as const;

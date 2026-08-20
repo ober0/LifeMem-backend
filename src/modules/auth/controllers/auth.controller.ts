@@ -1,6 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
 import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiTags, getSchemaPath } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
 import type express from 'express';
 
 import { ThrottleByIp, ThrottleByUser } from '../../../common/decorators/throttle-by-user.decorator';
