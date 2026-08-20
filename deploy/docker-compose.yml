@@ -48,6 +48,7 @@ services:
         build:
             context: .
             dockerfile: deploy/Dockerfile
+        image: lifemem-app:local
         container_name: lifemem-app
         restart: unless-stopped
         env_file:
@@ -63,6 +64,25 @@ services:
                 condition: service_healthy
             lifemem-minio:
                 condition: service_healthy
+
+    lifemem-cron:
+        build:
+            context: .
+            dockerfile: deploy/Dockerfile
+        image: lifemem-app:local
+        container_name: lifemem-cron
+        restart: unless-stopped
+        env_file:
+            - .env.prod
+        environment:
+            NODE_ENV: production
+            DATABASE_URL: ${CRON_WORKER_DATABASE_URL}
+        command: ['node', 'dist/src/cron-worker.js']
+        depends_on:
+            lifemem-postgres:
+                condition: service_healthy
+            lifemem-app:
+                condition: service_started
 
 volumes:
     lifemem_pgdata:

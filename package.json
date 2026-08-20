@@ -9,8 +9,11 @@
         "build": "nest build && tsc -p prisma/tsconfig.json",
         "seed:dev": "ts-node -r tsconfig-paths/register ./prisma/seeds/seed.ts",
         "seed": "node dist/prisma-seed/prisma/seeds/seed.js",
-        "dev": "nest start --watch",
+        "dev": "concurrently -k -n api,cron-worker -c cyan,magenta \"npm run dev:api\" \"npm run dev:cron\"",
+        "dev:api": "nest start --watch",
+        "dev:cron": "wait-on dist/src/cron-worker.js && node --watch dist/src/cron-worker.js",
         "prod": "node dist/src/main.js",
+        "prod:cron": "node dist/src/cron-worker.js",
         "generate": "npm run generate:i18n && npm run generate:prisma",
         "generate:prisma": "npx prisma generate --schema ./prisma/schema/",
         "generate:i18n": "ts-node src/translations/generate-types.ts",
@@ -81,6 +84,7 @@
         "@types/node": "^22.10.7",
         "@types/nodemailer": "^6.4.17",
         "@types/supertest": "^6.0.2",
+        "concurrently": "^10.0.5",
         "eslint": "^9.18.0",
         "eslint-config-prettier": "^10.0.1",
         "eslint-plugin-prettier": "^5.2.2",
@@ -94,7 +98,8 @@
         "ts-node": "^10.9.2",
         "tsconfig-paths": "^4.2.0",
         "typescript": "^5.7.3",
-        "typescript-eslint": "^8.20.0"
+        "typescript-eslint": "^8.20.0",
+        "wait-on": "^9.1.0"
     },
     "jest": {
         "moduleFileExtensions": [

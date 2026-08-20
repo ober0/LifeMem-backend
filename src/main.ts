@@ -7,10 +7,10 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 import cookieParser from 'cookie-parser';
 import basicAuth from 'express-basic-auth';
 
+import { AppModule } from './api/app/app.module';
 import type { AppConfig } from './common/config/env';
 import { ErrorsTranslateFilter } from './common/translation/errors-translate.filter';
 import { ValidationException } from './common/translation/validation-exception';
-import { AppModule } from './modules/app/app.module';
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);

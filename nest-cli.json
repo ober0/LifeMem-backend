@@ -3,11 +3,11 @@
     "collection": "@nestjs/schematics",
     "sourceRoot": "src",
     "compilerOptions": {
-        "deleteOutDir": true,
+        "deleteOutDir": false,
         "assets": [
             "translations/**/*",
             {
-                "include": "modules/smtp/templates/**/*",
+                "include": "api/smtp/templates/**/*",
                 "outDir": "dist/src",
                 "watchAssets": true
             }

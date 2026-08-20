@@ -1,4 +1,4 @@
-import type { ServiceSettingsJsonDto } from '../../../modules/service-settings/dto/settings-json.dto';
+import type { ServiceSettingsJsonDto } from '../../../api/service-settings/dto/settings-json.dto';
 import { appConstants } from '../../config/app.constants';
 
 export class ServerSettings {
