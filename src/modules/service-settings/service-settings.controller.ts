@@ -5,7 +5,7 @@ import { Permission } from '../../common/config/role-permission';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { ServiceSettingsDto } from './dto/base.dto';
-import type { ServiceSettingsUpdateDto } from './dto/update.dto';
+import { ServiceSettingsUpdateDto } from './dto/update.dto';
 import { ServiceSettingsService } from './service-settings.service';
 
 @ApiTags('Service Settings')

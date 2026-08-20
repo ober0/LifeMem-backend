@@ -6,7 +6,7 @@ import { CurrentActor } from '../../common/decorators/current-actor.decorator';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { UserSettingsDto } from '../../common/types/user';
-import type { UserSettingsUpdateDto } from './dto/user-settings.dto';
+import { UserSettingsUpdateDto } from './dto/user-settings.dto';
 import { UserSettingsService } from './user-settings.service';
 
 @ApiTags('User settings')

@@ -1,20 +1,21 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
 import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiTags, getSchemaPath } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type express from 'express';
 
+import { ThrottleByIp, ThrottleByUser } from '../../../common/decorators/throttle-by-user.decorator';
 import { apiError } from '../../../common/helpers/errors';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
 import { DeviceType } from '../../../common/types/user';
-import type { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
-import type { LoginDto } from '../dto/login.dto';
-import type {
-    LoginTokensResult,
-    OptionalRefreshTokenDto} from '../dto/tokens.dto';
+import { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
+import { LoginDto } from '../dto/login.dto';
+import type { LoginTokensResult } from '../dto/tokens.dto';
 import {
     AccessTokenDto,
     GeneratedTokens,
     LoginPhoneCodeResponseDto,
     LoginResponseDto,
+    OptionalRefreshTokenDto,
     WebLoginResponseDto
 } from '../dto/tokens.dto';
 import { AuthService } from '../services/auth.service';
@@ -22,6 +23,8 @@ import { AuthService } from '../services/auth.service';
 @ApiTags('Auth')
 @ApiExtraModels(LoginResponseDto, LoginPhoneCodeResponseDto, GeneratedTokens, AccessTokenDto)
 @Controller('auth')
+@ThrottleByUser({ limit: 10 })
+@ThrottleByIp({ limit: 10 })
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 

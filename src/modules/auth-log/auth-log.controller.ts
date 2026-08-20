@@ -7,7 +7,7 @@ import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { AuthLogService } from './auth-log.service';
 import { AuthLogSearchResponseDto } from './dto/base.dto';
-import type { AuthLogSearchDto } from './dto/search.dto';
+import { AuthLogSearchDto } from './dto/search.dto';
 
 @ApiTags('Auth logs')
 @ApiBearerAuth()

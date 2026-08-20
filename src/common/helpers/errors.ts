@@ -3,6 +3,8 @@ import {
     ConflictException,
     ForbiddenException,
     GatewayTimeoutException,
+    HttpException,
+    HttpStatus,
     InternalServerErrorException,
     NotFoundException,
     ServiceUnavailableException,
@@ -43,6 +45,15 @@ export const apiError = {
             code,
             ...(variables && { variables })
         }),
+
+    tooManyRequests: (code: ErrorsTranslationKey, variables?: ErrorVariables) =>
+        new HttpException(
+            {
+                code,
+                ...(variables && { variables })
+            },
+            HttpStatus.TOO_MANY_REQUESTS
+        ),
 
     internal: (code: ErrorsTranslationKey, variables?: ErrorVariables) =>
         new InternalServerErrorException({

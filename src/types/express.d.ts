@@ -1,5 +1,7 @@
-import type { Actor } from '../common/classes/actor/actor';
-import type { ServerSettings } from '../common/classes/server-settings/server-settings';
+import { JwtPayload } from 'jsonwebtoken';
+
+import type { Actor } from '../common/classes/actor';
+import type { ServerSettings } from '../common/classes/server-settings';
 
 /**
  * Дополняет Express.Request (open interface для merging).
@@ -11,6 +13,7 @@ declare global {
         interface Request {
             actor: Actor;
             serverSettings: ServerSettings;
+            decodedToken: JwtPayload | string | null;
         }
     }
 }

@@ -1,17 +1,21 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type express from 'express';
 
 import type { Actor } from '../../../common/classes/actor';
 import { CurrentActor } from '../../../common/decorators/current-actor.decorator';
+import { ThrottleByIp, ThrottleByUser } from '../../../common/decorators/throttle-by-user.decorator';
 import { JwtAuthGuardHttp } from '../../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
 import { translations } from '../../../common/translation/text-translations';
-import type { AppleAuthDto, AppleLinkAuthDto } from '../dto/apple-auth.dto';
+import { AppleAuthDto, AppleLinkAuthDto } from '../dto/apple-auth.dto';
 import { LoginResponseDto } from '../dto/tokens.dto';
 import { AuthAppleService } from '../services/auth-apple.service';
 
 @ApiTags('Auth Apple')
+@ThrottleByUser({ limit: 10 })
+@ThrottleByIp({ limit: 10 })
 @Controller('auth/apple')
 export class AuthAppleController {
     constructor(private readonly authAppleService: AuthAppleService) {}

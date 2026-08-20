@@ -5,7 +5,7 @@ import { Permission } from '../../common/config/role-permission';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { LogsSearchResponseDto } from './dto/base.dto';
-import type { LogsSearchDto } from './dto/search.dto';
+import { LogsSearchDto } from './dto/search.dto';
 import { LogsService } from './logs.service';
 
 @Controller('logs')

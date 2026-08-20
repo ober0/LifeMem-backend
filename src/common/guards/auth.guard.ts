@@ -1,6 +1,7 @@
 import type { CanActivate, ExecutionContext, Type } from '@nestjs/common';
 import { Injectable, mixin } from '@nestjs/common';
 import type { Request } from 'express';
+import * as jwt from 'jsonwebtoken';
 
 import { UserService } from '../../modules/user/user.service';
 import type { PermissionKey } from '../config/role-permission';
@@ -38,7 +39,19 @@ export function JwtAuthGuardHttp({
             }
 
             try {
-                const data = await this.userService.getUserInfoFromToken(token);
+                let payload = req.decodedToken;
+
+                if (!payload || typeof payload !== 'object' || !('id' in payload)) {
+                    payload = jwt.decode(token);
+
+                    if (!payload || typeof payload !== 'object' || !('id' in payload)) {
+                        throw apiError.unauthorized('auth.unauthorized');
+                    }
+
+                    req.decodedToken = payload;
+                }
+
+                const data = await this.userService.findAuthUserById(payload.id);
                 req.actor.setUser(data.user);
                 req.actor.setPermissions(data.permissions);
                 req.actor.setSettings(data.settings);

@@ -1,4 +1,4 @@
-import { Global,Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -16,10 +16,9 @@ import { RedisService } from './redis.service';
                 const redis = configService.getOrThrow<RedisConfig>('redis');
 
                 return new Redis(redis.url, {
-                    maxRetriesPerRequest: 1,
+                    maxRetriesPerRequest: 3,
                     connectTimeout: 1000,
-                    enableOfflineQueue: false,
-                    lazyConnect: true
+                    enableOfflineQueue: true
                 });
             }
         },

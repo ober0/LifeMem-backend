@@ -1,11 +1,25 @@
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
 import type { MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
+import Redis from 'ioredis';
 
 import { ActorMiddleware } from '../../common/classes/actor';
 import { ServerSettingsMiddleware } from '../../common/classes/server-settings';
+import { appConstants } from '../../common/config/app.constants';
 import { envConfigs, validateEnv } from '../../common/config/env';
+import {
+    AppThrottlerGuard,
+    getIpTracker,
+    getUserTracker,
+    shouldSkipIpThrottler,
+    shouldSkipUserThrottler,
+    THROTTLER_NAME_IP,
+    THROTTLER_NAME_USER
+} from '../../common/guards/app-throttler.guard';
 import { LoggerMiddleware } from '../../common/middleware/logger.middleware';
 import { AuthModule } from '../auth/auth.module';
 import { AuthLogModule } from '../auth-log/auth-log.module';
@@ -13,6 +27,7 @@ import { HealthModule } from '../health/health.module';
 import { LogsModule } from '../logs/logs.module';
 import { MobileSmsModule } from '../mobile-sms/mobile-sms.module';
 import { PrismaModule } from '../prisma/prisma.module';
+import { REDIS_CLIENT } from '../redis/redis.constants';
 import { RedisModule } from '../redis/redis.module';
 import { RoleModule } from '../role/role.module';
 import { S3Module } from '../s3/s3.module';
@@ -23,6 +38,29 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
 
 @Module({
     imports: [
+        ThrottlerModule.forRootAsync({
+            imports: [RedisModule],
+            inject: [REDIS_CLIENT],
+            useFactory: (redisClient: Redis) => ({
+                storage: new ThrottlerStorageRedisService(redisClient),
+                throttlers: [
+                    {
+                        name: THROTTLER_NAME_IP,
+                        ttl: appConstants.throttle.ip.ttlMs,
+                        limit: appConstants.throttle.ip.limit,
+                        skipIf: shouldSkipIpThrottler,
+                        getTracker: (req) => getIpTracker(req as never)
+                    },
+                    {
+                        name: THROTTLER_NAME_USER,
+                        ttl: appConstants.throttle.user.ttlMs,
+                        limit: appConstants.throttle.user.limit,
+                        skipIf: shouldSkipUserThrottler,
+                        getTracker: (req) => getUserTracker(req as never)
+                    }
+                ]
+            })
+        }),
         ConfigModule.forRoot({
             isGlobal: true,
             load: envConfigs,
@@ -42,6 +80,12 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         LogsModule,
         AuthLogModule,
         MobileSmsModule
+    ],
+    providers: [
+        {
+            provide: APP_GUARD,
+            useClass: AppThrottlerGuard
+        }
     ]
 })
 export class AppModule implements NestModule {

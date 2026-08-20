@@ -28,6 +28,7 @@ export type ErrorsTranslationKey =
   | 'auth.refresh_token_not_found'
   | 'auth.single_auth_method_required'
   | 'auth.unauthorized'
+  | 'common.too_many_requests'
   | 'common.unknown'
   | 'common.validation_failed'
   | 'role-permissions.role.not_found'

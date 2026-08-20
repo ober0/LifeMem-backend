@@ -2,6 +2,7 @@ import { codeConstants } from './constants/code.constants';
 import { languageConstants } from './constants/language.constants';
 import { phoneConstants } from './constants/phone.constants';
 import { serviceSettingsConstants } from './constants/service-settings.constants';
+import { throttleConstants } from './constants/throttle.constants';
 import { userSettingsConstants } from './constants/user-settings.constants';
 
 export const appConstants = {
@@ -9,5 +10,6 @@ export const appConstants = {
     language: languageConstants,
     userSettings: userSettingsConstants,
     serviceSettings: serviceSettingsConstants,
-    phone: phoneConstants
+    phone: phoneConstants,
+    throttle: throttleConstants
 } as const;

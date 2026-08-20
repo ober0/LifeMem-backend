@@ -2,11 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { User } from '@prisma/client';
 import { ConfirmCodeType } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-import * as jwt from 'jsonwebtoken';
 
 import { Phone } from '../../common/classes/phone';
 import { appConstants } from '../../common/config/app.constants';
-import type { AppConfig, AuthConfig} from '../../common/config/env';
+import type { AppConfig, AuthConfig } from '../../common/config/env';
 import { appConfig, authConfig } from '../../common/config/env';
 import { apiError } from '../../common/helpers/errors';
 import { generateCode } from '../../common/helpers/generate-code';
@@ -214,20 +213,8 @@ export class UserService {
         return this.toUserDto(updated);
     }
 
-    async getUserInfoFromToken(token: string): Promise<AuthUserInfo> {
-        let payload: { id: string };
-
-        try {
-            payload = jwt.verify(token, this.auth.jwtAccessSecret) as { id: string };
-        } catch {
-            throw apiError.unauthorized('auth.invalid_token');
-        }
-
-        if (!payload?.id) {
-            throw apiError.unauthorized('auth.invalid_token');
-        }
-
-        const record = await this.userRepository.findAuthUserById(payload.id);
+    async findAuthUserById(id: string): Promise<AuthUserInfo> {
+        const record = await this.userRepository.findAuthUserById(id);
 
         if (!record) {
             throw apiError.unauthorized('auth.unauthorized');

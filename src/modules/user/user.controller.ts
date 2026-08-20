@@ -1,17 +1,19 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import type { Actor } from '../../common/classes/actor';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
+import { ThrottleByIp, ThrottleByUser } from '../../common/decorators/throttle-by-user.decorator';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { apiError } from '../../common/helpers/errors';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { UserDto } from '../../common/types/user';
 import { RoleService } from '../role/role.service';
 import { OAuthBindingDto } from './dto/bindings.dto';
-import type { ConfirmEmailDto } from './dto/confirm-email.dto';
-import type { ConfirmPhoneDto } from './dto/confirm-phone.dto';
-import type { CreateUserDto } from './dto/create-user.dto';
+import { ConfirmEmailDto } from './dto/confirm-email.dto';
+import { ConfirmPhoneDto } from './dto/confirm-phone.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
 import { SelfDto } from './dto/self.dto';
 import { UserService } from './user.service';
@@ -36,6 +38,8 @@ export class UserController {
 
     @Post('confirm-email')
     @HttpCode(HttpStatus.OK)
+    @ThrottleByUser({ limit: 10 })
+    @ThrottleByIp({ limit: 10 })
     @ApiOperation({ summary: 'Подтверждение email' })
     @ApiOkResponse({ type: UserDto })
     @ApiErrorResponses(400, 404)
@@ -46,6 +50,8 @@ export class UserController {
     @Post('confirm-phone')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Подтверждение телефона' })
+    @ThrottleByUser({ limit: 10 })
+    @ThrottleByIp({ limit: 10 })
     @ApiOkResponse({ type: UserDto })
     @ApiErrorResponses(400, 404)
     async confirmPhone(@Body() dto: ConfirmPhoneDto): Promise<UserDto> {

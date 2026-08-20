@@ -1,17 +1,21 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type express from 'express';
 
 import type { Actor } from '../../../common/classes/actor';
 import { CurrentActor } from '../../../common/decorators/current-actor.decorator';
+import { ThrottleByIp, ThrottleByUser } from '../../../common/decorators/throttle-by-user.decorator';
 import { JwtAuthGuardHttp } from '../../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
 import { translations } from '../../../common/translation/text-translations';
-import type { GoogleAuthDto, GoogleLinkDto } from '../dto/google-auth.dto';
+import { GoogleAuthDto, GoogleLinkDto } from '../dto/google-auth.dto';
 import { LoginResponseDto } from '../dto/tokens.dto';
 import { AuthGoogleService } from '../services/auth-google.service';
 
 @ApiTags('Auth Google')
+@ThrottleByUser({ limit: 10 })
+@ThrottleByIp({ limit: 10 })
 @Controller('auth/google')
 export class AuthGoogleController {
     constructor(private readonly authGoogleService: AuthGoogleService) {}
