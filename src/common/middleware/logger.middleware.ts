@@ -1,10 +1,10 @@
 import type { NestMiddleware } from '@nestjs/common';
 import { Injectable, Logger } from '@nestjs/common';
 import type { HttpMethod } from '@prisma/client';
-import type { NextFunction,Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 
-import type { LogsCreateDto } from '../../modules/logs/dto/base.dto';
-import { LogsService } from '../../modules/logs/logs.service';
+import type { LogsCreateDto } from '../../api/logs/dto/base.dto';
+import { LogsService } from '../../api/logs/logs.service';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {

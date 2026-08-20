@@ -1,5 +1,5 @@
-import type { UserDto } from '../../../modules/user/dto/user.dto';
-import type { UserSettingsDto } from '../../../modules/user-settings/dto/user-settings.dto';
+import type { UserDto } from '../../../api/user/dto/user.dto';
+import type { UserSettingsDto } from '../../../api/user-settings/dto/user-settings.dto';
 import type { PermissionDto } from './permission.dto';
 
 export type AuthUserInfo = {

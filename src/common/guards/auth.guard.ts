@@ -3,7 +3,7 @@ import { Injectable, mixin } from '@nestjs/common';
 import type { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 
-import { UserService } from '../../modules/user/user.service';
+import { UserService } from '../../api/user/user.service';
 import type { PermissionKey } from '../config/role-permission';
 import { apiError } from '../helpers/errors';
 import { getDeviceType } from '../helpers/get-device-type';

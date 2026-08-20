@@ -1,4 +1,4 @@
-import { ServiceSettingsDto } from '../../../modules/service-settings/dto/base.dto';
+import { ServiceSettingsDto } from '../../../api/service-settings/dto/base.dto';
 
 export enum CacheKey {
     ServiceSettings = 'serviceSettings'

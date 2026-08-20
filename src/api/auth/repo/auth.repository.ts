@@ -35,6 +35,26 @@ export class AuthRepository {
         });
     }
 
+    async deleteExpiredRefreshTokens(): Promise<number> {
+        const result = await this.prisma.refreshToken.deleteMany({
+            where: {
+                expiresAt: { lte: new Date() }
+            }
+        });
+
+        return result.count;
+    }
+
+    async deleteExpiredConfirmationCodes(graceMs = 2 * 60 * 1000): Promise<number> {
+        const result = await this.prisma.confirmCode.deleteMany({
+            where: {
+                expiresAt: { lte: new Date(Date.now() - graceMs) }
+            }
+        });
+
+        return result.count;
+    }
+
     async findUserToken(userId: string) {
         return this.prisma.refreshToken.findFirst({
             where: { userId }
