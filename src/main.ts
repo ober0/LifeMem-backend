@@ -2,13 +2,11 @@ import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { apiReference } from '@scalar/nestjs-api-reference';
 import cookieParser from 'cookie-parser';
-import basicAuth from 'express-basic-auth';
 
 import { AppModule } from './api/app/app.module';
 import type { AppConfig } from './common/config/env';
+import { initSwagger } from './common/swagger/config';
 import { ErrorsTranslateFilter } from './common/translation/errors-translate.filter';
 import { ValidationException } from './common/translation/validation-exception';
 
@@ -17,19 +15,27 @@ async function bootstrap() {
     const configService = app.get(ConfigService);
     const appConfig = configService.getOrThrow<AppConfig>('app');
 
+    // прокидывание ip
     app.set('trust proxy', true);
+
+    // глобальный префикс
     app.setGlobalPrefix('api', {
         exclude: ['health']
     });
+
+    // парсер куки
     app.use(cookieParser());
 
+    // версионирование url /v1 v2
     app.enableVersioning({
         type: VersioningType.URI,
         defaultVersion: '1'
     });
 
+    // фильтр ошибок
     app.useGlobalFilters(new ErrorsTranslateFilter());
 
+    // валидация
     app.useGlobalPipes(
         new ValidationPipe({
             exceptionFactory: (errors) => {
@@ -40,18 +46,10 @@ async function bootstrap() {
         })
     );
 
+    // graceful shutdown
     app.enableShutdownHooks();
 
-    if (appConfig.isProduction) {
-        app.use(
-            ['/docs'],
-            basicAuth({
-                users: { [appConfig.swaggerUser]: appConfig.swaggerPass },
-                challenge: true
-            })
-        );
-    }
-
+    // корсы
     if (!appConfig.isProduction) {
         app.enableCors({
             origin: true,
@@ -64,45 +62,8 @@ async function bootstrap() {
         });
     }
 
-    const config = new DocumentBuilder()
-        .setTitle(`Api документация`)
-        .setVersion('0.0.1')
-        .addBearerAuth()
-        .addGlobalParameters(
-            {
-                name: 'x-client-type',
-                in: 'header',
-                required: true,
-                description: 'Тип клиента',
-                schema: {
-                    type: 'string',
-                    enum: ['web', 'mobile'],
-                    default: 'web'
-                }
-            },
-            {
-                name: 'x-accept-language',
-                in: 'header',
-                required: false,
-                description: 'Язык',
-                schema: {
-                    type: 'string',
-                    enum: ['ru', 'en'],
-                    default: 'ru'
-                }
-            }
-        )
-        .build();
-
-    const document = SwaggerModule.createDocument(app, config);
-
-    app.use(
-        '/docs',
-        apiReference({
-            content: document,
-            pageTitle: 'LifeMem API'
-        })
-    );
+    // scalar + настройки
+    initSwagger(app, appConfig);
 
     await app.listen(appConfig.port);
 }
