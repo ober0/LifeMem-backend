@@ -52,7 +52,6 @@ function resolveUserId(req: Request): string | null {
     }
 
     const payload = jwt.decode(token);
-    req.decodedToken = payload;
 
     if (!payload || typeof payload === 'string' || typeof payload.id !== 'string') {
         return null;

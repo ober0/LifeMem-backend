@@ -1,9 +1,11 @@
 import type { CanActivate, ExecutionContext, Type } from '@nestjs/common';
-import { Injectable, mixin } from '@nestjs/common';
+import { HttpException, Inject, Injectable, mixin } from '@nestjs/common';
 import type { Request } from 'express';
 import * as jwt from 'jsonwebtoken';
 
 import { UserService } from '../../api/user/user.service';
+import type { AuthConfig } from '../config/env';
+import { authConfig } from '../config/env';
 import type { PermissionKey } from '../config/role-permission';
 import { apiError } from '../helpers/errors';
 import { getDeviceType } from '../helpers/get-device-type';
@@ -18,7 +20,10 @@ export function JwtAuthGuardHttp({
 }): Type<CanActivate> {
     @Injectable()
     class JwtAuthGuardHttpMixin implements CanActivate {
-        constructor(private readonly userService: UserService) {}
+        constructor(
+            private readonly userService: UserService,
+            @Inject(authConfig.KEY) private readonly auth: AuthConfig
+        ) {}
 
         async canActivate(context: ExecutionContext): Promise<boolean> {
             if (context.getType() !== 'http') {
@@ -39,17 +44,8 @@ export function JwtAuthGuardHttp({
             }
 
             try {
-                let payload = req.decodedToken;
-
-                if (!payload || typeof payload !== 'object' || !('id' in payload)) {
-                    payload = jwt.decode(token);
-
-                    if (!payload || typeof payload !== 'object' || !('id' in payload)) {
-                        throw apiError.unauthorized('auth.unauthorized');
-                    }
-
-                    req.decodedToken = payload;
-                }
+                const payload = this.verifyAccessToken(token);
+                req.decodedToken = payload;
 
                 const data = await this.userService.findAuthUserById(payload.id);
                 req.actor.setUser(data.user);
@@ -65,6 +61,23 @@ export function JwtAuthGuardHttp({
 
             this.assertPermissions(req, permissions);
             return true;
+        }
+
+        private verifyAccessToken(token: string): jwt.JwtPayload & { id: string } {
+            try {
+                const payload = jwt.verify(token, this.auth.jwtAccessSecret);
+
+                if (!payload || typeof payload === 'string' || typeof payload.id !== 'string') {
+                    throw apiError.unauthorized('auth.unauthorized');
+                }
+
+                return payload as jwt.JwtPayload & { id: string };
+            } catch (error) {
+                if (error instanceof HttpException) {
+                    throw error;
+                }
+                throw apiError.unauthorized('auth.unauthorized');
+            }
         }
 
         private tryGetToken(req: Request, deviceType: DeviceType): string | null {
