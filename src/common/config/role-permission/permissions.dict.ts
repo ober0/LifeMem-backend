@@ -1,5 +1,6 @@
 export const Permission = {
     UsersSearch: 'users.search',
+    UsersAdminUpdate: 'users.admin-update',
     UsersAdminDelete: 'users.admin-delete',
 
     RolesRead: 'roles.read',
@@ -16,7 +17,7 @@ export const Permission = {
 export type PermissionKey = (typeof Permission)[keyof typeof Permission];
 
 export const PERMISSIONS_BY_CATEGORY = {
-    users: [Permission.UsersSearch, Permission.UsersAdminDelete],
+    users: [Permission.UsersSearch, Permission.UsersAdminUpdate, Permission.UsersAdminDelete],
     roles: [Permission.RolesRead, Permission.RolesCreate, Permission.RolesUpdate, Permission.RolesDelete],
     service_settings: [Permission.ServiceSettingsUpdate],
     logs: [Permission.LogsRead],

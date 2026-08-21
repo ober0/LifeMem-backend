@@ -39,6 +39,14 @@
         "ru": "Телефон уже подтвержден",
         "en": "Phone number already verified"
     },
+    "phone_already_bound": {
+        "ru": "Телефон уже привязан к аккаунту",
+        "en": "Phone number is already linked to the account"
+    },
+    "email_already_bound": {
+        "ru": "Email уже привязан к аккаунту",
+        "en": "Email is already linked to the account"
+    },
     "password_incorrect": {
         "ru": "Неверный пароль",
         "en": "Incorrect password"

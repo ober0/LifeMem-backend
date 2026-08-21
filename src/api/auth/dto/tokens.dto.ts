@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsOptional, IsString, ValidateNested } from 'class-validator';
 
+import { AlertBaseDto } from '../../../common/types/common/alert-base.dto';
 import { UserDto } from '../../../common/types/user';
 
 export class GeneratedTokens {
@@ -56,13 +57,7 @@ export type LoginTokensResult = {
     user: UserDto;
 };
 
-export class LoginPhoneCodeResponseDto {
-    @ApiProperty()
-    message: string;
-
-    @ApiProperty({ example: true })
-    alert: boolean;
-}
+export class LoginPhoneCodeResponseDto extends AlertBaseDto {}
 
 export type LoginFullResponseDto = LoginTokensResult | LoginPhoneCodeResponseDto;
 

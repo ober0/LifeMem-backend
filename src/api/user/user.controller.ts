@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import type { Actor } from '../../common/classes/actor';
@@ -7,7 +7,7 @@ import { ThrottleByIp, ThrottleByUser } from '../../common/decorators/throttle-b
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { apiError } from '../../common/helpers/errors';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
-import { UserDto } from '../../common/types/user';
+import { AlertBaseDto } from '../../common/types/common/alert-base.dto';
 import { RoleService } from '../role/role.service';
 import { OAuthBindingDto } from './dto/bindings.dto';
 import { ConfirmEmailDto } from './dto/confirm-email.dto';
@@ -15,6 +15,7 @@ import { ConfirmPhoneDto } from './dto/confirm-phone.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
 import { SelfDto } from './dto/self.dto';
+import { AddEmailDto, AddPhoneDto, UserDto, UserUpdateSelfDto } from './dto/user.dto';
 import { UserService } from './user.service';
 
 @ApiTags('User')
@@ -87,5 +88,36 @@ export class UserController {
         }
 
         return this.userService.getBindings(actor.user.id);
+    }
+
+    @ApiOperation({ summary: 'Обновление себя' })
+    @Patch('me')
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiOkResponse({ type: UserDto })
+    @ApiErrorResponses(400, 401)
+    async updateSelf(@CurrentActor() actor: Actor, @Body() dto: UserUpdateSelfDto): Promise<UserDto> {
+        return this.userService.updateSelf(actor, dto);
+    }
+
+    @ApiOperation({ summary: 'Добавить привязку по телефону' })
+    @Patch('add-phone')
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ThrottleByUser({ limit: 5 })
+    @ThrottleByIp({ limit: 3 })
+    @ApiOkResponse({ type: AlertBaseDto })
+    @ApiErrorResponses(400, 401, 409)
+    async addPhone(@CurrentActor() actor: Actor, @Body() dto: AddPhoneDto): Promise<AlertBaseDto> {
+        return this.userService.addPhone(actor, dto);
+    }
+
+    @ApiOperation({ summary: 'Добавить привязку по email' })
+    @Patch('add-email')
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ThrottleByUser({ limit: 5 })
+    @ThrottleByIp({ limit: 3 })
+    @ApiOkResponse({ type: AlertBaseDto })
+    @ApiErrorResponses(400, 401, 409)
+    async addEmail(@CurrentActor() actor: Actor, @Body() dto: AddEmailDto): Promise<AlertBaseDto> {
+        return this.userService.addEmail(actor, dto);
     }
 }
