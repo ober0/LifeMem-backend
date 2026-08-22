@@ -6,18 +6,18 @@ import { GoogleApiModule } from '../google-api/google-api.module';
 import { MobileSmsModule } from '../mobile-sms/mobile-sms.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { SmtpModule } from '../smtp/smtp.module';
-import { AuthCleanupModule } from './auth-cleanup.module';
 import { AuthController } from './controllers/auth.controller';
 import { AuthAppleController } from './controllers/auth-apple.controller';
 import { AuthGoogleController } from './controllers/auth-google.controller';
 import { UserOAuthRepository } from './repo/user-oauth.repository';
+import { AuthRepository } from './repo/auth.repository';
 import { AuthService } from './services/auth.service';
 import { AuthAppleService } from './services/auth-apple.service';
+import { AuthCleanupService } from './services/auth-cleanup.service';
 import { AuthGoogleService } from './services/auth-google.service';
 
 @Module({
     imports: [
-        AuthCleanupModule,
         GoogleApiModule,
         AppleApiModule,
         AuthLogModule,
@@ -26,7 +26,14 @@ import { AuthGoogleService } from './services/auth-google.service';
         SmtpModule
     ],
     controllers: [AuthController, AuthGoogleController, AuthAppleController],
-    providers: [AuthService, AuthGoogleService, AuthAppleService, UserOAuthRepository],
+    providers: [
+        AuthService,
+        AuthGoogleService,
+        AuthAppleService,
+        UserOAuthRepository,
+        AuthRepository,
+        AuthCleanupService
+    ],
     exports: [AuthService]
 })
 export class AuthModule {}

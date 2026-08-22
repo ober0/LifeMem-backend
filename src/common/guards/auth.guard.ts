@@ -13,9 +13,11 @@ import { DeviceType } from '../types/user';
 
 export function JwtAuthGuardHttp({
     allowUnauthorized = false,
+    allowSofDeleted = false,
     permissions = []
 }: {
     allowUnauthorized?: boolean;
+    allowSofDeleted?: boolean;
     permissions?: PermissionKey[];
 }): Type<CanActivate> {
     @Injectable()
@@ -48,9 +50,14 @@ export function JwtAuthGuardHttp({
                 req.decodedToken = payload;
 
                 const data = await this.userService.findAuthUserById(payload.id);
+
                 req.actor.setUser(data.user);
                 req.actor.setPermissions(data.permissions);
                 req.actor.setSettings(data.settings);
+
+                if (!allowSofDeleted && data.user.deletedAt) {
+                    throw apiError.forbidden('auth.forbidden_deleted');
+                }
             } catch (error) {
                 if (allowUnauthorized) {
                     this.assertPermissions(req, permissions);

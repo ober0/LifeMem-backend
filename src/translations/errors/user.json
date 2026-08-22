@@ -31,6 +31,10 @@
         "ru": "Нет доступа",
         "en": "No access"
     },
+    "not_deleted": {
+        "ru": "Аккаунт не удалён",
+        "en": "Account is not deleted"
+    },
     "already_verified": {
         "ru": "Почта уже подтверждена",
         "en": "Email already verified"

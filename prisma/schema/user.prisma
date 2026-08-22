@@ -37,6 +37,8 @@ model User {
   userSettings UserSettings?
   logs         Logs[]
 
+  deletedAt DateTime? @map("deletedAt")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

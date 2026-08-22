@@ -50,12 +50,21 @@ export class UserAdminController {
         return this.userService.adminUpdate(actor, id, dto);
     }
 
-    @Delete(':id')
-    @ApiOperation({ summary: 'Удаление пользователя' })
+    @Delete(':id/soft')
+    @ApiOperation({ summary: 'Удаление пользователя (soft)' })
+    @ApiOkResponse({ type: UserDto })
+    @UseGuards(JwtAuthGuardHttp({ permissions: [Permission.UsersAdminHardDelete] }))
+    @ApiErrorResponses(400, 401, 403, 404)
+    async deleteSoft(@CurrentActor() actor: Actor, @Param('id', ParseUUIDPipe) id: string): Promise<UserDto> {
+        return this.userService.adminSoftDelete(actor, id);
+    }
+
+    @Delete(':id/hard')
+    @ApiOperation({ summary: 'Удаление пользователя (hard)' })
     @ApiOkResponse({ type: UserDto })
     @UseGuards(JwtAuthGuardHttp({ permissions: [Permission.UsersAdminDelete] }))
     @ApiErrorResponses(400, 401, 403, 404)
-    async delete(@CurrentActor() actor: Actor, @Param('id', ParseUUIDPipe) id: string): Promise<UserDto> {
+    async deleteHard(@CurrentActor() actor: Actor, @Param('id', ParseUUIDPipe) id: string): Promise<UserDto> {
         return this.userService.adminDelete(actor, id);
     }
 }

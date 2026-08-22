@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsOptional, IsString, IsStrongPassword, IsUUID, MinLength } from 'class-validator';
+import { IsBoolean, IsDate, IsEmail, IsOptional, IsString, IsStrongPassword, IsUUID, MinLength } from 'class-validator';
 
 import { BaseEntity } from '../../../common/types/common/common-entity.dto';
 
@@ -8,17 +8,17 @@ export class UserDto extends BaseEntity {
     @IsString()
     nickname: string;
 
-    @ApiPropertyOptional({ format: 'uuid', nullable: true, type: String })
+    @ApiPropertyOptional({ format: 'uuid', type: String })
     @IsOptional()
     @IsUUID()
     passwordId: string | null;
 
-    @ApiPropertyOptional({ type: String, nullable: true })
+    @ApiPropertyOptional({ type: String })
     @IsOptional()
     @IsEmail()
     email: string | null;
 
-    @ApiPropertyOptional({ type: String, nullable: true })
+    @ApiPropertyOptional({ type: String })
     @IsOptional()
     @IsString()
     phoneNumber: string | null;
@@ -34,6 +34,11 @@ export class UserDto extends BaseEntity {
     @ApiProperty({ format: 'uuid' })
     @IsUUID()
     roleId: string;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsDate()
+    deletedAt?: Date | null;
 }
 
 export class UserUpdateSelfDto {

@@ -263,6 +263,28 @@ export class UserRepository {
         });
     }
 
+    async softDelete(userId: string) {
+        return this.prisma.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                deletedAt: new Date()
+            }
+        });
+    }
+
+    async restore(userId: string) {
+        return this.prisma.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                deletedAt: null
+            }
+        });
+    }
+
     async adminDelete(userId: string) {
         return this.prisma.$transaction(async (tx) => {
             const user = await tx.user.findUnique({ where: { id: userId } });
@@ -277,6 +299,18 @@ export class UserRepository {
             }
 
             return user;
+        });
+    }
+
+    async findSoftDeletedBefore(deletedBefore: Date): Promise<{ id: string }[]> {
+        return this.prisma.user.findMany({
+            where: {
+                deletedAt: {
+                    not: null,
+                    lte: deletedBefore
+                }
+            },
+            select: { id: true }
         });
     }
 }

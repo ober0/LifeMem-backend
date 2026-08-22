@@ -340,7 +340,8 @@ export class UserService {
             isPhoneVerified: user.isPhoneVerified,
             roleId: user.roleId,
             createdAt: user.createdAt,
-            updatedAt: user.updatedAt
+            updatedAt: user.updatedAt,
+            deletedAt: user.deletedAt
         };
     }
 
@@ -458,6 +459,43 @@ export class UserService {
         });
     }
 
+    async softDelete(actor: Actor): Promise<UserDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        return this.userRepository.softDelete(actor.user.id);
+    }
+
+    async restore(actor: Actor): Promise<UserDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        if (!actor.user.deletedAt) {
+            throw apiError.badRequest('user.not_deleted');
+        }
+
+        return this.userRepository.restore(actor.user.id);
+    }
+
+    async adminSoftDelete(actor: Actor, userId: string): Promise<UserDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        if (actor.user.id === userId) {
+            throw apiError.badRequest('user.no_access');
+        }
+
+        const deleted = await this.userRepository.softDelete(userId);
+        if (!deleted) {
+            throw apiError.notFound('user.not_found');
+        }
+
+        return deleted;
+    }
+
     async adminDelete(actor: Actor, userId: string): Promise<UserDto> {
         if (!actor.user) {
             throw apiError.unauthorized('auth.unauthorized');
@@ -472,6 +510,6 @@ export class UserService {
             throw apiError.notFound('user.not_found');
         }
 
-        return this.toUserDto(deleted);
+        return deleted;
     }
 }

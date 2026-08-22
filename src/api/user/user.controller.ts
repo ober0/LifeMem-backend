@@ -1,7 +1,8 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import type { Actor } from '../../common/classes/actor';
+import { Permission } from '../../common/config/role-permission';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
 import { ThrottleByIp, ThrottleByUser } from '../../common/decorators/throttle-by-user.decorator';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
@@ -59,7 +60,11 @@ export class UserController {
     }
 
     @Get('me')
-    @UseGuards(JwtAuthGuardHttp({}))
+    @UseGuards(
+        JwtAuthGuardHttp({
+            allowSofDeleted: true
+        })
+    )
     @ApiOperation({ summary: 'Получение информации о себе' })
     @ApiOkResponse({ type: SelfDto })
     @ApiErrorResponses(401, 404)
@@ -79,7 +84,11 @@ export class UserController {
 
     @ApiOperation({ summary: 'Получить привязки' })
     @Get('me/bindings')
-    @UseGuards(JwtAuthGuardHttp({}))
+    @UseGuards(
+        JwtAuthGuardHttp({
+            allowSofDeleted: true
+        })
+    )
     @ApiOkResponse({ type: OAuthBindingDto, isArray: true })
     @ApiErrorResponses(401)
     async getBindings(@CurrentActor() actor: Actor): Promise<OAuthBindingDto[]> {
@@ -119,5 +128,24 @@ export class UserController {
     @ApiErrorResponses(400, 401, 409)
     async addEmail(@CurrentActor() actor: Actor, @Body() dto: AddEmailDto): Promise<AlertBaseDto> {
         return this.userService.addEmail(actor, dto);
+    }
+
+    @Delete('soft')
+    @ApiOperation({ summary: 'Удаление себя (soft)' })
+    @ApiOkResponse()
+    @UseGuards(JwtAuthGuardHttp({ permissions: [Permission.UsersAdminHardDelete] }))
+    @ApiErrorResponses(403, 404)
+    async deleteSoft(@CurrentActor() actor: Actor) {
+        await this.userService.softDelete(actor);
+    }
+
+    @Post('restore')
+    @HttpCode(HttpStatus.OK)
+    @ApiOperation({ summary: 'Восстановление аккаунта' })
+    @UseGuards(JwtAuthGuardHttp({ allowSofDeleted: true }))
+    @ApiOkResponse({ type: UserDto })
+    @ApiErrorResponses(400, 401)
+    async restore(@CurrentActor() actor: Actor): Promise<UserDto> {
+        return this.userService.restore(actor);
     }
 }
