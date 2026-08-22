@@ -59,3 +59,11 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 
 /generated/prisma
+
+frontend
+/frontend
+/frontend/*
+/frontend/node_modules
+/frontend/.next
+/frontend/out
+/frontend/.env.local

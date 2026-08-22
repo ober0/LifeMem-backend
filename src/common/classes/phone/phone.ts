@@ -45,7 +45,7 @@ export class Phone {
             return false;
         }
 
-        if (appConstants.phone.whitelist && !appConstants.phone.whitelist.includes(country)) {
+        if (appConstants.phone.whitelist?.length && !appConstants.phone.whitelist.includes(country)) {
             return false;
         }
 
