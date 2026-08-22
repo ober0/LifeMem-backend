@@ -1,0 +1,79 @@
+model Entry {
+  id String @id @default(uuid()) @db.Uuid
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id") @db.Uuid
+
+  title String
+  text  String?
+
+  voice  EntryVoice?
+  images EntryImage[]
+
+  vectors EntryVector[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@map("entry")
+}
+
+model EntryImage {
+  id String @id @default(uuid()) @db.Uuid
+
+  entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId String @map("entry_id") @db.Uuid
+
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId String @map("file_id") @db.Uuid
+
+  aiTranscription String? @map("ai_transcription")
+  description     String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("entry_image")
+}
+
+model EntryVoice {
+  id String @id @default(uuid()) @db.Uuid
+
+  entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId String @unique @map("entry_id") @db.Uuid
+
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId String @map("file_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("entry_voice")
+}
+
+enum EntryVectorKind {
+  Text
+  Title
+  Image
+
+  @@map("entry_vector_kind")
+}
+
+model EntryVector {
+  id String @id @default(uuid()) @db.Uuid
+
+  entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId String @map("entry_id") @db.Uuid
+
+  kind      EntryVectorKind             @default(Text)
+  embedding Unsupported("vector(1536)")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([entryId, kind])
+  @@index([entryId])
+  @@map("entry_vector")
+}

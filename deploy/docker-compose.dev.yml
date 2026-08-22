@@ -1,6 +1,6 @@
 services:
     lifemem-postgres:
-        image: postgres:18
+        image: pgvector/pgvector:pg18
         container_name: lifemem-postgres
         restart: always
         environment:

@@ -37,6 +37,8 @@ model User {
   userSettings UserSettings?
   logs         Logs[]
 
+  entries Entry[]
+
   deletedAt DateTime? @map("deletedAt")
 
   createdAt DateTime @default(now()) @map("created_at")
