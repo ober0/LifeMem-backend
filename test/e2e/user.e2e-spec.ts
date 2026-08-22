@@ -2,13 +2,8 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import type { App } from 'supertest/types';
 
-import {
-    authHeader,
-    createVerifiedUser,
-    expectErrorCode,
-    loginAsSeedAdmin,
-    MOBILE_HEADERS
-} from './helpers/auth';
+import { PrismaService } from '../../src/api/prisma/prisma.service';
+import { authHeader, createVerifiedUser, expectErrorCode, loginAsSeedAdmin, MOBILE_HEADERS } from './helpers/auth';
 import { createTestApp } from './helpers/create-app';
 
 describe('User errors (e2e)', () => {
@@ -88,6 +83,79 @@ describe('User errors (e2e)', () => {
 
             expect(response.status).toBe(400);
             expectErrorCode(response.body, 'auth.invalid_code');
+        });
+    });
+
+    describe('soft deleted account access', () => {
+        let deletedUser: Awaited<ReturnType<typeof createVerifiedUser>>;
+        let activeUser: Awaited<ReturnType<typeof createVerifiedUser>>;
+
+        beforeAll(async () => {
+            const suffix = Date.now();
+            deletedUser = await createVerifiedUser(app, `test-deleted-${suffix}`, new Date());
+            activeUser = await createVerifiedUser(app, `test-active-${suffix}`);
+        });
+
+        afterAll(async () => {
+            const prisma = app.get(PrismaService);
+
+            await prisma.user.deleteMany({
+                where: {
+                    id: { in: [deletedUser.userId, activeUser.userId] }
+                }
+            });
+        });
+
+        it('GET /me returns soft-deleted user with deletedAt', async () => {
+            const response = await request(app.getHttpServer())
+                .get('/api/v1/user/me')
+                .set(MOBILE_HEADERS)
+                .set(authHeader(deletedUser.accessToken));
+
+            expect(response.status).toBe(200);
+            expect(response.body.info.deletedAt).toBeTruthy();
+        });
+
+        it('PATCH /me returns 403 for soft-deleted user', async () => {
+            const response = await request(app.getHttpServer())
+                .patch('/api/v1/user/me')
+                .set(MOBILE_HEADERS)
+                .set(authHeader(deletedUser.accessToken))
+                .send({ nickname: 'blocked_nick' });
+
+            expect(response.status).toBe(403);
+            expectErrorCode(response.body, 'auth.forbidden_deleted');
+        });
+
+        it('POST /restore clears deletedAt', async () => {
+            const response = await request(app.getHttpServer())
+                .post('/api/v1/user/restore')
+                .set(MOBILE_HEADERS)
+                .set(authHeader(deletedUser.accessToken));
+
+            expect(response.status).toBe(200);
+            expect(response.body.deletedAt).toBeNull();
+        });
+
+        it('PATCH /me works after restore', async () => {
+            const response = await request(app.getHttpServer())
+                .patch('/api/v1/user/me')
+                .set(MOBILE_HEADERS)
+                .set(authHeader(deletedUser.accessToken))
+                .send({ nickname: 'restored_nick' });
+
+            expect(response.status).toBe(200);
+            expect(response.body.nickname).toBe('restored_nick');
+        });
+
+        it('POST /restore returns 400 when account is not deleted', async () => {
+            const response = await request(app.getHttpServer())
+                .post('/api/v1/user/restore')
+                .set(MOBILE_HEADERS)
+                .set(authHeader(activeUser.accessToken));
+
+            expect(response.status).toBe(400);
+            expectErrorCode(response.body, 'user.not_deleted');
         });
     });
 
@@ -188,7 +256,7 @@ describe('User errors (e2e)', () => {
 
         it('400 delete self', async () => {
             const response = await request(app.getHttpServer())
-                .delete(`/api/v1/admin/user/${adminUserId}`)
+                .delete(`/api/v1/admin/user/${adminUserId}/hard`)
                 .set(MOBILE_HEADERS)
                 .set(authHeader(adminToken));
 

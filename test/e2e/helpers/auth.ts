@@ -54,7 +54,8 @@ export async function loginAsSeedAdmin(app: INestApplication<App>): Promise<{
 
 export async function createVerifiedUser(
     app: INestApplication<App>,
-    suffix: string
+    suffix: string,
+    deletedAt?: Date | null
 ): Promise<{ accessToken: string; userId: string; email: string }> {
     const prisma = app.get(PrismaService);
     const email = `user_${suffix}@lifemem.test`;
@@ -74,7 +75,8 @@ export async function createVerifiedUser(
             isEmailVerified: true,
             role: { connect: { id: role.id } },
             password: { create: { password: passwordHash } },
-            userSettings: { create: { json: {} } }
+            userSettings: { create: { json: {} } },
+            ...(deletedAt ? { deletedAt } : {})
         }
     });
 
