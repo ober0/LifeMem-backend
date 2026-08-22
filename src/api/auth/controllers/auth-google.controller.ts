@@ -8,7 +8,6 @@ import { ThrottleByIp, ThrottleByUser } from '../../../common/decorators/throttl
 import { JwtAuthGuardHttp } from '../../../common/guards/auth.guard';
 import { apiError } from '../../../common/helpers/errors';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
-import { translations } from '../../../common/translation/text-translations';
 import { GoogleAuthDto, GoogleLinkDto } from '../dto/google-auth.dto';
 import { LoginResponseDto } from '../dto/tokens.dto';
 import { AuthGoogleService } from '../services/auth-google.service';
