@@ -1,0 +1,34 @@
+{
+    "text_or_voice_required": {
+        "ru": "Укажите текст или голосовое сообщение",
+        "en": "Provide text or a voice message"
+    },
+    "text_or_voice_only": {
+        "ru": "Укажите только текст или только голосовое сообщение",
+        "en": "Provide either text or a voice message, not both"
+    },
+    "too_many_photos": {
+        "ru": "Можно прикрепить не более {{max}} фото",
+        "en": "You can attach at most {{max}} photos"
+    },
+    "invalid_voice_type": {
+        "ru": "Недопустимый формат голосового сообщения",
+        "en": "Invalid voice message format"
+    },
+    "invalid_photo_type": {
+        "ru": "Недопустимый формат фото",
+        "en": "Invalid photo format"
+    },
+    "person_not_found": {
+        "ru": "Связанный человек не найден",
+        "en": "Linked person not found"
+    },
+    "place_not_found": {
+        "ru": "Связанное место не найдено",
+        "en": "Linked place not found"
+    },
+    "geo_incomplete": {
+        "ru": "Укажите и широту, и долготу",
+        "en": "Provide both latitude and longitude"
+    }
+}

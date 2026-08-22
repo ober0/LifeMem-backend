@@ -32,6 +32,14 @@ export type ErrorsTranslationKey =
   | 'common.too_many_requests'
   | 'common.unknown'
   | 'common.validation_failed'
+  | 'entry.geo_incomplete'
+  | 'entry.invalid_photo_type'
+  | 'entry.invalid_voice_type'
+  | 'entry.person_not_found'
+  | 'entry.place_not_found'
+  | 'entry.text_or_voice_only'
+  | 'entry.text_or_voice_required'
+  | 'entry.too_many_photos'
   | 'role-permissions.role.not_found'
   | 'role.default_not_found'
   | 'role.not_found'
@@ -132,4 +140,5 @@ export type TextsTranslationKey =
   | 'code-email.title'
   | 'common.codeSentEmail'
   | 'common.codeSentPhone'
-  | 'common.inDevelopment';
+  | 'common.inDevelopment'
+  | 'entry.defaultName';

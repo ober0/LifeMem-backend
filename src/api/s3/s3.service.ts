@@ -1,4 +1,4 @@
-import { CreateBucketCommand, HeadBucketCommand, S3Client } from '@aws-sdk/client-s3';
+import { CreateBucketCommand, HeadBucketCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 
 import type { S3Config } from '../../common/config/env';
@@ -41,6 +41,17 @@ export class S3Service implements OnModuleInit {
 
     async ping(): Promise<void> {
         await this._s3.send(new HeadBucketCommand({ Bucket: this._bucket }));
+    }
+
+    async upload(params: { key: string; body: Buffer; contentType?: string }): Promise<void> {
+        await this._s3.send(
+            new PutObjectCommand({
+                Bucket: this._bucket,
+                Key: params.key,
+                Body: params.body,
+                ContentType: params.contentType
+            })
+        );
     }
 
     private async createBucketIfMissing(): Promise<void> {

@@ -23,6 +23,7 @@ import { LoggerMiddleware } from '../../common/middleware/logger.middleware';
 import { AuthModule } from '../auth/auth.module';
 import { AuthLogModule } from '../auth-log/auth-log.module';
 import { CacheModule } from '../cache/cache.module';
+import { EntryModule } from '../entry/entry.module';
 import { HealthModule } from '../health/health.module';
 import { LogsModule } from '../logs/logs.module';
 import { MobileSmsModule } from '../mobile-sms/mobile-sms.module';
@@ -79,7 +80,8 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         LogsModule,
         AuthLogModule,
         MobileSmsModule,
-        CacheModule
+        CacheModule,
+        EntryModule
     ],
     providers: [
         {
