@@ -1,0 +1,92 @@
+model Person {
+  id String @id @default(uuid()) @db.Uuid
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id") @db.Uuid
+
+  name String
+
+  entries EntryPerson[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("person")
+}
+
+model Place {
+  id String @id @default(uuid()) @db.Uuid
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id") @db.Uuid
+
+  name String
+
+  entries EntryPlace[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("place")
+}
+
+model Thing {
+  id String @id @default(uuid()) @db.Uuid
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id") @db.Uuid
+
+  name String
+
+  entries EntryThing[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("thing")
+}
+
+model EntryPerson {
+  entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId String @map("entry_id") @db.Uuid
+
+  person   Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  personId String @map("person_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([entryId, personId])
+  @@map("entry_person")
+}
+
+model EntryPlace {
+  entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId String @map("entry_id") @db.Uuid
+
+  place   Place  @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  placeId String @map("place_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([entryId, placeId])
+  @@map("entry_place")
+}
+
+model EntryThing {
+  entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId String @map("entry_id") @db.Uuid
+
+  thing   Thing  @relation(fields: [thingId], references: [id], onDelete: Cascade)
+  thingId String @map("thing_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([entryId, thingId])
+  @@map("entry_thing")
+}

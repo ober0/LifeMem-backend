@@ -11,7 +11,7 @@ model File {
 
   key      String
   filename String?
-  mimeType String?
+  mimeType String? @map("mime_type")
   size     BigInt?
   type     FileType
 

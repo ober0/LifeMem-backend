@@ -39,6 +39,10 @@ model User {
 
   entries Entry[]
 
+  people Person[]
+  places Place[]
+  things Thing[]
+
   deletedAt DateTime? @map("deletedAt")
 
   createdAt DateTime @default(now()) @map("created_at")

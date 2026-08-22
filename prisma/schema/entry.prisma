@@ -12,14 +12,23 @@ model Entry {
 
   vectors EntryVector[]
 
-  isReady    Boolean          @default(false)
+  isReady    Boolean          @default(false) @map("is_ready")
   processing EntryProcessing?
+
+  latitude      Decimal? @db.Decimal(10, 7)
+  longitude     Decimal? @db.Decimal(10, 7)
+  locationLabel String?  @map("location_label")
+
+  people EntryPerson[]
+  places EntryPlace[]
+  things EntryThing[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([userId])
   @@index([userId, createdAt])
+  @@index([userId, isReady, createdAt])
   @@map("entry")
 }
 
@@ -70,13 +79,16 @@ model EntryVector {
   entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
   entryId String @map("entry_id") @db.Uuid
 
-  kind      EntryVectorKind             @default(Text)
-  embedding Unsupported("vector(1536)")
+  kind       EntryVectorKind        @default(Text)
+  model      String
+  dimensions Int
+  embedding  Unsupported("vector")?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([entryId, kind])
   @@index([entryId])
+  @@index([dimensions])
   @@map("entry_vector")
 }
