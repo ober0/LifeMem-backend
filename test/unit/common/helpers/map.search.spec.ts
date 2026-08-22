@@ -1,6 +1,6 @@
-import { DateMinMaxFilterDto, NumberMinMaxFilterDto } from '../types/search/min-max.filter.dto';
-import { Contains } from './contains.decorator';
-import { mapSearch } from './map.search';
+import { DateMinMaxFilterDto, NumberMinMaxFilterDto } from '../../../../src/common/types/search/min-max.filter.dto';
+import { Contains } from '../../../../src/common/helpers/contains.decorator';
+import { mapSearch } from '../../../../src/common/helpers/map.search';
 
 class DemoFilterDto {
     nickname?: string;

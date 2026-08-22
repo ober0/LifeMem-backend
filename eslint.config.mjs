@@ -72,7 +72,7 @@ export default defineConfig([
     },
 
     {
-        files: ['**/*.spec.ts', '**/*.e2e.ts', '**/tests/**/*.{ts,js}'],
+        files: ['test/**/*.{ts,js}', '**/*.spec.ts', '**/*.e2e.ts', '**/tests/**/*.{ts,js}'],
         rules: {
             '@typescript-eslint/no-unused-vars': 'off'
         }

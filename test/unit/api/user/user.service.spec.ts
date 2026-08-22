@@ -1,10 +1,10 @@
 import { HttpException } from '@nestjs/common';
 import { ConfirmCodeType } from '@prisma/client';
 
-import { Actor } from '../../common/classes/actor';
-import { UserService } from './user.service';
+import { Actor } from '../../../../src/common/classes/actor';
+import { UserService } from '../../../../src/api/user/user.service';
 
-jest.mock('../../common/helpers/generate-code', () => ({
+jest.mock('../../../../src/common/helpers/generate-code', () => ({
     generateCode: () => 123456
 }));
 

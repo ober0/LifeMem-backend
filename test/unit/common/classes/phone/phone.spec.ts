@@ -1,4 +1,4 @@
-import { Phone } from './phone';
+import { Phone } from '../../../../../src/common/classes/phone/phone';
 
 describe('Phone', () => {
     it('parses valid RU number', () => {
