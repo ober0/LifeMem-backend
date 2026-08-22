@@ -1,11 +1,13 @@
-import { HeadBucketCommand, S3Client } from '@aws-sdk/client-s3';
-import { Inject, Injectable } from '@nestjs/common';
+import { CreateBucketCommand, HeadBucketCommand, S3Client } from '@aws-sdk/client-s3';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 
-import type { S3Config} from '../../common/config/env';
+import type { S3Config } from '../../common/config/env';
 import { s3Config } from '../../common/config/env';
 
 @Injectable()
-export class S3Service {
+export class S3Service implements OnModuleInit {
+    private static ensureBucketPromise: Promise<void> | null = null;
+
     private readonly _s3: S3Client;
     private readonly _bucket: string;
     private readonly _endpoint: string;
@@ -25,7 +27,39 @@ export class S3Service {
         });
     }
 
+    async onModuleInit(): Promise<void> {
+        await this.ensureBucket();
+    }
+
+    async ensureBucket(): Promise<void> {
+        if (!S3Service.ensureBucketPromise) {
+            S3Service.ensureBucketPromise = this.createBucketIfMissing();
+        }
+
+        await S3Service.ensureBucketPromise;
+    }
+
     async ping(): Promise<void> {
         await this._s3.send(new HeadBucketCommand({ Bucket: this._bucket }));
+    }
+
+    private async createBucketIfMissing(): Promise<void> {
+        try {
+            await this._s3.send(new HeadBucketCommand({ Bucket: this._bucket }));
+            return;
+        } catch {
+            // already
+        }
+
+        try {
+            await this._s3.send(new CreateBucketCommand({ Bucket: this._bucket }));
+        } catch (error) {
+            const name = (error as { name?: string }).name;
+            if (name === 'BucketAlreadyOwnedByYou' || name === 'BucketAlreadyExists') {
+                return;
+            }
+
+            throw error;
+        }
     }
 }

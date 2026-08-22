@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import * as nodemailer from 'nodemailer';
 import { join } from 'path';
 
-import type { SmtpConfig} from '../../common/config/env';
+import { AppConfig, appConfig, SmtpConfig } from '../../common/config/env';
 import { smtpConfig } from '../../common/config/env';
 import { LangEnum } from '../../common/types/common/lang.enum';
 import { CODE_EMAIL_TRANSLATIONS } from './config/code-email.translations';
@@ -15,7 +15,10 @@ export class SmtpService {
     private _transporter: nodemailer.Transporter;
     private readonly codeTemplate: string;
 
-    constructor(@Inject(smtpConfig.KEY) private readonly smtp: SmtpConfig) {
+    constructor(
+        @Inject(smtpConfig.KEY) private readonly smtp: SmtpConfig,
+        @Inject(appConfig.KEY) private readonly app: AppConfig
+    ) {
         this.createTransporter();
         this.codeTemplate = this.loadTemplate('code.html');
     }
@@ -50,6 +53,11 @@ export class SmtpService {
     }
 
     private createTransporter() {
+        if (this.app.nodeEnv === 'test') {
+            this._transporter = nodemailer.createTransport({ jsonTransport: true });
+            return;
+        }
+
         this._transporter = nodemailer.createTransport({
             host: this.smtp.host,
             port: this.smtp.port,

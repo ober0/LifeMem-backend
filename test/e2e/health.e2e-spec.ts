@@ -3,13 +3,11 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 
 import { createTestApp } from './helpers/create-app';
-import { ensureE2eBucket } from './helpers/ensure-bucket';
 
 describe('Health (e2e)', () => {
     let app: INestApplication<App>;
 
     beforeAll(async () => {
-        await ensureE2eBucket();
         app = await createTestApp();
     }, 30000);
 

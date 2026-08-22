@@ -10,7 +10,6 @@ import {
     MOBILE_HEADERS
 } from './helpers/auth';
 import { createTestApp } from './helpers/create-app';
-import { ensureE2eBucket } from './helpers/ensure-bucket';
 
 describe('User errors (e2e)', () => {
     let app: INestApplication<App>;
@@ -18,7 +17,6 @@ describe('User errors (e2e)', () => {
     let adminUserId: string;
 
     beforeAll(async () => {
-        await ensureE2eBucket();
         app = await createTestApp();
 
         const admin = await loginAsSeedAdmin(app);
