@@ -1,4 +1,4 @@
-import { FileType } from '@prisma/client';
+import { EntryProcessingStatus, EntryProcessingType, FileType } from '@prisma/client';
 
 import { LocationDto } from '../dto/create-entry.dto';
 
@@ -24,6 +24,11 @@ export type CreateEntryFileInput = {
     description?: string | null;
 };
 
+export type CreateEntryJobInput = {
+    type: EntryProcessingType;
+    status?: EntryProcessingStatus;
+};
+
 export type CreateEntryInput = {
     userId: string;
     title: string;
@@ -33,4 +38,5 @@ export type CreateEntryInput = {
     placeIds: string[];
     voice?: CreateEntryFileInput;
     images: CreateEntryFileInput[];
+    jobs?: CreateEntryJobInput[];
 };

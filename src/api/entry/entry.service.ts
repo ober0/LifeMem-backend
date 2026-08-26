@@ -4,6 +4,9 @@ import { FileType } from '@prisma/client';
 import type { Actor } from '../../common/classes/actor';
 import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
+import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
+import { EntryProcessingService } from '../entry-processing/entry-processing.service';
+import { EntryPipelinesEnum } from '../entry-processing/pipelines';
 import { S3Service } from '../s3/s3.service';
 import type { BaseEntryDto, BaseEntryUpdateDto } from './dto/base';
 import { CreateEntryDto } from './dto/create-entry.dto';
@@ -30,7 +33,8 @@ import type { CreateEntryFileInput, UploadedEntryFiles, UploadedFile } from './t
 export class EntryService {
     constructor(
         private readonly entryRepository: EntryRepository,
-        private readonly s3Service: S3Service
+        private readonly s3Service: S3Service,
+        private readonly entryProcessingService: EntryProcessingService
     ) {}
 
     private async validateCreateInput(
@@ -84,10 +88,13 @@ export class EntryService {
             )
         ]);
 
+        const text = dto.text?.trim() || null;
+        const hasLocationCoords = location?.latitude !== undefined && location.longitude !== undefined;
+
         const entry = await this.entryRepository.create({
             userId,
             title: dto.title ? dto.title.trim() : generateDefaultEntryName(actor.settings?.lang),
-            text: dto.text?.trim() || null,
+            text,
             location,
             personIds,
             placeIds,
@@ -95,12 +102,44 @@ export class EntryService {
             images: imageInputs
         });
 
+        const basePayload = {
+            pipeline: EntryPipelinesEnum.Create,
+            userId,
+            entryId: entry.id
+        };
+
+        await this.entryProcessingService.activatePipeline(
+            EntryPipelinesEnum.Create,
+            {
+                hasCoords: hasLocationCoords,
+                hasVoice: Boolean(voiceFile),
+                hasText: Boolean(text),
+                hasImage: photoFiles.length > 0
+            },
+            {
+                ...(hasLocationCoords && {
+                    [DelayedJob.EntryLocation]: {
+                        ...basePayload,
+                        latitude: location!.latitude!,
+                        longitude: location!.longitude!,
+                        locationLabel: location!.locationLabel || undefined
+                    }
+                }),
+                [DelayedJob.EntryStt]: basePayload,
+                [DelayedJob.EntryVision]: basePayload,
+                [DelayedJob.EntryEmbedText]: basePayload,
+                [DelayedJob.EntryEmbedTitle]: basePayload,
+                [DelayedJob.EntryLocationDetect]: basePayload,
+                [DelayedJob.EntryEmbedImage]: basePayload
+            }
+        );
+
         const images = await this.mapImages(entry.images);
 
         return entryMapper.toCreateResponse(
             {
                 id: entry.id,
-                status: entry.processing!.status,
+                jobs: entry.jobs,
                 peoples: entry.people.map(({ person }) => person),
                 places: entry.places.map(({ place }) => place)
             },

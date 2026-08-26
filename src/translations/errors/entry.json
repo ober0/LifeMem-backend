@@ -42,5 +42,13 @@
     "geo_incomplete": {
         "ru": "Укажите и широту, и долготу",
         "en": "Provide both latitude and longitude"
+    },
+    "invalid_job_type": {
+        "ru": "Неизвестный тип задачи обработки",
+        "en": "Unknown processing job type"
+    },
+    "duplicate_job": {
+        "ru": "Задача обработки такого типа уже существует",
+        "en": "A processing job of this type already exists"
     }
 }

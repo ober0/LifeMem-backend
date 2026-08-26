@@ -31,7 +31,7 @@ export const entryMapper = {
     toCreateResponse(entry: CreateEntrySource, images: EntryImageDto[]): CreateEntryResponseDto {
         return {
             id: entry.id,
-            status: entry.status,
+            jobs: entry.jobs,
             images,
             peoples: toRelations(entry.peoples),
             places: toRelations(entry.places)

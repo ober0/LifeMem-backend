@@ -38,8 +38,11 @@ const entryImagesSelect = {
 
 export const createEntrySelect = {
     id: true,
-    processing: {
-        select: { status: true }
+    jobs: {
+        select: {
+            type: true,
+            status: true
+        }
     },
     ...entryImagesSelect,
     ...entryRelationsSelect

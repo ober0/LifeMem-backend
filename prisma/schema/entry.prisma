@@ -23,9 +23,8 @@ model Entry {
   people EntryPerson[]
   places EntryPlace[]
 
-  createdAt            DateTime @default(now()) @map("created_at")
-  updatedAt            DateTime @updatedAt @map("updated_at")
-  entryProcessingJobId String   @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([userId])
   @@index([userId, createdAt])

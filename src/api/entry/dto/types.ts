@@ -1,4 +1,4 @@
-import type { CreateEntryResponseDto } from './create-entry-response.dto';
+import type { EntryProcessingStatus, EntryProcessingType } from '@prisma/client';
 
 export type EntryRelationSource = {
     id: string;
@@ -13,9 +13,14 @@ export type EntryImageSource = {
     updatedAt: Date;
 };
 
+export type CreateEntryJobSource = {
+    type: EntryProcessingType;
+    status: EntryProcessingStatus;
+};
+
 export type CreateEntrySource = {
     id: string;
-    status: CreateEntryResponseDto['status'];
+    jobs: CreateEntryJobSource[];
     peoples: EntryRelationSource[];
     places: EntryRelationSource[];
 };

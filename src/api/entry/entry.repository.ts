@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntryProcessingStageKind, EntryProcessingStatus, type Prisma } from '@prisma/client';
+import { type Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { baseEntrySelect, createEntrySelect } from './consts/entry.constants';
@@ -105,16 +105,6 @@ export class EntryRepository {
             longitude: data.location?.longitude,
             locationLabel: data.location?.locationLabel ?? null,
             isReady: false,
-            processing: {
-                create: {
-                    status: EntryProcessingStatus.Uploaded,
-                    stages: {
-                        create: {
-                            stage: EntryProcessingStageKind.Upload
-                        }
-                    }
-                }
-            },
             ...(data.personIds.length > 0 && {
                 people: {
                     create: data.personIds.map((personId) => ({ personId }))
@@ -143,7 +133,16 @@ export class EntryRepository {
                         }
                     }))
                 }
-            })
+            }),
+            ...(data.jobs &&
+                data.jobs.length > 0 && {
+                    jobs: {
+                        create: data.jobs.map((job) => ({
+                            type: job.type,
+                            status: job.status
+                        }))
+                    }
+                })
         };
 
         return this.prisma.entry.create({

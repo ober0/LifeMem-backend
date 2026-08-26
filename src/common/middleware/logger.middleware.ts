@@ -3,9 +3,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { HttpMethod } from '@prisma/client';
 import type { NextFunction, Request, Response } from 'express';
 
+import { DelayedWorkerService } from '../../api/delayed-worker/delayed-worker.service';
 import type { LogsCreateDto } from '../../api/logs/dto/base.dto';
 import { LogsService } from '../../api/logs/logs.service';
-import { DelayedWorkerService } from '../../api/delayed-worker/delayed-worker.service';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
