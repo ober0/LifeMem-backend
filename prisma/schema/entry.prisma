@@ -12,8 +12,9 @@ model Entry {
 
   vectors EntryVector[]
 
-  isReady    Boolean          @default(false) @map("is_ready")
-  processing EntryProcessing?
+  isReady Boolean @default(false) @map("is_ready")
+
+  jobs EntryProcessingJob[]
 
   latitude      Decimal? @db.Decimal(10, 7)
   longitude     Decimal? @db.Decimal(10, 7)
@@ -22,8 +23,9 @@ model Entry {
   people EntryPerson[]
   places EntryPlace[]
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+  entryProcessingJobId String   @db.Uuid
 
   @@index([userId])
   @@index([userId, createdAt])

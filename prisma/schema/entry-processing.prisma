@@ -1,51 +1,50 @@
 enum EntryProcessingStatus {
-  Uploaded
-  Transcribing
-  VisionProcessing
-  Enriching
-  Vectorizing
-  Ready
+  Pending
+  Running
+  Done
   Failed
 
   @@map("entry_processing_status")
 }
 
-enum EntryProcessingStageKind {
-  Upload
-  SttTranscription
-  VisionCaption
-  TextEnrichment
-  EmbeddingText
-  EmbeddingTitle
-  EmbeddingImage
+enum EntryProcessingType {
+  Stt
+  Vision
+  LocationConnect
+  LocationAndPeopleDetect
+  EmbedText
+  EmbedTitle
+  EmbedImage
 
-  @@map("entry_processing_stage_kind")
+  @@map("entry_processing_type")
 }
 
-model EntryProcessing {
+model EntryProcessingJob {
   id String @id @default(uuid()) @db.Uuid
 
   entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  entryId String @unique @map("entry_id") @db.Uuid
+  entryId String @map("entry_id") @db.Uuid
 
-  status       EntryProcessingStatus @default(Uploaded)
-  errorMessage String?               @map("error_message")
+  type   EntryProcessingType
+  status EntryProcessingStatus @default(Pending)
 
-  stages EntryProcessingStage[]
+  errorMessage String? @map("error_message")
+
+  usage EntryProcessingUsage?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("entry_processing")
+  @@unique([entryId, type])
+  @@index([entryId, status])
+  @@map("entry_processing_job")
 }
 
-model EntryProcessingStage {
+model EntryProcessingUsage {
   id String @id @default(uuid()) @db.Uuid
 
-  processing   EntryProcessing @relation(fields: [processingId], references: [id], onDelete: Cascade)
-  processingId String          @map("processing_id") @db.Uuid
-
-  stage EntryProcessingStageKind
+  job   EntryProcessingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId String             @unique @map("job_id") @db.Uuid
 
   model        String?
   inputTokens  Int?     @map("input_tokens")
@@ -55,6 +54,5 @@ model EntryProcessingStage {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([processingId, createdAt])
-  @@map("entry_processing_stage")
+  @@map("entry_processing_usage")
 }
