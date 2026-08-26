@@ -1,4 +1,8 @@
 {
+    "not_found": {
+        "ru": "Заметка не найдена",
+        "en": "Entry not found"
+    },
     "text_or_voice_required": {
         "ru": "Укажите текст или голосовое сообщение",
         "en": "Provide text or a voice message"
@@ -10,6 +14,14 @@
     "too_many_photos": {
         "ru": "Можно прикрепить не более {{max}} фото",
         "en": "You can attach at most {{max}} photos"
+    },
+    "photo_descriptions_mismatch": {
+        "ru": "Число описаний должно совпадать с числом фото",
+        "en": "Number of descriptions must match the number of photos"
+    },
+    "invalid_photo_descriptions": {
+        "ru": "photoDescriptions должен быть JSON-массивом строк или null",
+        "en": "photoDescriptions must be a JSON array of strings or null"
     },
     "invalid_voice_type": {
         "ru": "Недопустимый формат голосового сообщения",

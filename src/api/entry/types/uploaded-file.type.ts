@@ -21,6 +21,7 @@ export type CreateEntryFileInput = {
     mimeType?: string;
     size: bigint;
     type: FileType;
+    description?: string | null;
 };
 
 export type CreateEntryInput = {

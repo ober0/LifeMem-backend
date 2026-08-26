@@ -41,7 +41,6 @@ model User {
 
   people Person[]
   places Place[]
-  things Thing[]
 
   deletedAt DateTime? @map("deletedAt")
 

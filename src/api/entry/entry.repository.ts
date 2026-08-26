@@ -1,8 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { type Entry, EntryProcessingStageKind, EntryProcessingStatus, type Prisma } from '@prisma/client';
+import { EntryProcessingStageKind, EntryProcessingStatus, type Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { baseEntrySelect, createEntrySelect } from './consts/entry.constants';
+import type { ParsedLocation } from './helpers/parse-form-data.helper';
 import { CreateEntryInput } from './types/uploaded-file.type';
+
+export type UpdateBaseEntryInput = {
+    title?: string;
+    location?: ParsedLocation;
+    personIds?: string[];
+    placeIds?: string[];
+};
 
 @Injectable()
 export class EntryRepository {
@@ -34,7 +43,60 @@ export class EntryRepository {
         });
     }
 
-    async create(data: CreateEntryInput): Promise<Entry & { processing: { status: EntryProcessingStatus } | null }> {
+    async findOwnedById(id: string, userId: string) {
+        return this.prisma.entry.findFirst({
+            where: { id, userId }
+        });
+    }
+
+    async updateBase(id: string, data: UpdateBaseEntryInput) {
+        return this.prisma.$transaction(async (tx) => {
+            if (data.personIds) {
+                await tx.entryPerson.deleteMany({ where: { entryId: id } });
+
+                if (data.personIds.length > 0) {
+                    await tx.entryPerson.createMany({
+                        data: data.personIds.map((personId) => ({ entryId: id, personId }))
+                    });
+                }
+            }
+
+            if (data.placeIds) {
+                await tx.entryPlace.deleteMany({ where: { entryId: id } });
+
+                if (data.placeIds.length > 0) {
+                    await tx.entryPlace.createMany({
+                        data: data.placeIds.map((placeId) => ({ entryId: id, placeId }))
+                    });
+                }
+            }
+
+            const locationData: Prisma.EntryUpdateInput = {};
+
+            if (data.location) {
+                if (data.location.latitude !== undefined) {
+                    locationData.latitude = data.location.latitude;
+                }
+                if (data.location.longitude !== undefined) {
+                    locationData.longitude = data.location.longitude;
+                }
+                if (data.location.locationLabel !== undefined) {
+                    locationData.locationLabel = data.location.locationLabel;
+                }
+            }
+
+            return tx.entry.update({
+                where: { id },
+                data: {
+                    ...(data.title !== undefined && { title: data.title }),
+                    ...locationData
+                },
+                select: baseEntrySelect
+            });
+        });
+    }
+
+    async create(data: CreateEntryInput) {
         const entryData: Prisma.EntryCreateInput = {
             user: { connect: { id: data.userId } },
             title: data.title,
@@ -74,9 +136,10 @@ export class EntryRepository {
             }),
             ...(data.images.length > 0 && {
                 images: {
-                    create: data.images.map((image) => ({
+                    create: data.images.map(({ description, ...file }) => ({
+                        description: description ?? null,
                         file: {
-                            create: image
+                            create: file
                         }
                     }))
                 }
@@ -85,11 +148,7 @@ export class EntryRepository {
 
         return this.prisma.entry.create({
             data: entryData,
-            include: {
-                processing: {
-                    select: { status: true }
-                }
-            }
+            select: createEntrySelect
         });
     }
 }

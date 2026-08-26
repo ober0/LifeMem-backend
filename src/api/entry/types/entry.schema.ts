@@ -30,6 +30,11 @@ export const createSchema = {
                 description: 'JSON-массив UUID',
                 example: '["b2c3d4e5-f6a7-4890-b123-456789abcdef0"]'
             },
+            photoDescriptions: {
+                type: 'string',
+                description: 'JSON-массив описаний в том же порядке, что и photos',
+                example: '[null,"Мы на скамейке"]'
+            },
             voice: { type: 'string', format: 'binary' },
             photos: {
                 type: 'array',

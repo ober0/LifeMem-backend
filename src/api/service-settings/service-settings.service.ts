@@ -5,6 +5,7 @@ import { appConstants } from '../../common/config/app.constants';
 import { cacheConstants, CacheKey } from '../../common/config/constants/cache.constants';
 import { apiError } from '../../common/helpers/errors';
 import { CacheService } from '../cache/cache.service';
+import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
 import { ServiceSettingsDto } from './dto/base.dto';
 import type { ServiceSettingsJsonDto } from './dto/settings-json.dto';
 import type { ServiceSettingsUpdateDto } from './dto/update.dto';
@@ -14,7 +15,8 @@ import { ServiceSettingsRepository } from './service-settings.repository';
 export class ServiceSettingsService {
     constructor(
         private readonly repository: ServiceSettingsRepository,
-        private readonly cacheService: CacheService
+        private readonly cacheService: CacheService,
+        private readonly delayedWorker: DelayedWorkerService
     ) {}
 
     async getJsonForRequest(): Promise<ServiceSettingsJsonDto> {
@@ -54,9 +56,9 @@ export class ServiceSettingsService {
                 ...Object.fromEntries(Object.entries(dto).filter(([_, v]) => v !== undefined))
             });
 
-            setImmediate(() => {
-                this.cacheService.invalidateCache(cacheConstants[CacheKey.ServiceSettings]());
-            });
+            this.delayedWorker.setImmediate(() =>
+                this.cacheService.invalidateCache(cacheConstants[CacheKey.ServiceSettings]())
+            );
 
             return created.json as unknown as ServiceSettingsJsonDto;
         }
@@ -70,9 +72,9 @@ export class ServiceSettingsService {
 
         const updated = await this.repository.upsert(merged);
 
-        setImmediate(() => {
-            this.cacheService.invalidateCache(cacheConstants[CacheKey.ServiceSettings]());
-        });
+        this.delayedWorker.setImmediate(() =>
+            this.cacheService.invalidateCache(cacheConstants[CacheKey.ServiceSettings]())
+        );
 
         return updated.json as unknown as ServiceSettingsJsonDto;
     }

@@ -13,6 +13,7 @@ import { apiError } from '../../../common/helpers/errors';
 import { generateCode } from '../../../common/helpers/generate-code';
 import { translations } from '../../../common/translation/text-translations';
 import { AuthLogService } from '../../auth-log/auth-log.service';
+import { DelayedWorkerService } from '../../delayed-worker/delayed-worker.service';
 import { MobileSmsService } from '../../mobile-sms/mobile-sms.service';
 import { NotificationMessage, NotificationType } from '../../notifications/const/messages';
 import { NotificationsService } from '../../notifications/notifications.service';
@@ -39,7 +40,8 @@ export class AuthService {
         private readonly authLogService: AuthLogService,
         private readonly mobileSmsService: MobileSmsService,
         private readonly notificationService: NotificationsService,
-        private readonly smtpService: SmtpService
+        private readonly smtpService: SmtpService,
+        private readonly delayedWorker: DelayedWorkerService
     ) {}
 
     private hashRefreshToken(refreshToken: string): string {
@@ -79,14 +81,14 @@ export class AuthService {
                 code,
                 userId: user.id
             });
-            setImmediate(() => {
+            this.delayedWorker.setImmediate(() =>
                 this.smtpService.sendCodeEmail({
                     to: email,
                     code,
                     lang: actor.requestLang,
                     expiresMinutes: appConstants.code.emailLifetimeMs / 60000
-                });
-            });
+                })
+            );
 
             return {
                 message: translations.byTextKey({
@@ -102,7 +104,7 @@ export class AuthService {
 
         const ip = actor.device?.ip ?? '';
 
-        setImmediate(() => {
+        this.delayedWorker.setImmediate(() => {
             void this.notificationService.create({
                 userId: user.id,
                 type: NotificationType.LoginToAccount,
@@ -148,9 +150,7 @@ export class AuthService {
         });
 
         if (this.app.isProduction) {
-            setImmediate(() => {
-                void this.mobileSmsService.sendMessage(phoneObj, code);
-            });
+            this.delayedWorker.setImmediate(() => this.mobileSmsService.sendMessage(phoneObj, code));
         }
 
         return {
@@ -193,7 +193,7 @@ export class AuthService {
         const { refreshToken, accessToken } = this.generateTokens(verifiedUser.id);
         await this.saveToken({ userId: verifiedUser.id, refreshToken, ip });
 
-        setImmediate(() => {
+        this.delayedWorker.setImmediate(() => {
             void this.authLogService.create({
                 userId: verifiedUser.id,
                 type: AuthType.Phone,

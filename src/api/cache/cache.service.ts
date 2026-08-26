@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 
 import type { CacheConfig, CacheKey, CacheTypes } from '../../common/config/constants/cache.constants';
+import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
 import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class CacheService {
-    constructor(private readonly redis: RedisService) {}
+    constructor(
+        private readonly redis: RedisService,
+        private readonly delayedWorker: DelayedWorkerService
+    ) {}
 
     async setInCache<K extends CacheKey>(config: CacheConfig, value: CacheTypes[K]): Promise<void> {
         await this.redis.set<CacheTypes[K]>({
@@ -34,9 +38,7 @@ export class CacheService {
             return null;
         }
 
-        setImmediate(() => {
-            void this.setInCache<K>(config, value);
-        });
+        this.delayedWorker.setImmediate(() => this.setInCache<K>(config, value));
 
         return value;
     }

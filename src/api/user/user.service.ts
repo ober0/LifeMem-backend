@@ -13,6 +13,7 @@ import { generateCode } from '../../common/helpers/generate-code';
 import { translations } from '../../common/translation/text-translations';
 import type { AlertBaseDto } from '../../common/types/common/alert-base.dto';
 import type { AuthUserInfo, PermissionDto, UserDto, UserSettingsDto } from '../../common/types/user';
+import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
 import { MobileSmsService } from '../mobile-sms/mobile-sms.service';
 import { RoleService } from '../role/role.service';
 import { SmtpService } from '../smtp/smtp.service';
@@ -34,7 +35,8 @@ export class UserService {
         private readonly userRepository: UserRepository,
         private readonly roleService: RoleService,
         private readonly smtpService: SmtpService,
-        private readonly mobileSmsService: MobileSmsService
+        private readonly mobileSmsService: MobileSmsService,
+        private readonly delayedWorker: DelayedWorkerService
     ) {}
 
     async create(dto: CreateUserDto): Promise<RegisterResponseDto> {
@@ -85,14 +87,14 @@ export class UserService {
             userId: user.id
         });
 
-        setImmediate(() => {
+        this.delayedWorker.setImmediate(() =>
             this.smtpService.sendCodeEmail({
                 to: email,
                 code,
                 lang: fullSettings.lang,
                 expiresMinutes: appConstants.code.mobileLifetimeMs / 60_000
-            });
-        });
+            })
+        );
 
         return {
             user: this.toUserDto(user),
@@ -144,9 +146,7 @@ export class UserService {
         });
 
         if (this.app.isProduction) {
-            setImmediate(() => {
-                void this.mobileSmsService.sendMessage(phone, code);
-            });
+            this.delayedWorker.setImmediate(() => this.mobileSmsService.sendMessage(phone, code));
         }
 
         return {
@@ -257,9 +257,7 @@ export class UserService {
         });
 
         if (this.app.isProduction) {
-            setImmediate(() => {
-                void this.mobileSmsService.sendMessage(phone, code);
-            });
+            this.delayedWorker.setImmediate(() => this.mobileSmsService.sendMessage(phone, code));
         }
 
         // FIXME убрать variable code
@@ -300,14 +298,14 @@ export class UserService {
             userId: actor.user.id
         });
 
-        setImmediate(() => {
+        this.delayedWorker.setImmediate(() =>
             this.smtpService.sendCodeEmail({
                 to: dto.email,
                 code,
                 lang: actor.requestLang,
                 expiresMinutes: appConstants.code.mobileLifetimeMs / 60_000
-            });
-        });
+            })
+        );
 
         return {
             message: translations.byTextKey({

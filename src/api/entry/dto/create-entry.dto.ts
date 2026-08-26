@@ -2,7 +2,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { ArrayMaxSize, IsArray, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
-import { parseFormDataUuidArray } from '../helpers/parse-form-data.helper';
+import { appConstants } from '../../../common/config/app.constants';
+import { parseFormDataPhotoDescriptions, parseFormDataUuidArray } from '../helpers/parse-form-data.helper';
 
 export class LocationDto {
     latitude?: number;
@@ -25,6 +26,17 @@ export class CreateEntryDto {
     @IsString()
     @MaxLength(20000)
     text?: string;
+
+    @ApiPropertyOptional({
+        description: 'Описания фото в том же порядке, что и photos',
+        type: 'string',
+        example: '[null,"Мы на скамейке"]'
+    })
+    @IsOptional()
+    @Transform(({ value }) => parseFormDataPhotoDescriptions(value))
+    @IsArray()
+    @ArrayMaxSize(appConstants.entry.maxPhotosPerEntry)
+    photoDescriptions?: (string | null)[];
 
     @ApiPropertyOptional({
         description: 'id связанных людей (JSON-массив UUID в multipart)',

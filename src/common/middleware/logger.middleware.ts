@@ -5,12 +5,16 @@ import type { NextFunction, Request, Response } from 'express';
 
 import type { LogsCreateDto } from '../../api/logs/dto/base.dto';
 import { LogsService } from '../../api/logs/logs.service';
+import { DelayedWorkerService } from '../../api/delayed-worker/delayed-worker.service';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
     private logger: Logger = new Logger(LoggerMiddleware.name);
 
-    constructor(private readonly loggerService: LogsService) {}
+    constructor(
+        private readonly loggerService: LogsService,
+        private readonly delayedWorker: DelayedWorkerService
+    ) {}
 
     use(req: Request, res: Response, next: NextFunction) {
         const start = Date.now();
@@ -31,7 +35,7 @@ export class LoggerMiddleware implements NestMiddleware {
                 this.logger.log(`END [${method}] ${url} [CODE: ${status}] - ${duration}ms`);
             }
 
-            setImmediate(() => {
+            this.delayedWorker.setImmediate(() => {
                 const data: LogsCreateDto = {
                     code: status,
                     method: (method.charAt(0).toUpperCase() + method.slice(1).toLowerCase()) as HttpMethod,
@@ -41,7 +45,7 @@ export class LoggerMiddleware implements NestMiddleware {
                     ip: req.ip
                 };
 
-                void this.loggerService.create(data);
+                return this.loggerService.create(data);
             });
         });
 

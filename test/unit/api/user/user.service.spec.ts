@@ -34,6 +34,7 @@ describe('UserService addPhone/addEmail', () => {
     const roleService = {};
     const smtpService = { sendCodeEmail: jest.fn() };
     const mobileSmsService = { sendMessage: jest.fn() };
+    const delayedWorker = { setImmediate: jest.fn((fn: () => unknown) => fn()), schedule: jest.fn() };
     const auth = { saltRounds: 10, jwtAccessSecret: 'a', jwtRefreshSecret: 'r' };
     const appConfig = { isProduction: false };
 
@@ -65,7 +66,8 @@ describe('UserService addPhone/addEmail', () => {
             userRepository as never,
             roleService as never,
             smtpService as never,
-            mobileSmsService as never
+            mobileSmsService as never,
+            delayedWorker as never
         );
     });
 

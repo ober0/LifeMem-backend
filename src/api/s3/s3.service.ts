@@ -1,4 +1,11 @@
-import { CreateBucketCommand, HeadBucketCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+    CreateBucketCommand,
+    GetObjectCommand,
+    HeadBucketCommand,
+    PutObjectCommand,
+    S3Client
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 
 import type { S3Config } from '../../common/config/env';
@@ -51,6 +58,19 @@ export class S3Service implements OnModuleInit {
                 Body: params.body,
                 ContentType: params.contentType
             })
+        );
+    }
+
+    async getSignedUrl(params: { key: string; expiresIn?: number }): Promise<string> {
+        return getSignedUrl(
+            this._s3,
+            new GetObjectCommand({
+                Bucket: this._bucket,
+                Key: params.key
+            }),
+            {
+                expiresIn: params.expiresIn ?? 3600
+            }
         );
     }
 
