@@ -51,14 +51,16 @@ export class CreateEntryDto {
     personIds?: string[];
 
     @ApiPropertyOptional({
-        description: 'id связанных мест (JSON-массив UUID в multipart)',
+        description:
+            `id уже созданных мест (JSON-массив UUID в multipart). ` +
+            `Вместе с location не больше ${appConstants.entry.maxPlacesPerEntry}`,
         type: 'string',
-        example: '["b2c3d4e5-f6a7-4890-b123-456789abcdef0"]'
+        example: '["b2c3d4e5-f6a7-4890-b123-456789abcdef"]'
     })
     @IsOptional()
     @Transform(({ value }) => parseFormDataUuidArray(value))
     @IsArray()
-    @ArrayMaxSize(10)
+    @ArrayMaxSize(appConstants.entry.maxPlacesPerEntry)
     @IsUUID('4', { each: true })
     placeIds?: string[];
 }

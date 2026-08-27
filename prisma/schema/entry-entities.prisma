@@ -22,7 +22,12 @@ model Place {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @map("user_id") @db.Uuid
 
-  name String
+  latitude  Decimal @db.Decimal(10, 7)
+  longitude Decimal @db.Decimal(10, 7)
+
+  name     String
+  fullName String? @map("full_name")
+  data     Json?   @db.JsonB
 
   entries EntryPlace[]
 

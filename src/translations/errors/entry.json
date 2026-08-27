@@ -50,5 +50,17 @@
     "duplicate_job": {
         "ru": "Задача обработки такого типа уже существует",
         "en": "A processing job of this type already exists"
+    },
+    "location_required": {
+        "ru": "Не указана локация",
+        "en": "Location is not specified"
+    },
+    "too_many_places": {
+        "ru": "Можно указать не более {{max}} локаций",
+        "en": "You can specify at most {{max}} places"
+    },
+    "invalid_locations": {
+        "ru": "locations должен быть JSON-массивом объектов с координатами",
+        "en": "locations must be a JSON array of objects with coordinates"
     }
 }

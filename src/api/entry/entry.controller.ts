@@ -24,7 +24,7 @@ import { BaseEntryDto, BaseEntryUpdateDto } from './dto/base';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import { EntryService } from './entry.service';
-import { parseLocation } from './helpers/parse-form-data.helper';
+import { parseLocations } from './helpers/parse-form-data.helper';
 import { createSchema } from './types/entry.schema';
 import type { UploadedEntryFiles } from './types/uploaded-file.type';
 
@@ -53,9 +53,9 @@ export class EntryController {
         @Req() req: Request,
         @UploadedFiles() files: UploadedEntryFiles
     ): Promise<CreateEntryResponseDto> {
-        const location = parseLocation(req.body?.location);
+        const locations = parseLocations(req.body?.location);
 
-        return this.entryService.create(actor, dto, files, location);
+        return this.entryService.create(actor, dto, files, locations);
     }
 
     @Patch(':id/base')

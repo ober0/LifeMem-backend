@@ -50,6 +50,29 @@ export function checkGeo(location: ParsedLocation): void {
     }
 }
 
+export function checkPlacesLimit(placeIdsCount: number, locationsCount: number): void {
+    if (placeIdsCount + locationsCount > appConstants.entry.maxPlacesPerEntry) {
+        throw apiError.badRequest('entry.too_many_places', {
+            max: appConstants.entry.maxPlacesPerEntry
+        });
+    }
+}
+
+export function toLocationCoords(
+    locations: ParsedLocation[]
+): Array<{ latitude: number; longitude: number; locationLabel?: string }> {
+    return locations
+        .filter(
+            (location): location is ParsedLocation & { latitude: number; longitude: number } =>
+                location.latitude !== undefined && location.longitude !== undefined
+        )
+        .map((location) => ({
+            latitude: location.latitude,
+            longitude: location.longitude,
+            ...(location.locationLabel && { locationLabel: location.locationLabel })
+        }));
+}
+
 export function checkVoiceMimeType(file: UploadedFile): void {
     if (!file.mimetype.startsWith('audio/')) {
         throw apiError.badRequest('entry.invalid_voice_type');

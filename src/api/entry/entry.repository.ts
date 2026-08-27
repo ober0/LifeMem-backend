@@ -71,25 +71,10 @@ export class EntryRepository {
                 }
             }
 
-            const locationData: Prisma.EntryUpdateInput = {};
-
-            if (data.location) {
-                if (data.location.latitude !== undefined) {
-                    locationData.latitude = data.location.latitude;
-                }
-                if (data.location.longitude !== undefined) {
-                    locationData.longitude = data.location.longitude;
-                }
-                if (data.location.locationLabel !== undefined) {
-                    locationData.locationLabel = data.location.locationLabel;
-                }
-            }
-
             return tx.entry.update({
                 where: { id },
                 data: {
-                    ...(data.title !== undefined && { title: data.title }),
-                    ...locationData
+                    ...(data.title !== undefined && { title: data.title })
                 },
                 select: baseEntrySelect
             });
@@ -101,9 +86,6 @@ export class EntryRepository {
             user: { connect: { id: data.userId } },
             title: data.title,
             text: data.text ?? null,
-            latitude: data.location?.latitude,
-            longitude: data.location?.longitude,
-            locationLabel: data.location?.locationLabel ?? null,
             isReady: false,
             ...(data.personIds.length > 0 && {
                 people: {

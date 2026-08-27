@@ -118,13 +118,7 @@ export type ParsedLocation = {
     locationLabel?: string;
 };
 
-export function parseLocation(locationValue: unknown): ParsedLocation | undefined {
-    const payload = parseFormDataJson<LocationFormPayload>(locationValue);
-
-    if (!payload) {
-        return undefined;
-    }
-
+function parseLocationItem(payload: LocationFormPayload): ParsedLocation | undefined {
     const latitude = parseCoordinate(payload.latitude);
     const longitude = parseCoordinate(payload.longitude);
     const locationLabelRaw = payload.locationLabel;
@@ -140,4 +134,30 @@ export function parseLocation(locationValue: unknown): ParsedLocation | undefine
         longitude,
         locationLabel
     };
+}
+
+export function parseLocations(locationsValue: unknown): ParsedLocation[] {
+    if (isEmptyFormValue(locationsValue)) {
+        return [];
+    }
+
+    const payload = parseFormDataJson<unknown>(locationsValue);
+
+    if (payload == null) {
+        throw apiError.badRequest('entry.invalid_locations');
+    }
+
+    const items = Array.isArray(payload) ? payload : [payload];
+
+    if (items.length === 0) {
+        return [];
+    }
+
+    if (!items.every((item) => item != null && typeof item === 'object' && !Array.isArray(item))) {
+        throw apiError.badRequest('entry.invalid_locations');
+    }
+
+    return items
+        .map((item) => parseLocationItem(item as LocationFormPayload))
+        .filter((item): item is ParsedLocation => item != null);
 }

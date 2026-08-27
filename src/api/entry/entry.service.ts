@@ -22,9 +22,10 @@ import {
     checkPhotoDescriptions,
     checkPhotoMimeTypes,
     checkPhotosLimit,
+    checkPlacesLimit,
     checkVoiceMimeType,
     generateDefaultEntryName,
-    toNumberOrNull
+    toLocationCoords
 } from './helpers/entry.helper';
 import type { ParsedLocation } from './helpers/parse-form-data.helper';
 import type { CreateEntryFileInput, UploadedEntryFiles, UploadedFile } from './types/uploaded-file.type';
@@ -41,15 +42,21 @@ export class EntryService {
         dto: CreateEntryDto,
         voiceFile: UploadedFile | undefined,
         photoFiles: UploadedFile[],
-        location: ParsedLocation | undefined
+        locations: ParsedLocation[]
     ) {
         checkEntryInput(dto.text, voiceFile);
         checkPhotosLimit(photoFiles);
         checkPhotoDescriptions(photoFiles, dto.photoDescriptions);
 
-        if (location) {
+        for (const location of locations) {
             checkGeo(location);
+
+            if (location.latitude === undefined || location.longitude === undefined) {
+                throw apiError.badRequest('entry.geo_incomplete');
+            }
         }
+
+        checkPlacesLimit(dto.placeIds?.length ?? 0, locations.length);
 
         if (voiceFile) {
             checkVoiceMimeType(voiceFile);
@@ -62,7 +69,7 @@ export class EntryService {
         actor: Actor,
         dto: CreateEntryDto,
         files: UploadedEntryFiles,
-        location?: ParsedLocation
+        locations: ParsedLocation[] = []
     ): Promise<CreateEntryResponseDto> {
         if (!actor.user) {
             throw apiError.unauthorized('auth.unauthorized');
@@ -72,10 +79,11 @@ export class EntryService {
         const voiceFile = files.voice?.[0];
         const photoFiles = files.photos ?? [];
 
-        await this.validateCreateInput(dto, voiceFile, photoFiles, location);
+        await this.validateCreateInput(dto, voiceFile, photoFiles, locations);
 
         const personIds = dto.personIds ?? [];
         const placeIds = dto.placeIds ?? [];
+        const locationCoords = toLocationCoords(locations);
 
         await this.checkLinkedEntities(userId, personIds, placeIds);
 
@@ -89,13 +97,12 @@ export class EntryService {
         ]);
 
         const text = dto.text?.trim() || null;
-        const hasLocationCoords = location?.latitude !== undefined && location.longitude !== undefined;
+        const hasLocationCoords = locationCoords.length > 0;
 
         const entry = await this.entryRepository.create({
             userId,
             title: dto.title ? dto.title.trim() : generateDefaultEntryName(actor.settings?.lang),
             text,
-            location,
             personIds,
             placeIds,
             voice: voiceInput,
@@ -120,16 +127,15 @@ export class EntryService {
                 ...(hasLocationCoords && {
                     [DelayedJob.EntryLocation]: {
                         ...basePayload,
-                        latitude: location!.latitude!,
-                        longitude: location!.longitude!,
-                        locationLabel: location!.locationLabel || undefined
+                        locations: locationCoords,
+                        userLang: actor.settings?.lang
                     }
                 }),
                 [DelayedJob.EntryStt]: basePayload,
                 [DelayedJob.EntryVision]: basePayload,
                 [DelayedJob.EntryEmbedText]: basePayload,
                 [DelayedJob.EntryEmbedTitle]: basePayload,
-                [DelayedJob.EntryLocationDetect]: basePayload,
+                [DelayedJob.EntryLocationAndPeopleDetect]: basePayload,
                 [DelayedJob.EntryEmbedImage]: basePayload
             }
         );
@@ -139,9 +145,10 @@ export class EntryService {
         return entryMapper.toCreateResponse(
             {
                 id: entry.id,
-                jobs: entry.jobs,
-                peoples: entry.people.map(({ person }) => person),
-                places: entry.places.map(({ place }) => place)
+                places: {
+                    ready: dto.placeIds?.length ?? 0,
+                    processing: locations.length ?? 0
+                }
             },
             images
         );
@@ -159,17 +166,18 @@ export class EntryService {
             throw apiError.notFound('entry.not_found');
         }
 
-        if (dto.location) {
-            checkGeo(dto.location);
-        }
-
         if (dto.peoples || dto.places) {
             await this.checkLinkedEntities(userId, dto.peoples ?? [], dto.places ?? []);
         }
 
+        if (dto.places && dto.places.length > appConstants.entry.maxPlacesPerEntry) {
+            throw apiError.badRequest('entry.too_many_places', {
+                max: appConstants.entry.maxPlacesPerEntry
+            });
+        }
+
         const entry = await this.entryRepository.updateBase(id, {
             title: dto.title?.trim() || undefined,
-            location: dto.location || undefined,
             personIds: dto.peoples || undefined,
             placeIds: dto.places || undefined
         });
@@ -183,9 +191,6 @@ export class EntryService {
                 text: entry.text,
                 isHasVoice: Boolean(entry.voice),
                 isReady: entry.isReady,
-                latitude: toNumberOrNull(entry.latitude),
-                longitude: toNumberOrNull(entry.longitude),
-                locationLabel: entry.locationLabel,
                 peoples: entry.people.map((el) => el.person),
                 places: entry.places.map((el) => el.place),
                 createdAt: entry.createdAt,

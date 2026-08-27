@@ -53,9 +53,6 @@ export const baseEntrySelect = {
     title: true,
     text: true,
     isReady: true,
-    latitude: true,
-    longitude: true,
-    locationLabel: true,
     createdAt: true,
     updatedAt: true,
     voice: {

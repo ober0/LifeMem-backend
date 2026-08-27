@@ -14,7 +14,7 @@ export const CreateEntryPipeline: EntryPipeline = {
         requires: () => [],
         when: (ctx) => ctx.hasVoice
     },
-    [DelayedJob.EntryLocationDetect]: {
+    [DelayedJob.EntryLocationAndPeopleDetect]: {
         type: EntryProcessingType.LocationAndPeopleDetect,
         requires: (ctx) => (ctx.hasVoice ? [DelayedJob.EntryStt] : []),
         when: (ctx) => ctx.hasCoords || ctx.hasText || ctx.hasVoice

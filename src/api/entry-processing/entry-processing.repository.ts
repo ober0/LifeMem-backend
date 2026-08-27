@@ -41,11 +41,9 @@ export class EntryProcessingRepository {
         return this.prisma.entry.findUnique({
             where: { id: entryId },
             select: {
-                latitude: true,
-                longitude: true,
-                locationLabel: true,
                 text: true,
                 voice: { select: { id: true } },
+                jobs: { select: { type: true } },
                 _count: { select: { images: true } }
             }
         });

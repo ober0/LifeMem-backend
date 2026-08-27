@@ -16,10 +16,6 @@ model Entry {
 
   jobs EntryProcessingJob[]
 
-  latitude      Decimal? @db.Decimal(10, 7)
-  longitude     Decimal? @db.Decimal(10, 7)
-  locationLabel String?  @map("location_label")
-
   people EntryPerson[]
   places EntryPlace[]
 

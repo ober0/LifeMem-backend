@@ -1,5 +1,7 @@
 import type { EntryProcessingStatus, EntryProcessingType } from '@prisma/client';
 
+import { EntryPlacesResponse } from './create-entry-response.dto';
+
 export type EntryRelationSource = {
     id: string;
     name: string;
@@ -20,9 +22,7 @@ export type CreateEntryJobSource = {
 
 export type CreateEntrySource = {
     id: string;
-    jobs: CreateEntryJobSource[];
-    peoples: EntryRelationSource[];
-    places: EntryRelationSource[];
+    places: EntryPlacesResponse;
 };
 
 export type BaseEntrySource = {
@@ -31,9 +31,6 @@ export type BaseEntrySource = {
     text: string | null;
     isHasVoice: boolean;
     isReady: boolean;
-    latitude: number | null;
-    longitude: number | null;
-    locationLabel: string | null;
     peoples: EntryRelationSource[];
     places: EntryRelationSource[];
     createdAt: Date;

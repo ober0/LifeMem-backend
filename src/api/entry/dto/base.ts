@@ -2,8 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ArrayMaxSize, IsArray, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
+import { appConstants } from '../../../common/config/app.constants';
 import { BaseEntity } from '../../../common/types/common/common-entity.dto';
-import { LocationDto } from './create-entry.dto';
 import { EntryImageDto } from './entry-images';
 
 export class EntryRelations {
@@ -21,11 +21,6 @@ export class BaseEntryUpdateDto {
     @MaxLength(50)
     title?: string;
 
-    @ApiProperty({ type: LocationDto, required: false })
-    @IsOptional()
-    @Type(() => LocationDto)
-    location?: LocationDto;
-
     @ApiProperty({ type: 'string', format: 'uuid', isArray: true, required: false })
     @IsOptional()
     @IsArray()
@@ -33,10 +28,17 @@ export class BaseEntryUpdateDto {
     @IsUUID('4', { each: true })
     peoples?: string[];
 
-    @ApiProperty({ type: 'string', format: 'uuid', isArray: true, required: false })
+    @ApiProperty({
+        type: 'string',
+        format: 'uuid',
+        isArray: true,
+        required: false,
+        description: `id связанных мест (не больше ${appConstants.entry.maxPlacesPerEntry})`,
+        example: ['b2c3d4e5-f6a7-4890-b123-456789abcdef']
+    })
     @IsOptional()
     @IsArray()
-    @ArrayMaxSize(10)
+    @ArrayMaxSize(appConstants.entry.maxPlacesPerEntry)
     @IsUUID('4', { each: true })
     places?: string[];
 }
@@ -56,10 +58,6 @@ export class BaseEntryDto extends BaseEntity {
 
     @ApiProperty()
     isReady: boolean;
-
-    @ApiProperty({ type: LocationDto })
-    @Type(() => LocationDto)
-    location: LocationDto;
 
     @ApiProperty({ type: EntryRelations, isArray: true })
     @Type(() => EntryRelations)

@@ -45,8 +45,10 @@ export class EntryProcessor extends WorkerHost {
             await this.entryProcessingService.onJobFinished(job.name as DelayedJobName, data);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Unknown error';
+            this.logger.error(`Job end with error ${error}`);
 
             await this.entryProcessingService.markJobFailed(data.jobId, message);
+
             throw error;
         }
     }

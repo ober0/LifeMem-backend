@@ -25,9 +25,11 @@ import { AuthLogModule } from '../auth-log/auth-log.module';
 import { CacheModule } from '../cache/cache.module';
 import { DelayedWorkerModule } from '../delayed-worker/delayed-worker.module';
 import { EntryModule } from '../entry/entry.module';
+import { EntryLocationModule } from '../entry-location/entry-location.module';
 import { HealthModule } from '../health/health.module';
 import { LogsModule } from '../logs/logs.module';
 import { MobileSmsModule } from '../mobile-sms/mobile-sms.module';
+import { OpenstreetmapModule } from '../openstreetmap/openstreetmap.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { REDIS_CLIENT } from '../redis/redis.constants';
 import { RedisModule } from '../redis/redis.module';
@@ -83,7 +85,9 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         MobileSmsModule,
         CacheModule,
         EntryModule,
-        DelayedWorkerModule
+        DelayedWorkerModule,
+        EntryLocationModule,
+        OpenstreetmapModule
     ],
     providers: [
         {

@@ -4,7 +4,6 @@ import { EntryProcessingStatus, EntryProcessingType, Prisma } from '@prisma/clie
 import { apiError } from '../../common/helpers/errors';
 import {
     type baseEntryJobPayload,
-    DelayedJob,
     type DelayedJobName,
     type DelayedJobPayloads
 } from '../delayed-worker/delayed-worker.constants';
@@ -81,8 +80,6 @@ export class EntryProcessingService {
             entryId: data.entryId
         };
 
-        const entry = await this.repository.findEntryContext(data.entryId);
-
         for (const [key, step] of Object.entries(pipeline) as [DelayedJobName, PipelineStep][]) {
             const requires = step.requires(ctx);
 
@@ -112,9 +109,7 @@ export class EntryProcessingService {
                 continue;
             }
 
-            const payload = this.buildJobPayload(key, basePayload, entry);
-
-            await this.createJob(data.entryId, key, payload as Omit<DelayedJobPayloads[typeof key], 'jobId'>, {
+            await this.createJob(data.entryId, key, basePayload as Omit<DelayedJobPayloads[typeof key], 'jobId'>, {
                 ignoreDuplicate: true
             });
         }
@@ -170,27 +165,10 @@ export class EntryProcessingService {
         }
 
         return {
-            hasCoords: entry.latitude != null && entry.longitude != null,
+            hasCoords: entry.jobs.some((job) => job.type === EntryProcessingType.LocationConnect),
             hasVoice: entry.voice != null,
             hasText: Boolean(entry.text?.trim()),
             hasImage: entry._count.images > 0
         };
-    }
-
-    private buildJobPayload(
-        key: DelayedJobName,
-        base: Omit<baseEntryJobPayload, 'jobId'>,
-        entry: Awaited<ReturnType<EntryProcessingRepository['findEntryContext']>>
-    ) {
-        if (key === DelayedJob.EntryLocation && entry?.latitude != null && entry.longitude != null) {
-            return {
-                ...base,
-                latitude: Number(entry.latitude),
-                longitude: Number(entry.longitude),
-                ...(entry.locationLabel && { locationLabel: entry.locationLabel })
-            } satisfies Omit<DelayedJobPayloads[typeof DelayedJob.EntryLocation], 'jobId'>;
-        }
-
-        return base;
     }
 }
