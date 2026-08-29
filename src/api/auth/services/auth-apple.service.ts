@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { OAuthProvider } from '@prisma/client';
 
 import type { Actor } from '../../../common/classes/actor';
+import type { ServerSettings } from '../../../common/classes/server-settings';
 import { apiError } from '../../../common/helpers/errors';
+import { resolveAuthCountry } from '../../../common/helpers/get-country-from-request';
 import type { UserDto } from '../../../common/types/user';
 import { AppleApiService } from '../../apple-api/apple-api.service';
 import { UserService } from '../../user/user.service';
@@ -22,16 +24,25 @@ export class AuthAppleService {
         private readonly appleApiService: AppleApiService
     ) {}
 
-    async login(dto: AppleAuthDto, ip: string): Promise<LoginResponseDto & { refreshToken: string }> {
+    async login(
+        dto: AppleAuthDto,
+        ip: string,
+        serverSettings: ServerSettings,
+        actor: Actor
+    ): Promise<LoginResponseDto & { refreshToken: string }> {
         const appleData = await this.appleApiService.verifyIdToken(dto.idToken);
         const email = appleData.email;
 
         const oauthProvider = await this.userOAuthRepository.findByProvider(OAuthProvider.Apple, appleData.sub);
 
         if (oauthProvider) {
+            serverSettings.assertAuthAllowed('apple', 'login', resolveAuthCountry(undefined, actor.requestCountry));
+
             const user = await this.userService.findOneById(oauthProvider.userId);
             return this.issueTokensAndSave(user, ip);
         }
+
+        serverSettings.assertAuthAllowed('apple', 'register', resolveAuthCountry(undefined, actor.requestCountry));
 
         if (!dto.initSettings) {
             throw apiError.badRequest('auth.no_init_settings');
@@ -74,11 +85,13 @@ export class AuthAppleService {
         return { accessToken, refreshToken, user };
     }
 
-    async link(dto: AppleLinkAuthDto, actor: Actor): Promise<void> {
+    async link(dto: AppleLinkAuthDto, actor: Actor, serverSettings: ServerSettings): Promise<void> {
         const user = actor.user;
         if (!user) {
             throw apiError.badRequest('auth.unauthorized');
         }
+
+        serverSettings.assertAuthAllowed('apple', 'login', resolveAuthCountry(undefined, actor.requestCountry));
 
         const appleData = await this.appleApiService.verifyIdToken(dto.idToken);
 

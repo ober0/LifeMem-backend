@@ -5,10 +5,12 @@ import * as bcrypt from 'bcryptjs';
 
 import type { Actor } from '../../common/classes/actor';
 import { Phone } from '../../common/classes/phone';
+import type { ServerSettings } from '../../common/classes/server-settings';
 import { appConstants } from '../../common/config/app.constants';
 import type { AppConfig, AuthConfig } from '../../common/config/env';
 import { appConfig, authConfig } from '../../common/config/env';
 import { apiError } from '../../common/helpers/errors';
+import { resolveAuthCountry } from '../../common/helpers/get-country-from-request';
 import { generateCode } from '../../common/helpers/generate-code';
 import { translations } from '../../common/translation/text-translations';
 import type { AlertBaseDto } from '../../common/types/common/alert-base.dto';
@@ -39,17 +41,17 @@ export class UserService {
         private readonly delayedWorker: DelayedWorkerService
     ) {}
 
-    async create(dto: CreateUserDto): Promise<RegisterResponseDto> {
+    async create(dto: CreateUserDto, serverSettings: ServerSettings, actor: Actor): Promise<RegisterResponseDto> {
         if (dto.phoneNumber && (dto.email || dto.password)) {
             throw apiError.badRequest('auth.single_auth_method_required');
         }
 
         if (dto.email && dto.password) {
-            return this.registerByEmail(dto.nickname, dto.email, dto.password, dto.initSettings);
+            return this.registerByEmail(dto.nickname, dto.email, dto.password, dto.initSettings, serverSettings, actor);
         }
 
         if (dto.phoneNumber) {
-            return this.registerByPhone(dto.nickname, dto.phoneNumber, dto.initSettings);
+            return this.registerByPhone(dto.nickname, dto.phoneNumber, dto.initSettings, serverSettings, actor);
         }
 
         throw apiError.badRequest('auth.no_auth_data');
@@ -59,8 +61,12 @@ export class UserService {
         nickname: string,
         email: string,
         password: string,
-        settings: CreateUserSettings
+        settings: CreateUserSettings,
+        serverSettings: ServerSettings,
+        actor: Actor
     ): Promise<RegisterResponseDto> {
+        serverSettings.assertAuthAllowed('email', 'register', resolveAuthCountry(undefined, actor.requestCountry));
+
         const emailOwner = await this.userRepository.findByEmail(email);
         if (emailOwner) {
             throw apiError.conflict('user.email_already_exists');
@@ -110,16 +116,21 @@ export class UserService {
     private async registerByPhone(
         nickname: string,
         phoneNumber: string,
-        settings: CreateUserSettings
+        settings: CreateUserSettings,
+        serverSettings: ServerSettings,
+        actor: Actor
     ): Promise<RegisterResponseDto> {
         const phone = Phone.tryCreate(phoneNumber);
 
         if (!phone) {
             throw apiError.badRequest('user.phone_not_correct');
         }
-        if (!phone.isAccess) {
-            throw apiError.badRequest('user.phone_not_access');
-        }
+
+        serverSettings.assertAuthAllowed(
+            'freshCall',
+            'register',
+            resolveAuthCountry(phone.data.country, actor.requestCountry)
+        );
 
         const phoneOwner = await this.userRepository.findByPhoneNumber(phone.normalized);
         if (phoneOwner) {

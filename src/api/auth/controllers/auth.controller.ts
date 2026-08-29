@@ -54,7 +54,7 @@ export class AuthController {
             throw apiError.internal('auth.device_context_missing');
         }
 
-        const data = await this.authService.login(loginDto, request.actor);
+        const data = await this.authService.login(loginDto, request.actor, request.serverSettings);
 
         if ('alert' in data) {
             return data;
@@ -81,7 +81,7 @@ export class AuthController {
             throw apiError.internal('auth.device_context_missing');
         }
 
-        const data = await this.authService.confirmPhoneLogin(dto, device.ip);
+        const data = await this.authService.confirmPhoneLogin(dto, device.ip, request.actor, request.serverSettings);
         return this.respondWithTokens(response, data, device.type);
     }
 

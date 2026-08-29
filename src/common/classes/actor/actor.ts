@@ -1,7 +1,9 @@
 import type { Request } from 'express';
+import type { CountryCode } from 'libphonenumber-js';
 
 import type { UserDto } from '../../../api/user/dto/user.dto';
 import type { UserSettingsDto } from '../../../api/user-settings/dto/user-settings.dto';
+import { getCountryFromRequest } from '../../helpers/get-country-from-request';
 import { getLanguageFromRequest } from '../../helpers/get-language';
 import { LangEnum } from '../../types/common/lang.enum';
 import type { DeviceDto } from '../../types/user';
@@ -14,6 +16,7 @@ export class Actor {
     private _settings: UserSettingsDto | null = null;
     private _headerLang: LangEnum = LangEnum.En;
     private _userLang: LangEnum;
+    private _requestCountry: CountryCode | null = null;
 
     private constructor() {}
 
@@ -35,6 +38,10 @@ export class Actor {
 
     get requestLang(): LangEnum {
         return this._userLang ?? this._headerLang;
+    }
+
+    get requestCountry(): CountryCode | null {
+        return this._requestCountry;
     }
 
     get settings(): Readonly<UserSettingsDto> | null {
@@ -70,5 +77,9 @@ export class Actor {
 
     setHeaderLang(req: Request): void {
         this._headerLang = getLanguageFromRequest(req);
+    }
+
+    setRequestCountry(req: Request): void {
+        this._requestCountry = getCountryFromRequest(req);
     }
 }

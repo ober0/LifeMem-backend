@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { OAuthProvider } from '@prisma/client';
 
 import type { Actor } from '../../../common/classes/actor';
+import type { ServerSettings } from '../../../common/classes/server-settings';
 import { apiError } from '../../../common/helpers/errors';
+import { resolveAuthCountry } from '../../../common/helpers/get-country-from-request';
 import type { UserDto } from '../../../common/types/user';
 import { GoogleApiService } from '../../google-api/google-api.service';
 import { UserService } from '../../user/user.service';
@@ -22,7 +24,12 @@ export class AuthGoogleService {
         private readonly googleApiService: GoogleApiService
     ) {}
 
-    async login(dto: GoogleAuthDto, ip: string): Promise<LoginResponseDto & { refreshToken: string }> {
+    async login(
+        dto: GoogleAuthDto,
+        ip: string,
+        serverSettings: ServerSettings,
+        actor: Actor
+    ): Promise<LoginResponseDto & { refreshToken: string }> {
         const googleData = await this.googleApiService.verifyIdToken(dto.idToken);
 
         if (!googleData.email) {
@@ -36,9 +43,13 @@ export class AuthGoogleService {
         const oauthProvider = await this.userOAuthRepository.findByProvider(OAuthProvider.Google, googleData.sub);
 
         if (oauthProvider) {
+            serverSettings.assertAuthAllowed('google', 'login', resolveAuthCountry(undefined, actor.requestCountry));
+
             const user = await this.userService.findOneById(oauthProvider.userId);
             return this.issueTokensAndSave(user, ip);
         }
+
+        serverSettings.assertAuthAllowed('google', 'register', resolveAuthCountry(undefined, actor.requestCountry));
 
         if (!dto.initSettings) {
             throw apiError.badRequest('auth.no_init_settings');
@@ -72,11 +83,13 @@ export class AuthGoogleService {
         return { accessToken, refreshToken, user };
     }
 
-    async link(dto: GoogleLinkDto, actor: Actor): Promise<void> {
+    async link(dto: GoogleLinkDto, actor: Actor, serverSettings: ServerSettings): Promise<void> {
         const user = actor.user;
         if (!user) {
             throw apiError.badRequest('auth.unauthorized');
         }
+
+        serverSettings.assertAuthAllowed('google', 'login', resolveAuthCountry(undefined, actor.requestCountry));
 
         const googleData = await this.googleApiService.verifyIdToken(dto.idToken);
 

@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import type express from 'express';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import type { Actor } from '../../common/classes/actor';
@@ -33,8 +34,8 @@ export class UserController {
     })
     @ApiCreatedResponse({ type: RegisterResponseDto })
     @ApiErrorResponses(400, 409)
-    async create(@Body() dto: CreateUserDto): Promise<RegisterResponseDto> {
-        return this.userService.create(dto);
+    async create(@Body() dto: CreateUserDto, @Req() request: express.Request): Promise<RegisterResponseDto> {
+        return this.userService.create(dto, request.serverSettings, request.actor);
     }
 
     @Post('confirm-email')

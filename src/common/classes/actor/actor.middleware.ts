@@ -16,6 +16,7 @@ export class ActorMiddleware implements NestMiddleware {
 
         req.actor.setDevice({ ip, type: deviceType });
         req.actor.setHeaderLang(req);
+        req.actor.setRequestCountry(req);
 
         next();
     }

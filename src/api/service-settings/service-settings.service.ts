@@ -3,6 +3,7 @@ import type { ServiceSettings } from '@prisma/client';
 
 import { appConstants } from '../../common/config/app.constants';
 import { cacheConstants, CacheKey } from '../../common/config/constants/cache.constants';
+import { deepMerge } from '../../common/helpers/deep-merge';
 import { apiError } from '../../common/helpers/errors';
 import { CacheService } from '../cache/cache.service';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
@@ -49,27 +50,11 @@ export class ServiceSettingsService {
 
     async updateServiceSettings(dto: ServiceSettingsUpdateDto): Promise<ServiceSettingsJsonDto> {
         const current = await this.repository.get();
+        const base = current
+            ? (current.json as unknown as ServiceSettingsJsonDto)
+            : { ...appConstants.serviceSettings.base };
 
-        if (!current) {
-            const created = await this.repository.upsert({
-                ...appConstants.serviceSettings.base,
-                ...Object.fromEntries(Object.entries(dto).filter(([_, v]) => v !== undefined))
-            });
-
-            this.delayedWorker.setImmediate(() =>
-                this.cacheService.invalidateCache(cacheConstants[CacheKey.ServiceSettings]())
-            );
-
-            return created.json as unknown as ServiceSettingsJsonDto;
-        }
-
-        const currentJson = current.json as unknown as ServiceSettingsJsonDto;
-
-        const merged: ServiceSettingsJsonDto = {
-            ...currentJson,
-            ...Object.fromEntries(Object.entries(dto).filter(([_, v]) => v !== undefined))
-        };
-
+        const merged = deepMerge(base, dto);
         const updated = await this.repository.upsert(merged);
 
         this.delayedWorker.setImmediate(() =>

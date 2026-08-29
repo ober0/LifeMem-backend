@@ -4,12 +4,14 @@ import * as bcrypt from 'bcrypt';
 import { createHmac } from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import type { Actor } from 'src/common/classes/actor';
+import type { ServerSettings } from 'src/common/classes/server-settings';
 
 import { Phone } from '../../../common/classes/phone';
 import { appConstants } from '../../../common/config/app.constants';
 import type { AppConfig,AuthConfig} from '../../../common/config/env';
 import { appConfig, authConfig } from '../../../common/config/env';
 import { apiError } from '../../../common/helpers/errors';
+import { resolveAuthCountry } from '../../../common/helpers/get-country-from-request';
 import { generateCode } from '../../../common/helpers/generate-code';
 import { translations } from '../../../common/translation/text-translations';
 import { AuthLogService } from '../../auth-log/auth-log.service';
@@ -60,7 +62,14 @@ export class AuthService {
         });
     }
 
-    async authByEmail(email: string, password: string, actor: Actor): Promise<LoginFullResponseDto> {
+    async authByEmail(
+        email: string,
+        password: string,
+        actor: Actor,
+        serverSettings: ServerSettings
+    ): Promise<LoginFullResponseDto> {
+        serverSettings.assertAuthAllowed('email', 'login', resolveAuthCountry(undefined, actor.requestCountry));
+
         const user = await this.userService.findOneByEmailWithPassword(email);
 
         if (!user?.passwordId || !user.password) {
@@ -126,15 +135,23 @@ export class AuthService {
         return { accessToken, refreshToken, user: restUser };
     }
 
-    async sendPhoneCode(phone: string, lang: Actor['requestLang']): Promise<LoginPhoneCodeResponseDto> {
+    async sendPhoneCode(
+        phone: string,
+        lang: Actor['requestLang'],
+        actor: Actor,
+        serverSettings: ServerSettings
+    ): Promise<LoginPhoneCodeResponseDto> {
         const phoneObj = Phone.tryCreate(phone);
 
         if (!phoneObj) {
             throw apiError.badRequest('user.phone_not_correct');
         }
-        if (!phoneObj.isAccess) {
-            throw apiError.badRequest('user.phone_not_access');
-        }
+
+        serverSettings.assertAuthAllowed(
+            'freshCall',
+            'login',
+            resolveAuthCountry(phoneObj.data.country, actor.requestCountry)
+        );
 
         const user = await this.userService.findByPhone(phoneObj);
         if (!user) {
@@ -163,15 +180,18 @@ export class AuthService {
         };
     }
 
-    async confirmPhoneLogin(dto: ConfirmPhoneDto, ip: string) {
+    async confirmPhoneLogin(dto: ConfirmPhoneDto, ip: string, actor: Actor, serverSettings: ServerSettings) {
         const phoneObj = Phone.tryCreate(dto.phone);
 
         if (!phoneObj) {
             throw apiError.badRequest('user.phone_not_correct');
         }
-        if (!phoneObj.isAccess) {
-            throw apiError.badRequest('user.phone_not_access');
-        }
+
+        serverSettings.assertAuthAllowed(
+            'freshCall',
+            'login',
+            resolveAuthCountry(phoneObj.data.country, actor.requestCountry)
+        );
 
         const user = await this.userService.findByPhone(phoneObj);
         if (!user) {
@@ -211,17 +231,17 @@ export class AuthService {
         return { accessToken, refreshToken, user: verifiedUser };
     }
 
-    async login(dto: LoginDto, actor: Actor): Promise<LoginFullResponseDto> {
+    async login(dto: LoginDto, actor: Actor, serverSettings: ServerSettings): Promise<LoginFullResponseDto> {
         if (dto.phone && (dto.email || dto.password)) {
             throw apiError.badRequest('auth.single_auth_method_required');
         }
 
         if (dto.phone) {
-            return this.sendPhoneCode(dto.phone, actor.requestLang);
+            return this.sendPhoneCode(dto.phone, actor.requestLang, actor, serverSettings);
         }
 
         if (dto.email && dto.password) {
-            return this.authByEmail(dto.email, dto.password, actor);
+            return this.authByEmail(dto.email, dto.password, actor, serverSettings);
         }
 
         throw apiError.badRequest('auth.no_auth_params');

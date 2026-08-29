@@ -37,7 +37,7 @@ export class AuthGoogleController {
         }
 
         const ip = device.ip;
-        const data = await this.authGoogleService.login(dto, ip);
+        const data = await this.authGoogleService.login(dto, ip, request.serverSettings, request.actor);
 
         response.cookie('refreshToken', data.refreshToken, {
             secure: true,
@@ -75,8 +75,12 @@ export class AuthGoogleController {
     @ApiBearerAuth()
     @ApiOkResponse()
     @ApiErrorResponses(401)
-    async link(@Body() dto: GoogleLinkDto, @CurrentActor() actor: Actor) {
-        await this.authGoogleService.link(dto, actor);
+    async link(
+        @Body() dto: GoogleLinkDto,
+        @CurrentActor() actor: Actor,
+        @Req() request: express.Request
+    ) {
+        await this.authGoogleService.link(dto, actor, request.serverSettings);
     }
 
     @ApiOperation({ summary: 'Отвязать Google от аккаунта' })
