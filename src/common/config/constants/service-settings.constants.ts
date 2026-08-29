@@ -11,10 +11,10 @@ export const serviceSettingsConstants = {
                 countriesWhitelist: []
             },
             freshCall: {
-                isRegistrationEnabled: true,
-                isLoginEnabled: true,
+                isRegistrationEnabled: false,
+                isLoginEnabled: false,
                 allowAllCountry: false,
-                countriesWhitelist: ['RU']
+                countriesWhitelist: []
             },
             telegram: {
                 isRegistrationEnabled: true,
