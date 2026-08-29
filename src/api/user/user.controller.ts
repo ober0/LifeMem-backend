@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Req, UseGuards } from '@nestjs/common';
-import type express from 'express';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import type express from 'express';
 
 import type { Actor } from '../../common/classes/actor';
 import { Permission } from '../../common/config/role-permission';

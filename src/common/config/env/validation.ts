@@ -87,6 +87,14 @@ class EnvironmentVariables {
     @IsOptional()
     @IsString()
     APPLE_CLIENT_ID?: string;
+
+    @IsOptional()
+    @IsString()
+    TELEGRAM_BOT_TOKEN?: string;
+
+    @IsOptional()
+    @IsString()
+    TELEGRAM_BOT_USERNAME?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

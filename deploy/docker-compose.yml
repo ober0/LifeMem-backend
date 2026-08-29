@@ -66,9 +66,6 @@ services:
                 condition: service_healthy
 
     lifemem-cron:
-        build:
-            context: .
-            dockerfile: deploy/Dockerfile
         image: lifemem-app:local
         container_name: lifemem-cron
         restart: unless-stopped
@@ -81,6 +78,19 @@ services:
         depends_on:
             lifemem-postgres:
                 condition: service_healthy
+            lifemem-app:
+                condition: service_started
+
+    lifemem-telegram:
+        image: lifemem-app:local
+        container_name: lifemem-telegram
+        restart: unless-stopped
+        env_file:
+            - .env.prod
+        environment:
+            NODE_ENV: production
+        command: ['node', 'dist/src/telegram-worker.js']
+        depends_on:
             lifemem-app:
                 condition: service_started
 
