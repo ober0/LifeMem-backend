@@ -14,7 +14,7 @@ export class LogsRepository {
     constructor(private readonly prisma: PrismaService) {}
 
     private buildWhere(dto: LogsSearchDto): Prisma.LogsWhereInput {
-        return mapSearch(dto.filters, [], [], dto.query, ['code', 'path', 'method'], LogsFilterDto);
+        return mapSearch(dto.filters, [], [], dto.query, ['path'], LogsFilterDto);
     }
 
     async search(dto: LogsSearchDto) {

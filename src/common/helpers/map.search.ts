@@ -140,17 +140,26 @@ export function mapSearch<T>(
 
     if (query && queryFields.length > 0) {
         const queryConditions: Record<string, any>[] = [];
+
         queryFields.forEach((fieldPath) => {
-            const condition: Record<string, any> = fieldPath
+            const field = fieldPath.split('.').pop()!;
+
+            const value =
+                containsMetaTarget && isContains(containsMetaTarget, field)
+                    ? query
+                    : {
+                          contains: query.toLowerCase(),
+                          mode: 'insensitive'
+                      };
+
+            const condition = fieldPath
                 .split('.')
                 .reverse()
-                .reduce((acc, key) => ({ [key]: acc }), {
-                    contains: query.toLowerCase(),
-                    mode: 'insensitive'
-                } as any);
+                .reduce((acc: any, key: string) => ({ [key]: acc }), value);
 
             queryConditions.push(condition);
         });
+
         andConditions.push({
             OR: queryConditions
         });
