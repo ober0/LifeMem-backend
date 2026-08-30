@@ -20,6 +20,7 @@ import {
     THROTTLER_NAME_USER
 } from '../../common/guards/app-throttler.guard';
 import { LoggerMiddleware } from '../../common/middleware/logger.middleware';
+import { AiModelModule } from '../ai-model/ai-model.module';
 import { AuthModule } from '../auth/auth.module';
 import { AuthLogModule } from '../auth-log/auth-log.module';
 import { CacheModule } from '../cache/cache.module';
@@ -82,6 +83,7 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         RoleModule,
         LogsModule,
         AuthLogModule,
+        AiModelModule,
         MobileSmsModule,
         CacheModule,
         EntryModule,

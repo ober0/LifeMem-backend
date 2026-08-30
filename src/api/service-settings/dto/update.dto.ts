@@ -1,10 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsNumber, IsOptional, Validate, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsUUID, Validate, ValidateIf, ValidateNested } from 'class-validator';
 import type { CountryCode } from 'libphonenumber-js';
 
 import { phoneConstants } from '../../../common/config/constants/phone.constants';
 import { IsCountryCodeArrayConstraint } from '../../../common/helpers/is-country-code-array.constraint';
+import { AiProvider } from '../../../common/types/ai/ai-provider.enum';
 
 export class AuthMethodUpdateDto {
     @ApiPropertyOptional()
@@ -66,6 +67,39 @@ export class AuthMethodsSettingsUpdateDto {
     email?: AuthMethodUpdateDto;
 }
 
+export class ModelTierSettingsUpdateDto {
+    @ApiPropertyOptional({ format: 'uuid', nullable: true, type: String })
+    @IsOptional()
+    @ValidateIf((_, value) => value !== null)
+    @IsUUID()
+    premium?: string | null;
+
+    @ApiPropertyOptional({ format: 'uuid', nullable: true, type: String })
+    @IsOptional()
+    @ValidateIf((_, value) => value !== null)
+    @IsUUID()
+    lite?: string | null;
+}
+
+export class ModelsSettingsUpdateDto {
+    @ApiPropertyOptional({ type: ModelTierSettingsUpdateDto })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => ModelTierSettingsUpdateDto)
+    analyze?: ModelTierSettingsUpdateDto;
+
+    @ApiPropertyOptional({ type: ModelTierSettingsUpdateDto })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => ModelTierSettingsUpdateDto)
+    embedding?: ModelTierSettingsUpdateDto;
+
+    @ApiPropertyOptional({ enum: AiProvider })
+    @IsOptional()
+    @IsEnum(AiProvider)
+    provider?: AiProvider;
+}
+
 export class ServiceSettingsUpdateDto {
     @ApiPropertyOptional()
     @IsOptional()
@@ -77,4 +111,10 @@ export class ServiceSettingsUpdateDto {
     @ValidateNested()
     @Type(() => AuthMethodsSettingsUpdateDto)
     authMethods?: AuthMethodsSettingsUpdateDto;
+
+    @ApiPropertyOptional({ type: ModelsSettingsUpdateDto })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => ModelsSettingsUpdateDto)
+    models?: ModelsSettingsUpdateDto;
 }

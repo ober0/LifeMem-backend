@@ -2,5 +2,17 @@
     "not_found": {
         "ru": "Настройки сервиса не найдены",
         "en": "Service settings not found"
+    },
+    "model_not_found": {
+        "ru": "Модель не найдена",
+        "en": "Model not found"
+    },
+    "model_wrong_type": {
+        "ru": "Тип модели {{name}} не подходит для {{slot}}",
+        "en": "Model {{name}} has an incompatible type for {{slot}}"
+    },
+    "model_inactive": {
+        "ru": "Модель {{name}} неактивна",
+        "en": "Model {{name}} is inactive"
     }
 }

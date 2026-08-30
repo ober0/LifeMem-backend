@@ -1,4 +1,5 @@
 import type { ServiceSettingsJsonDto } from '../../../api/service-settings/dto/settings-json.dto';
+import { AiProvider } from '../../types/ai/ai-provider.enum';
 
 export const serviceSettingsConstants = {
     base: {
@@ -34,6 +35,17 @@ export const serviceSettingsConstants = {
                 allowAllCountry: true,
                 countriesWhitelist: []
             }
+        },
+        models: {
+            analyze: {
+                premium: null,
+                lite: null
+            },
+            embedding: {
+                premium: null,
+                lite: null
+            },
+            provider: AiProvider.Polza
         }
     } satisfies ServiceSettingsJsonDto
 } as const;

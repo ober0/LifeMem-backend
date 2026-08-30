@@ -1,0 +1,22 @@
+enum ModelType {
+  ImageToText
+  TextToText
+  Embedding
+
+  @@map("model_type")
+}
+
+model AiModel {
+  id String @id @default(uuid()) @db.Uuid
+
+  name     String
+  type     ModelType
+  isActive Boolean   @default(true)
+
+  entryProcessingUsage EntryProcessingUsage[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("ai_model")
+}

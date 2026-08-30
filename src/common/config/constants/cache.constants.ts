@@ -1,7 +1,11 @@
+import { AiModelSearchResponseDto } from '../../../api/ai-model/dto/base.dto';
+import { AiModelSearchDto } from '../../../api/ai-model/dto/search.dto';
 import { ServiceSettingsDto } from '../../../api/service-settings/dto/base.dto';
+import { generateObjectHash } from '../../helpers/generate-object-hash';
 
 export enum CacheKey {
-    ServiceSettings = 'serviceSettings'
+    ServiceSettings = 'serviceSettings',
+    AiModelsSearch = 'aiModelsSearch'
 }
 
 export enum CacheTtl {
@@ -15,6 +19,7 @@ export enum CacheTtl {
 
 export type CacheTypes = {
     [CacheKey.ServiceSettings]: ServiceSettingsDto;
+    [CacheKey.AiModelsSearch]: AiModelSearchResponseDto;
 };
 
 export type CacheConfig = {
@@ -26,8 +31,14 @@ export type CacheConstants = {
     [K in CacheKey]: (...params: any[]) => CacheConfig;
 };
 
+export const AI_MODELS_CACHE_KEY_PREFIX = 'ai-models';
+export const AI_MODELS_CACHE_PATTERN = `${AI_MODELS_CACHE_KEY_PREFIX}:*`;
+
 export const cacheConstants: CacheConstants = {
     [CacheKey.ServiceSettings]: () => ({
         key: 'service-settings'
+    }),
+    [CacheKey.AiModelsSearch]: (dto: AiModelSearchDto) => ({
+        key: `${AI_MODELS_CACHE_KEY_PREFIX}:${generateObjectHash(dto)}`
     })
 };

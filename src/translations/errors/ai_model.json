@@ -1,0 +1,10 @@
+{
+    "not_found": {
+        "ru": "AI-модель не найдена",
+        "en": "AI model not found"
+    },
+    "in_use_in_settings": {
+        "ru": "Сначала уберите модель из сервисных настроек, затем сделайте её неактивной",
+        "en": "Remove the model from service settings first, then deactivate it"
+    }
+}

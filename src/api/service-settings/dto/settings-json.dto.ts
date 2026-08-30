@@ -4,7 +4,9 @@ import {
     ArrayNotEmpty,
     IsArray,
     IsBoolean,
+    IsEnum,
     IsNumber,
+    IsUUID,
     Validate,
     ValidateIf,
     ValidateNested
@@ -13,6 +15,7 @@ import type { CountryCode } from 'libphonenumber-js';
 
 import { phoneConstants } from '../../../common/config/constants/phone.constants';
 import { IsCountryCodeArrayConstraint } from '../../../common/helpers/is-country-code-array.constraint';
+import { AiProvider } from '../../../common/types/ai/ai-provider.enum';
 
 export class AuthMethodDto {
     @ApiProperty()
@@ -69,6 +72,34 @@ export class AuthMethodsSettings {
 
 export type AuthMethodKey = keyof AuthMethodsSettings;
 
+export class ModelTierSettingsDto {
+    @ApiProperty({ format: 'uuid', nullable: true, type: String })
+    @ValidateIf((_, value) => value !== null)
+    @IsUUID()
+    premium: string | null;
+
+    @ApiProperty({ format: 'uuid', nullable: true, type: String })
+    @ValidateIf((_, value) => value !== null)
+    @IsUUID()
+    lite: string | null;
+}
+
+export class ModelsSettingsDto {
+    @ApiProperty({ type: ModelTierSettingsDto })
+    @ValidateNested()
+    @Type(() => ModelTierSettingsDto)
+    analyze: ModelTierSettingsDto;
+
+    @ApiProperty({ type: ModelTierSettingsDto })
+    @ValidateNested()
+    @Type(() => ModelTierSettingsDto)
+    embedding: ModelTierSettingsDto;
+
+    @ApiProperty({ enum: AiProvider })
+    @IsEnum(AiProvider)
+    provider: AiProvider;
+}
+
 export class ServiceSettingsJsonDto {
     @ApiProperty()
     @IsNumber()
@@ -78,4 +109,9 @@ export class ServiceSettingsJsonDto {
     @ValidateNested()
     @Type(() => AuthMethodsSettings)
     authMethods: AuthMethodsSettings;
+
+    @ApiProperty({ type: ModelsSettingsDto })
+    @ValidateNested()
+    @Type(() => ModelsSettingsDto)
+    models: ModelsSettingsDto;
 }

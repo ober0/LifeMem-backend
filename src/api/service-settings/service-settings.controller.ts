@@ -25,7 +25,7 @@ export class ServiceSettingsController {
     @UseGuards(JwtAuthGuardHttp({ permissions: [Permission.ServiceSettingsUpdate] }))
     @ApiOperation({ summary: 'Частично обновить настройки приложения' })
     @ApiOkResponse({ type: ServiceSettingsDto })
-    @ApiErrorResponses(401, 403)
+    @ApiErrorResponses(400, 401, 403, 404)
     async updateServiceSettings(@Body() dto: ServiceSettingsUpdateDto) {
         return this.service.updateServiceSettings(dto);
     }

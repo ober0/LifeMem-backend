@@ -1,5 +1,7 @@
 export type ErrorsTranslationKey =
-              | 'auth.apple_account_already_linked'
+              | 'ai_model.in_use_in_settings'
+  | 'ai_model.not_found'
+  | 'auth.apple_account_already_linked'
   | 'auth.apple_account_linked_to_other'
   | 'auth.apple_email_not_found'
   | 'auth.apple_email_not_verified'
@@ -58,6 +60,9 @@ export type ErrorsTranslationKey =
   | 'role-permissions.role.not_found'
   | 'role.default_not_found'
   | 'role.not_found'
+  | 'service_settings.model_inactive'
+  | 'service_settings.model_not_found'
+  | 'service_settings.model_wrong_type'
   | 'service_settings.not_found'
   | 'user.already_verified'
   | 'user.email_already_bound'

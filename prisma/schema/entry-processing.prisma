@@ -46,7 +46,8 @@ model EntryProcessingUsage {
   job   EntryProcessingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
   jobId String             @unique @map("job_id") @db.Uuid
 
-  model        String?
+  model        AiModel  @relation(fields: [aiModelId], references: [id])
+  aiModelId    String   @db.Uuid
   inputTokens  Int?     @map("input_tokens")
   outputTokens Int?     @map("output_tokens")
   price        Decimal? @db.Decimal(12, 6)
