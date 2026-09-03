@@ -151,8 +151,8 @@ export class AuthController {
             throw apiError.forbidden('auth.refresh_token_not_found');
         }
 
-        response.clearCookie('refreshToken');
-        response.clearCookie('accessToken');
+        response.clearCookie('refreshToken', { secure: true, sameSite: 'none', httpOnly: true, path: '/' });
+        response.clearCookie('accessToken', { secure: true, sameSite: 'none', httpOnly: true, path: '/' });
 
         await this.authService.logout(refreshToken);
     }
