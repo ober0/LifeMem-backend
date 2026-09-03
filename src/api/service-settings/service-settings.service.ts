@@ -12,7 +12,6 @@ import { AiModelService } from '../ai-model/ai-model.service';
 import { CacheService } from '../cache/cache.service';
 import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
-import type { UserDto } from '../user/dto/user.dto';
 import { ServiceSettingsDto } from './dto/base.dto';
 import type { ModelsSettingsDto, ServiceSettingsJsonDto } from './dto/settings-json.dto';
 import type { ServiceSettingsUpdateDto } from './dto/update.dto';

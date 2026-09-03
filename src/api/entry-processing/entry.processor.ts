@@ -5,10 +5,9 @@ import type { Job } from 'bullmq';
 import {
     type baseEntryJobPayload,
     DelayedJob,
-    type EntryJobName,
     type DelayedJobPayloads,
-    ENTRY_QUEUE
-} from '../delayed-worker/delayed-worker.constants';
+    ENTRY_QUEUE,
+    type EntryJobName} from '../delayed-worker/delayed-worker.constants';
 import { EntryLocationService } from '../entry-location/entry-location.service';
 import { EntryProcessingService } from './entry-processing.service';
 

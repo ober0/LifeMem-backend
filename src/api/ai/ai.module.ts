@@ -3,8 +3,8 @@ import { Module } from '@nestjs/common';
 import { AiModelModule } from '../ai-model/ai-model.module';
 import { ServiceSettingsModule } from '../service-settings/service-settings.module';
 import { AiProcessor } from './ai.processor';
-import { AiResponseStore } from './ai-response.store';
 import { AiService } from './ai.service';
+import { AiResponseStore } from './ai-response.store';
 import { AiToolsRegistry } from './tools/ai-tools.registry';
 import { TestFactory } from './tools/items/test.tool';
 

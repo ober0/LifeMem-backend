@@ -56,8 +56,12 @@ async function bootstrap() {
             credentials: true
         });
     } else {
+        // app.enableCors({
+        //     origin: ['https://lifemem.ober0.ru'],
+        //     credentials: true
+        // });
         app.enableCors({
-            origin: ['https://lifemem.com'],
+            origin: true,
             credentials: true
         });
     }
