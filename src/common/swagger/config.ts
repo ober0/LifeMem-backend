@@ -48,10 +48,14 @@ export const initSwagger = (app: NestExpressApplication, config: AppConfig) => {
 
     const document = SwaggerModule.createDocument(app, swagger);
 
+    app.use('/openapi.json', (_req: unknown, res: { json: (d: unknown) => void }) => {
+        res.json(document);
+    });
+
     app.use(
         '/docs',
         apiReference({
-            content: document,
+            url: '/openapi.json',
             pageTitle: 'LifeMem API'
         })
     );
