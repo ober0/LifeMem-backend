@@ -95,6 +95,14 @@ class EnvironmentVariables {
     @IsOptional()
     @IsString()
     TELEGRAM_BOT_USERNAME?: string;
+
+    @IsOptional()
+    @IsString()
+    OPENROUTER_API_KEY?: string;
+
+    @IsOptional()
+    @IsString()
+    POLZA_AI_API_KEY?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

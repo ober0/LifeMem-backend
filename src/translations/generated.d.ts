@@ -1,5 +1,11 @@
 export type ErrorsTranslationKey =
-              | 'ai_model.in_use_in_settings'
+              | 'ai.api_key_missing'
+  | 'ai.model_not_ready'
+  | 'ai.request_not_found'
+  | 'ai.tool_loop_limit'
+  | 'ai.unexpected_model_type'
+  | 'ai.unknown_tool'
+  | 'ai_model.in_use_in_settings'
   | 'ai_model.not_found'
   | 'auth.apple_account_already_linked'
   | 'auth.apple_account_linked_to_other'

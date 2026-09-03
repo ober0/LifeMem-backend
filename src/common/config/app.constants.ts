@@ -1,3 +1,4 @@
+import { aiConstants } from './constants/ai.constants';
 import { cacheConstants } from './constants/cache.constants';
 import { codeConstants } from './constants/code.constants';
 import { entryConstants } from './constants/entry.constants';
@@ -19,5 +20,6 @@ export const appConstants = {
     phone: phoneConstants,
     throttle: throttleConstants,
     cache: cacheConstants,
-    telegram: telegramConstants
+    telegram: telegramConstants,
+    ai: aiConstants
 } as const;

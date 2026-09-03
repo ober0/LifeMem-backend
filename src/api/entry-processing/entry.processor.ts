@@ -5,7 +5,7 @@ import type { Job } from 'bullmq';
 import {
     type baseEntryJobPayload,
     DelayedJob,
-    type DelayedJobName,
+    type EntryJobName,
     type DelayedJobPayloads,
     ENTRY_QUEUE
 } from '../delayed-worker/delayed-worker.constants';
@@ -42,7 +42,7 @@ export class EntryProcessor extends WorkerHost {
             }
 
             this.logger.log(`end job ${job.name} for entry`);
-            await this.entryProcessingService.onJobFinished(job.name as DelayedJobName, data);
+            await this.entryProcessingService.onJobFinished(job.name as EntryJobName, data);
         } catch (error) {
             const message = error instanceof Error ? error.message : 'Unknown error';
             this.logger.error(`Job end with error ${error}`);

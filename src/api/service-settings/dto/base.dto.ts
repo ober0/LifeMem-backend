@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import type { JsonValue } from '@prisma/client/runtime/wasm-compiler-edge';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
@@ -11,4 +11,11 @@ export class ServiceSettingsDto extends BaseEntity {
     @ValidateNested()
     @Type(() => ServiceSettingsJsonDto)
     json: ServiceSettingsJsonDto | JsonValue;
+}
+
+export class ServiceSettingsResponseDto extends PartialType(BaseEntity) {
+    @ApiProperty({ type: PartialType(ServiceSettingsJsonDto) })
+    @ValidateNested()
+    @Type(() => ServiceSettingsJsonDto)
+    json: Partial<ServiceSettingsJsonDto>;
 }

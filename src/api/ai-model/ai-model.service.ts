@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import type { ServerSettings } from '../../common/classes/server-settings';
 import { AI_MODELS_CACHE_PATTERN, cacheConstants, CacheKey } from '../../common/config/constants/cache.constants';
 import { apiError } from '../../common/helpers/errors';
+import { collectUniqueModelsSettingsIds } from '../../common/helpers/models-settings';
 import { CacheService } from '../cache/cache.service';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
 import { AiModelRepository } from './ai-model.repository';
@@ -43,13 +44,7 @@ export class AiModelService {
         }
 
         if (!dto.isActive && existing.isActive) {
-            const models = serverSettings.json.models;
-            const usedIds = [
-                models?.analyze?.premium,
-                models?.analyze?.lite,
-                models?.embedding?.premium,
-                models?.embedding?.lite
-            ].filter((modelId): modelId is string => typeof modelId === 'string' && modelId.length > 0);
+            const usedIds = collectUniqueModelsSettingsIds(serverSettings.json.models);
 
             if (usedIds.includes(id)) {
                 throw apiError.conflict('ai_model.in_use_in_settings');

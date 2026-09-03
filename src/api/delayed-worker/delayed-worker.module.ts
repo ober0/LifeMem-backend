@@ -3,7 +3,7 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import type { RedisConfig } from '../../common/config/env';
-import { DELAYED_QUEUE, ENTRY_QUEUE } from './delayed-worker.constants';
+import { AI_QUEUE, DELAYED_QUEUE, ENTRY_QUEUE } from './delayed-worker.constants';
 import { DelayedWorkerService } from './delayed-worker.service';
 
 @Global()
@@ -22,7 +22,7 @@ import { DelayedWorkerService } from './delayed-worker.service';
                 };
             }
         }),
-        BullModule.registerQueue({ name: DELAYED_QUEUE }, { name: ENTRY_QUEUE })
+        BullModule.registerQueue({ name: DELAYED_QUEUE }, { name: ENTRY_QUEUE }, { name: AI_QUEUE })
     ],
     providers: [DelayedWorkerService],
     exports: [DelayedWorkerService, BullModule]

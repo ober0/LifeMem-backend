@@ -1,3 +1,4 @@
+import aiConfig from './register/ai.config';
 import appConfig from './register/app.config';
 import authConfig from './register/auth.config';
 import oauthConfig from './register/oauth.config';
@@ -6,6 +7,8 @@ import s3Config from './register/s3.config';
 import smtpConfig from './register/smtp.config';
 import telegramConfig from './register/telegram.config';
 
+export type { AiConfig } from './register/ai.config';
+export { default as aiConfig } from './register/ai.config';
 export type { AppConfig } from './register/app.config';
 export { default as appConfig } from './register/app.config';
 export type { AuthConfig } from './register/auth.config';
@@ -29,5 +32,6 @@ export const envConfigs = [
     s3Config,
     redisConfig,
     oauthConfig,
-    telegramConfig
+    telegramConfig,
+    aiConfig
 ];

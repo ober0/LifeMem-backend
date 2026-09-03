@@ -1,0 +1,26 @@
+{
+    "model_not_ready": {
+        "ru": "Модель не подключена в AI-сервисе",
+        "en": "Model is not connected in the AI service"
+    },
+    "api_key_missing": {
+        "ru": "API-ключ для провайдера {{provider}} не задан",
+        "en": "API key for provider {{provider}} is not configured"
+    },
+    "unexpected_model_type": {
+        "ru": "Неподдерживаемый тип модели {{name}}",
+        "en": "Unsupported model type for {{name}}"
+    },
+    "unknown_tool": {
+        "ru": "Неизвестный AI-тул {{tool}}",
+        "en": "Unknown AI tool {{tool}}"
+    },
+    "tool_loop_limit": {
+        "ru": "Превышен лимит шагов tool-calling",
+        "en": "Tool-calling step limit exceeded"
+    },
+    "request_not_found": {
+        "ru": "AI-запрос не найден или истёк",
+        "en": "AI request not found or expired"
+    }
+}

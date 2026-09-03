@@ -4,8 +4,8 @@ import { EntryProcessingStatus, EntryProcessingType, Prisma } from '@prisma/clie
 import { apiError } from '../../common/helpers/errors';
 import {
     type baseEntryJobPayload,
-    type DelayedJobName,
-    type DelayedJobPayloads
+    type DelayedJobPayloads,
+    type EntryJobName
 } from '../delayed-worker/delayed-worker.constants';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
 import { EntryProcessingRepository } from './entry-processing.repository';
@@ -13,7 +13,7 @@ import { EntryPipelines, EntryPipelinesEnum } from './pipelines';
 import type { PipelineContext, PipelineStep } from './pipelines/types';
 
 export type PipelineJobPayloads = {
-    [K in DelayedJobName]?: Omit<DelayedJobPayloads[K], 'jobId'>;
+    [K in EntryJobName]?: Omit<DelayedJobPayloads[K], 'jobId'>;
 };
 
 type CreateJobOptions = {
@@ -29,16 +29,16 @@ export class EntryProcessingService {
 
     private logger: Logger = new Logger(EntryProcessingService.name);
 
-    private jobMap = new Map<DelayedJobName, EntryProcessingType>(
+    private jobMap = new Map<EntryJobName, EntryProcessingType>(
         Object.values(EntryPipelines).flatMap((pipeline) =>
-            (Object.entries(pipeline) as [DelayedJobName, PipelineStep][]).map(([key, step]) => [key, step.type])
+            (Object.entries(pipeline) as [EntryJobName, PipelineStep][]).map(([key, step]) => [key, step.type])
         )
     );
 
     async activatePipeline(pipelineName: EntryPipelinesEnum, ctx: PipelineContext, payloads: PipelineJobPayloads) {
         const pipeline = EntryPipelines[pipelineName];
 
-        const tasks = (Object.entries(pipeline) as [DelayedJobName, PipelineStep][]).filter(([key, step]) => {
+        const tasks = (Object.entries(pipeline) as [EntryJobName, PipelineStep][]).filter(([key, step]) => {
             if (step.requires(ctx).length > 0) {
                 return false;
             }
@@ -67,7 +67,7 @@ export class EntryProcessingService {
         await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Failed, errorMessage);
     }
 
-    async onJobFinished(finishedKey: DelayedJobName, data: baseEntryJobPayload) {
+    async onJobFinished(finishedKey: EntryJobName, data: baseEntryJobPayload) {
         await this.repository.updateJobStatus(data.jobId, EntryProcessingStatus.Done);
 
         const pipeline = EntryPipelines[data.pipeline];
@@ -80,7 +80,7 @@ export class EntryProcessingService {
             entryId: data.entryId
         };
 
-        for (const [key, step] of Object.entries(pipeline) as [DelayedJobName, PipelineStep][]) {
+        for (const [key, step] of Object.entries(pipeline) as [EntryJobName, PipelineStep][]) {
             const requires = step.requires(ctx);
 
             if (!requires.includes(finishedKey)) {
@@ -115,7 +115,7 @@ export class EntryProcessingService {
         }
     }
 
-    async createJob<K extends DelayedJobName>(
+    async createJob<K extends EntryJobName>(
         entryId: string,
         key: K,
         data: Omit<DelayedJobPayloads[K], 'jobId'>,

@@ -9,6 +9,7 @@ export const Permission = {
     RolesUpdate: 'roles.update',
     RolesDelete: 'roles.delete',
 
+    ServiceSettingsGetFull: 'service.settings.get-full',
     ServiceSettingsUpdate: 'service_settings.update',
 
     LogsRead: 'logs.read',
@@ -28,7 +29,7 @@ export const PERMISSIONS_BY_CATEGORY = {
         Permission.UsersAdminHardDelete
     ],
     roles: [Permission.RolesRead, Permission.RolesCreate, Permission.RolesUpdate, Permission.RolesDelete],
-    service_settings: [Permission.ServiceSettingsUpdate],
+    service_settings: [Permission.ServiceSettingsUpdate, Permission.ServiceSettingsGetFull],
     logs: [Permission.LogsRead],
     auth_logs: [Permission.AuthLogsRead],
     ai_models: [Permission.AiModelsRead, Permission.AiModelsUpdate]

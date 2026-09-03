@@ -1,23 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { ModelType, type ServiceSettings } from '@prisma/client';
+import type { ServiceSettings } from '@prisma/client';
 
+import { Actor } from '../../common/classes/actor';
 import { appConstants } from '../../common/config/app.constants';
 import { cacheConstants, CacheKey } from '../../common/config/constants/cache.constants';
+import { Permission } from '../../common/config/role-permission';
 import { deepMerge } from '../../common/helpers/deep-merge';
 import { apiError } from '../../common/helpers/errors';
+import { collectUniqueModelsSettingsIds, getModelsSettingsSlots } from '../../common/helpers/models-settings';
 import { AiModelService } from '../ai-model/ai-model.service';
 import { CacheService } from '../cache/cache.service';
+import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
+import type { UserDto } from '../user/dto/user.dto';
 import { ServiceSettingsDto } from './dto/base.dto';
 import type { ModelsSettingsDto, ServiceSettingsJsonDto } from './dto/settings-json.dto';
 import type { ServiceSettingsUpdateDto } from './dto/update.dto';
 import { ServiceSettingsRepository } from './service-settings.repository';
-
-type ModelSettingSlot = {
-    id: string | null;
-    expectedType: ModelType;
-    slot: string;
-};
 
 @Injectable()
 export class ServiceSettingsService {
@@ -40,7 +39,7 @@ export class ServiceSettingsService {
         return data ? this.toJson(data) : { ...appConstants.serviceSettings.base };
     }
 
-    async getServiceSettings(): Promise<ServiceSettingsDto> {
+    async getServiceSettings(actor: Actor) {
         const data = await this.cacheService.getOrSet<CacheKey.ServiceSettings>(
             cacheConstants[CacheKey.ServiceSettings](),
             async () => {
@@ -53,7 +52,17 @@ export class ServiceSettingsService {
             throw apiError.notFound('service_settings.not_found');
         }
 
-        return data;
+        if (actor.hasPermission(Permission.ServiceSettingsGetFull)) {
+            return data;
+        }
+
+        const { authMethods, appVersion, ..._rest } = data.json as ServiceSettingsJsonDto;
+        return {
+            json: {
+                authMethods,
+                appVersion
+            }
+        };
     }
 
     async updateServiceSettings(dto: ServiceSettingsUpdateDto): Promise<ServiceSettingsJsonDto> {
@@ -67,22 +76,22 @@ export class ServiceSettingsService {
 
         const updated = await this.repository.upsert(merged);
 
-        this.delayedWorker.setImmediate(() =>
-            this.cacheService.invalidateCache(cacheConstants[CacheKey.ServiceSettings]())
-        );
+        this.delayedWorker.setImmediate(async () => {
+            await this.cacheService.invalidateCache(cacheConstants[CacheKey.ServiceSettings]());
+
+            if (dto.models?.provider) {
+                await this.delayedWorker.delayed(DelayedJob.AiRefreshModels, {}, { queue: 'ai' });
+            } else if (dto.models?.analyze || dto.models?.embedding) {
+                await this.delayedWorker.delayed(DelayedJob.AiAddModels, {}, { queue: 'ai' });
+            }
+        });
 
         return updated.json as unknown as ServiceSettingsJsonDto;
     }
 
     private async validateModelsSettings(models: ModelsSettingsDto): Promise<void> {
-        const slots: ModelSettingSlot[] = [
-            { id: models.analyze.premium, expectedType: ModelType.TextToText, slot: 'models.analyze.premium' },
-            { id: models.analyze.lite, expectedType: ModelType.TextToText, slot: 'models.analyze.lite' },
-            { id: models.embedding.premium, expectedType: ModelType.Embedding, slot: 'models.embedding.premium' },
-            { id: models.embedding.lite, expectedType: ModelType.Embedding, slot: 'models.embedding.lite' }
-        ];
-
-        const ids = [...new Set(slots.map((item) => item.id).filter((id) => id !== null))];
+        const slots = getModelsSettingsSlots(models);
+        const ids = collectUniqueModelsSettingsIds(models);
         if (ids.length === 0) {
             return;
         }
