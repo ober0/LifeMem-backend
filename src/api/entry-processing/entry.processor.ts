@@ -1,13 +1,16 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { HttpException, Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 
+import type { ErrorVariables } from '../../common/helpers/errors';
+import { errorTranslations } from '../../common/translation/error-translations';
 import {
     type baseEntryJobPayload,
     DelayedJob,
     type DelayedJobPayloads,
     ENTRY_QUEUE,
-    type EntryJobName} from '../delayed-worker/delayed-worker.constants';
+    type EntryJobName
+} from '../delayed-worker/delayed-worker.constants';
 import { EntryLocationService } from '../entry-location/entry-location.service';
 import { EntryProcessingService } from './entry-processing.service';
 
@@ -34,6 +37,11 @@ export class EntryProcessor extends WorkerHost {
                         job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocation]
                     );
                     break;
+                case DelayedJob.EntryLocationAndPeopleDetect:
+                    await this.entryLocationService.processEntryLocationAndPeopleDetect(
+                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocationAndPeopleDetect]
+                    );
+                    break;
                 default:
                     this.logger.warn(`Unknown delayed job: ${job.name}`);
                     await this.entryProcessingService.markJobFailed(data.jobId, `Unknown job: ${job.name}`);
@@ -42,13 +50,47 @@ export class EntryProcessor extends WorkerHost {
 
             this.logger.log(`end job ${job.name} for entry`);
             await this.entryProcessingService.onJobFinished(job.name as EntryJobName, data);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Unknown error';
-            this.logger.error(`Job end with error ${error}`);
+        } catch (error: unknown) {
+            const message = this.resolveErrorMessage(error);
+            this.logger.error(`Job end with error ${message}`, error instanceof Error ? error.stack : undefined);
 
             await this.entryProcessingService.markJobFailed(data.jobId, message);
 
             throw error;
         }
+    }
+
+    private resolveErrorMessage(error: unknown): string {
+        if (error instanceof HttpException) {
+            const response = error.getResponse();
+
+            if (typeof response === 'object' && response !== null && typeof (response as { code?: unknown }).code === 'string') {
+                const code = (response as { code: string }).code;
+                const variables =
+                    'variables' in response && typeof response.variables === 'object' && response.variables !== null
+                        ? (response.variables as ErrorVariables)
+                        : undefined;
+
+                if (errorTranslations.hasKey(code)) {
+                    return errorTranslations.byCode({ code, variables });
+                }
+
+                return code;
+            }
+
+            if (typeof response === 'string') {
+                return errorTranslations.hasKey(response)
+                    ? errorTranslations.byCode({ code: response })
+                    : response;
+            }
+
+            return error.message;
+        }
+
+        if (error instanceof Error) {
+            return error.message;
+        }
+
+        return 'internal error';
     }
 }

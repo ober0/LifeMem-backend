@@ -10,6 +10,8 @@ export const aiConstants = {
         }
     },
     defaultMaxToolSteps: 10,
-    responseTtlMs: 3 * 60 * 1000, // 3 минуты
-    responseCleanupIntervalMs: 60 * 1000 // минута
+    responseTtlMs: 3 * 60 * 1000,
+    responseCleanupIntervalMs: 60 * 1000,
+    resultPollIntervalMs: 5000,
+    resultWaitTimeoutSec: 120
 } as const;

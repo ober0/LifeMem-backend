@@ -4,7 +4,8 @@ model Person {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @map("user_id") @db.Uuid
 
-  name String
+  name         String
+  autodetected Boolean @default(false)
 
   entries EntryPerson[]
 
@@ -22,12 +23,13 @@ model Place {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @map("user_id") @db.Uuid
 
-  latitude  Decimal @db.Decimal(10, 7)
-  longitude Decimal @db.Decimal(10, 7)
+  latitude  Decimal? @db.Decimal(10, 7)
+  longitude Decimal? @db.Decimal(10, 7)
 
-  name     String
-  fullName String? @map("full_name")
-  data     Json?   @db.JsonB
+  name         String
+  fullName     String? @map("full_name")
+  data         Json?   @db.JsonB
+  autodetected Boolean @default(false)
 
   entries EntryPlace[]
 

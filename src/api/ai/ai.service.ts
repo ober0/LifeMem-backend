@@ -1,8 +1,20 @@
-import { AIMessage, type BaseMessage, HumanMessage, ToolMessage } from '@langchain/core/messages';
+import {
+    AIMessage,
+    type BaseMessage,
+    HumanMessage,
+    MessageStructure,
+    MessageToolSet,
+    MessageType,
+    SystemMessage,
+    ToolMessage
+} from '@langchain/core/messages';
+import type { StructuredOutputParser } from '@langchain/core/output_parsers';
+import { RunnableLambda } from '@langchain/core/runnables';
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ModelType } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import type { z } from 'zod';
 
 import { appConstants } from '../../common/config/app.constants';
 import type { AiConfig } from '../../common/config/env';
@@ -31,6 +43,12 @@ type ProviderClientConfig = {
     configuration: { baseURL: string };
 };
 
+type ParsedStructuredOutput<T> = {
+    data: T;
+    metadata: unknown;
+    raw: BaseMessage;
+};
+
 @Injectable()
 export class AiService implements OnModuleInit {
     private readonly logger = new Logger(AiService.name);
@@ -49,6 +67,7 @@ export class AiService implements OnModuleInit {
         await this.refreshModels();
     }
 
+    // TODO parser заменить
     async invoke(params: AiInvokeParams): Promise<AiRequestAccepted> {
         return this.enqueueRequest(() => this.executeInvoke(params));
     }
@@ -170,11 +189,21 @@ export class AiService implements OnModuleInit {
     private async executeInvokeWithTools(params: AiInvokeWithToolsParams): Promise<AiInvokeResult<unknown>> {
         const chat = await this.ensureChatModel(params.modelId);
 
-        const tools = this.toolsRegistry.resolve(params.tools);
+        const tools = this.toolsRegistry.resolve(params.tools, params.toolContext);
         const toolsByName = new Map(tools.map((item) => [item.name, item]));
 
+        const parser = 'parser' in params ? params.parser : null;
+        const instruction = 'instruction' in params ? params.instruction : null;
+
         const model = chat.bindTools(tools);
-        const messages = this.toMessages(params.input);
+        const messages: BaseMessage<MessageStructure<MessageToolSet>, MessageType>[] = [];
+
+        if (instruction) {
+            messages.push(new SystemMessage(instruction));
+        }
+
+        messages.push(...this.toMessages(params.input));
+
         const maxSteps = params.maxSteps ?? appConstants.ai.defaultMaxToolSteps;
 
         let usage: AiTokenUsage = {
@@ -185,49 +214,67 @@ export class AiService implements OnModuleInit {
 
         for (let step = 0; step < maxSteps; step++) {
             const response = await model.invoke(messages);
+
             usage = this.mergeUsage(usage, this.extractUsage(response));
             messages.push(response);
 
             const toolCalls = response.tool_calls ?? [];
-            if (toolCalls.length === 0) {
-                if (params.schema) {
-                    const structured = await chat
-                        .withStructuredOutput<Record<string, unknown>>(params.schema, {
-                            includeRaw: true,
-                            method: 'jsonSchema'
-                        })
-                        .invoke(messages);
+            if (toolCalls.length > 0) {
+                for (const call of toolCalls) {
+                    const selected = toolsByName.get(call.name);
+                    if (!selected) {
+                        throw apiError.badRequest('ai.unknown_tool', { tool: call.name });
+                    }
 
-                    return {
-                        result: structured.parsed,
-                        usage: this.mergeUsage(usage, this.extractUsage(structured.raw))
-                    };
+                    const toolResult = await selected.invoke(call.args);
+                    messages.push(
+                        new ToolMessage({
+                            content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
+                            tool_call_id: call.id ?? call.name
+                        })
+                    );
                 }
 
+                continue;
+            }
+
+            if (parser) {
+                const parsed = await this.parseNode(parser).invoke(response);
+
+                console.log(parsed.data);
+
                 return {
-                    result: this.extractTextContent(response),
+                    result: parsed.data,
                     usage
                 };
             }
 
-            for (const call of toolCalls) {
-                const selected = toolsByName.get(call.name);
-                if (!selected) {
-                    throw apiError.badRequest('ai.unknown_tool', { tool: call.name });
-                }
-
-                const toolResult = await selected.invoke(call.args);
-                messages.push(
-                    new ToolMessage({
-                        content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
-                        tool_call_id: call.id ?? call.name
-                    })
-                );
-            }
+            return {
+                result: this.extractTextContent(response),
+                usage
+            };
         }
 
         throw apiError.badRequest('ai.tool_loop_limit');
     }
+
+    private parseNode = <T extends z.ZodObject>(parser: StructuredOutputParser<T>) =>
+        new RunnableLambda({
+            func: async (message: BaseMessage): Promise<ParsedStructuredOutput<z.infer<T>>> => {
+                const toolCalls = 'tool_calls' in message ? message.tool_calls : undefined;
+                if (message.content === '' || (Array.isArray(toolCalls) && toolCalls.length !== 0)) {
+                    throw new Error('empty content');
+                }
+
+                const parsed = (await parser.parse(message.text)) as z.infer<T>;
+
+                return {
+                    data: parsed,
+                    metadata: message.response_metadata,
+                    raw: message
+                };
+            }
+        });
 
     private async ensureChatModel(modelId: string): Promise<ChatOpenAI> {
         const existing = this.models.get(modelId);
@@ -341,20 +388,29 @@ export class AiService implements OnModuleInit {
     }
 
     private extractUsage(message: BaseMessage): AiTokenUsage {
-        const usage = message instanceof AIMessage ? message.usage_metadata : undefined;
+        const usage = message instanceof AIMessage ? message : undefined;
 
         return {
-            inputTokens: usage?.input_tokens ?? 0,
-            outputTokens: usage?.output_tokens ?? 0,
-            totalTokens: usage?.total_tokens ?? 0
+            inputTokens: usage?.usage_metadata?.input_tokens ?? 0,
+            outputTokens: usage?.usage_metadata?.output_tokens ?? 0,
+            totalTokens: usage?.usage_metadata?.total_tokens ?? 0,
+            // TODO
+            price: undefined
         };
     }
 
     private mergeUsage(left: AiTokenUsage, right: AiTokenUsage): AiTokenUsage {
+        let price: number | undefined = undefined;
+
+        if (right.price) {
+            price = (left.price ?? 0) + right.price;
+        }
+
         return {
             inputTokens: left.inputTokens + right.inputTokens,
             outputTokens: left.outputTokens + right.outputTokens,
-            totalTokens: left.totalTokens + right.totalTokens
+            totalTokens: left.totalTokens + right.totalTokens,
+            price
         };
     }
 }

@@ -62,5 +62,9 @@
     "invalid_locations": {
         "ru": "locations должен быть JSON-массивом объектов с координатами",
         "en": "locations must be a JSON array of objects with coordinates"
+    },
+    "no_text": {
+        "ru": "Нету текста для обработки",
+        "en": "No text for processing"
     }
 }

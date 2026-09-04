@@ -1,4 +1,6 @@
 import type { BaseLanguageModelInput } from '@langchain/core/language_models/base';
+import type { StructuredOutputParser } from '@langchain/core/output_parsers';
+import type { z } from 'zod';
 
 import type { AiToolKey } from './tools/ai-tool-key.enum';
 
@@ -6,6 +8,7 @@ export type AiTokenUsage = {
     inputTokens: number;
     outputTokens: number;
     totalTokens: number;
+    price?: number;
 };
 
 export type AiInvokeResult<T> = {
@@ -18,9 +21,11 @@ export type AiRequestAccepted = {
 };
 
 export type AiRequestLookupResult<T> =
-    | { status: 'pending' }
-    | { status: 'ready'; result: T; usage: AiTokenUsage }
-    | { status: 'failed'; error: string };
+    { status: 'pending' } | { status: 'ready'; result: T; usage: AiTokenUsage } | { status: 'failed'; error: string };
+
+export type AiToolContext = {
+    userId: string;
+};
 
 export type AiInvokeParams = {
     modelId: string;
@@ -28,10 +33,22 @@ export type AiInvokeParams = {
     schema?: Record<string, unknown>;
 };
 
-export type AiInvokeWithToolsParams = {
-    modelId: string;
-    input: BaseLanguageModelInput;
-    tools: AiToolKey[];
-    schema?: Record<string, unknown>;
-    maxSteps?: number;
-};
+export type AiStructuredParser = StructuredOutputParser<z.ZodObject<any>>;
+
+export type AiInvokeWithToolsParams =
+    | {
+          modelId: string;
+          input: BaseLanguageModelInput;
+          tools: AiToolKey[];
+          toolContext?: AiToolContext;
+          parser: AiStructuredParser;
+          instruction: string;
+          maxSteps?: number;
+      }
+    | {
+          modelId: string;
+          input: BaseLanguageModelInput;
+          tools: AiToolKey[];
+          toolContext?: AiToolContext;
+          maxSteps?: number;
+      };

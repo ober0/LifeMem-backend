@@ -1,7 +1,12 @@
+import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { Injectable, Logger } from '@nestjs/common';
 
+import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
 import { LangEnum } from '../../common/types/common/lang.enum';
+import { AiService } from '../ai/ai.service';
+import type { AiInvokeResult } from '../ai/ai.types';
+import { AiToolKey } from '../ai/tools/ai-tool-key.enum';
 import {
     DelayedJob,
     type DelayedJobPayloads,
@@ -9,9 +14,17 @@ import {
 } from '../delayed-worker/delayed-worker.constants';
 import { OpenstreetmapService } from '../openstreetmap/openstreetmap.service';
 import { OpenstreetReverseResponse } from '../openstreetmap/types';
-import { UserService } from '../user/user.service';
+import { ServiceSettingsService } from '../service-settings/service-settings.service';
+import { entryLocationPrompts } from './consts/prompts.const';
 import { EntryLocationRepository } from './entry-location.repository';
-import { CreateLocationDto } from './types';
+import {
+    CreateLocationDto,
+    DetectedPersonResult,
+    DetectedPlaceResult,
+    detectPeoplePlacesFormatInstructions,
+    detectPeoplePlacesParser,
+    DetectPeoplePlacesResult
+} from './types';
 
 @Injectable()
 export class EntryLocationService {
@@ -20,7 +33,8 @@ export class EntryLocationService {
     constructor(
         private readonly repository: EntryLocationRepository,
         private readonly openstreetmap: OpenstreetmapService,
-        private readonly userService: UserService
+        private readonly serviceSettings: ServiceSettingsService,
+        private readonly ai: AiService
     ) {}
 
     async processEntryLocation(data: DelayedJobPayloads[typeof DelayedJob.EntryLocation]) {
@@ -77,5 +91,167 @@ export class EntryLocationService {
             ...openstreetData,
             shortName: userName ?? openstreetData?.shortName
         };
+    }
+
+    async processEntryLocationAndPeopleDetect(
+        data: DelayedJobPayloads[typeof DelayedJob.EntryLocationAndPeopleDetect]
+    ) {
+        // TODO переделвть промпт чтобы не было ложных определений, например заметка я был в москве в парке зарядье. должно определять заарядье а не зарядье и москва
+        const entry = await this.repository.getEntryText(data.entryId);
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        const text = entry.text?.trim();
+        if (!text) {
+            this.logger.warn(`skip detect: empty text entryId=${data.entryId}`);
+            return true;
+        }
+
+        const serviceSettings = await this.serviceSettings.getJsonForRequest();
+
+        // TODO это надо вытаскивать из тарифа
+        const tariff: 'lite' | 'premium' = 'lite';
+
+        const modelId = serviceSettings.models.analyze[tariff];
+
+        if (!modelId) {
+            throw apiError.internal('service_settings.model_not_found');
+        }
+
+        const { requestId } = await this.ai.invokeWithTools({
+            modelId,
+            maxSteps: appConstants.ai.defaultMaxToolSteps,
+            tools: [AiToolKey.SearchPeople, AiToolKey.SearchPlaces],
+            toolContext: { userId: data.userId },
+            parser: detectPeoplePlacesParser,
+            instruction: detectPeoplePlacesFormatInstructions,
+            input: [
+                new SystemMessage(entryLocationPrompts.peoplePlacesDetect),
+                new SystemMessage(entryLocationPrompts.parallelToolSearch),
+                new HumanMessage(text)
+            ]
+        });
+
+        const { result, usage } = await this.waitAiResult<DetectPeoplePlacesResult>(requestId);
+
+        await Promise.all([
+            this.applyDetectedPeople(data.userId, data.entryId, result.people ?? []),
+            this.applyDetectedPlaces(data.userId, data.entryId, result.places ?? []),
+            this.repository.updateUsage(data.entryId, DelayedJob.EntryLocationAndPeopleDetect, {
+                aiModelId: modelId,
+                usage
+            })
+        ]);
+
+        return true;
+    }
+
+    private waitAiResult<T>(requestId: string): Promise<AiInvokeResult<T>> {
+        const timeoutMs = appConstants.ai.resultWaitTimeoutSec * 1000;
+        const startedAt = Date.now();
+
+        return new Promise<AiInvokeResult<T>>((resolve, reject) => {
+            const timer = setInterval(() => {
+                try {
+                    if (Date.now() - startedAt >= timeoutMs) {
+                        clearInterval(timer);
+                        reject(apiError.internal('ai.request_timeout'));
+                        return;
+                    }
+
+                    const lookup = this.ai.getResult<T>(requestId);
+
+                    if (lookup.status === 'pending') {
+                        return;
+                    }
+
+                    clearInterval(timer);
+
+                    if (lookup.status === 'failed') {
+                        reject(apiError.internal('ai.request_failed', { error: lookup.error }));
+                        return;
+                    }
+
+                    resolve({
+                        result: lookup.result,
+                        usage: lookup.usage
+                    });
+                } catch (error) {
+                    clearInterval(timer);
+                    reject(error);
+                }
+            }, appConstants.ai.resultPollIntervalMs);
+        });
+    }
+
+    private async applyDetectedPeople(userId: string, entryId: string, people: DetectedPersonResult[]) {
+        const peoples = new Set<string>();
+
+        for (const item of people) {
+            const name = item.name?.trim();
+            if (!name) {
+                continue;
+            }
+
+            const key = name.toLowerCase();
+            if (peoples.has(key)) {
+                continue;
+            }
+            peoples.add(key);
+
+            if (item.exists && item.id) {
+                const owned = await this.repository.findPersonOwned(userId, item.id);
+                if (owned) {
+                    await this.repository.attachPerson(entryId, owned.id);
+                    continue;
+                }
+            }
+
+            await this.repository.connectOrCreatePerson(userId, entryId, name, true);
+        }
+    }
+
+    private async applyDetectedPlaces(userId: string, entryId: string, places: DetectedPlaceResult[]) {
+        const placesSet = new Set<string>();
+
+        for (const item of places) {
+            const name = item.name?.trim();
+            if (!name) {
+                continue;
+            }
+
+            const key = name.toLowerCase();
+            if (placesSet.has(key)) {
+                continue;
+            }
+            placesSet.add(key);
+
+            if (item.exists && item.id) {
+                const owned = await this.repository.findPlaceOwned(userId, item.id);
+                if (owned) {
+                    await this.repository.attachPlace(entryId, owned.id);
+                    continue;
+                }
+            }
+
+            const latitude = this.normalizeCoord(item.latitude);
+            const longitude = this.normalizeCoord(item.longitude);
+            const hasPair = latitude != null && longitude != null;
+
+            await this.repository.connectOrCreatePlace(userId, entryId, {
+                name,
+                latitude: hasPair ? latitude : null,
+                longitude: hasPair ? longitude : null,
+                autodetected: true
+            });
+        }
+    }
+
+    private normalizeCoord(value: number | null | undefined): number | null {
+        if (value == null || Number.isNaN(value)) {
+            return null;
+        }
+        return value;
     }
 }

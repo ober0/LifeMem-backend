@@ -1,7 +1,10 @@
 export type ErrorsTranslationKey =
               | 'ai.api_key_missing'
   | 'ai.model_not_ready'
+  | 'ai.request_failed'
   | 'ai.request_not_found'
+  | 'ai.request_timeout'
+  | 'ai.tool_context_required'
   | 'ai.tool_loop_limit'
   | 'ai.unexpected_model_type'
   | 'ai.unknown_tool'
@@ -55,6 +58,7 @@ export type ErrorsTranslationKey =
   | 'entry.invalid_photo_type'
   | 'entry.invalid_voice_type'
   | 'entry.location_required'
+  | 'entry.no_text'
   | 'entry.not_found'
   | 'entry.person_not_found'
   | 'entry.photo_descriptions_mismatch'

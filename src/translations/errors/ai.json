@@ -22,5 +22,17 @@
     "request_not_found": {
         "ru": "AI-запрос не найден или истёк",
         "en": "AI request not found or expired"
+    },
+    "request_timeout": {
+        "ru": "Истёк таймаут ожидания AI-ответа",
+        "en": "AI response wait timeout exceeded"
+    },
+    "request_failed": {
+        "ru": "AI-запрос завершился ошибкой: {{error}}",
+        "en": "AI request failed: {{error}}"
+    },
+    "tool_context_required": {
+        "ru": "Для тула {{tool}} нужен контекст пользователя",
+        "en": "Tool {{tool}} requires user context"
     }
 }

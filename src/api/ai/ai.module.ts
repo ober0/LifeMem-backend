@@ -6,11 +6,21 @@ import { AiProcessor } from './ai.processor';
 import { AiService } from './ai.service';
 import { AiResponseStore } from './ai-response.store';
 import { AiToolsRegistry } from './tools/ai-tools.registry';
-import { TestFactory } from './tools/items/test.tool';
+import { SearchPeopleFactory } from './tools/items/search-people.tool';
+import { SearchPlacesFactory } from './tools/items/search-places.tool';
+import { UserEntitiesSearchRepository } from './tools/user-entities-search.repository';
 
 @Module({
     imports: [ServiceSettingsModule, AiModelModule],
-    providers: [AiService, AiProcessor, AiResponseStore, AiToolsRegistry, TestFactory],
+    providers: [
+        AiService,
+        AiProcessor,
+        AiResponseStore,
+        AiToolsRegistry,
+        UserEntitiesSearchRepository,
+        SearchPeopleFactory,
+        SearchPlacesFactory
+    ],
     exports: [AiService]
 })
 export class AiModule {}

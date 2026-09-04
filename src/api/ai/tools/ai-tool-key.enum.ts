@@ -1,3 +1,4 @@
 export enum AiToolKey {
-    Test = 'test'
+    SearchPeople = 'search_people',
+    SearchPlaces = 'search_places'
 }

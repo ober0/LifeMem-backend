@@ -18,6 +18,7 @@ export class ServiceSettingsController {
     @Get()
     @ApiOperation({ summary: 'Получить настройки приложения' })
     @ApiOkResponse({ type: ServiceSettingsResponseDto })
+    @UseGuards(JwtAuthGuardHttp({ allowUnauthorized: true }))
     @ApiErrorResponses(404)
     async getServiceSettings(@CurrentActor() actor: Actor) {
         return this.service.getServiceSettings(actor);
