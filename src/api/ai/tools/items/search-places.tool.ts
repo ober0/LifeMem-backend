@@ -21,24 +21,26 @@ export class SearchPlacesFactory implements AiToolFactory {
         }
 
         return tool(
-            async ({ query }) => {
-                const rows = await this.repository.searchPlaces(userId, query);
+            async ({ queries }) => {
+                const rows = await this.repository.searchPlaces(userId, queries);
                 return JSON.stringify({
+                    queries,
                     items: rows.map((row) => ({
                         id: row.id,
                         name: row.name,
-                        fullName: row.fullName,
-                        latitude: row.latitude == null ? null : Number(row.latitude),
-                        longitude: row.longitude == null ? null : Number(row.longitude)
+                        fullName: row.fullName
                     }))
                 });
             },
             {
                 name: AiToolKey.SearchPlaces,
                 description:
-                    "Search places already saved for the current user by name fragment. Search like { contains: query, mode: 'insensitive' }",
+                    'Search places already saved for the current user. Pass one or many place name fragments at once, e.g. ["Москва", "Питер"]. Returns all matches for all queries (case-insensitive contains on name/fullName).',
                 schema: z.object({
-                    query: z.string().min(1).describe('Place name fragment to search')
+                    queries: z
+                        .array(z.string().min(1))
+                        .min(1)
+                        .describe('One or more place name fragments to search, e.g. ["Москва", "Зарядье"]')
                 })
             }
         );

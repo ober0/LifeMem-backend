@@ -2,9 +2,6 @@ import {
     AIMessage,
     type BaseMessage,
     HumanMessage,
-    MessageStructure,
-    MessageToolSet,
-    MessageType,
     SystemMessage,
     ToolMessage
 } from '@langchain/core/messages';
@@ -54,6 +51,8 @@ export class AiService implements OnModuleInit {
     private readonly logger = new Logger(AiService.name);
     private readonly models = new Map<string, AiRuntimeModel>();
 
+    private usdRateInRub: number = 80; //default
+
     constructor(
         @Inject(aiConfig.KEY) private readonly ai: AiConfig,
         private readonly serviceSettingsService: ServiceSettingsService,
@@ -65,9 +64,26 @@ export class AiService implements OnModuleInit {
 
     async onModuleInit(): Promise<void> {
         await this.refreshModels();
+        await this.refreshUsdRate();
+
+        setInterval(async () => {
+            await this.refreshUsdRate();
+        }, appConstants.ai.refreshUsdMs);
     }
 
-    // TODO parser заменить
+    // TODO можно потом вынести в отдельный модуль если будет переиспользоваться
+    private async refreshUsdRate() {
+        const response = await fetch('https://api.frankfurter.dev/v2/rate/USD/RUB');
+
+        const { rate } = await response.json();
+
+        if (typeof rate !== 'number' || !Number.isFinite(rate)) {
+            return;
+        }
+
+        this.usdRateInRub = rate as number;
+    }
+
     async invoke(params: AiInvokeParams): Promise<AiRequestAccepted> {
         return this.enqueueRequest(() => this.executeInvoke(params));
     }
@@ -162,32 +178,39 @@ export class AiService implements OnModuleInit {
     }
 
     private async executeInvoke(params: AiInvokeParams): Promise<AiInvokeResult<unknown>> {
-        const chat = await this.ensureChatModel(params.modelId);
+        const chat = this.withReasoning(await this.ensureChatModel(params.modelId), params.reasoning);
+        const messages: BaseMessage[] = [];
 
-        if (params.schema) {
-            const response = await chat
-                .withStructuredOutput<Record<string, unknown>>(params.schema, {
-                    includeRaw: true,
-                    method: 'jsonSchema'
-                })
-                .invoke(params.input);
+        if ('instruction' in params) {
+            messages.push(new SystemMessage(params.instruction));
+        }
+
+        messages.push(...this.toMessages(params.input));
+
+        const settingsPromise = this.serviceSettingsService.getJsonForRequest();
+
+        if ('parser' in params) {
+            const [parsed, settings] = await Promise.all([
+                chat.pipe(this.parseNode(params.parser)).invoke(messages),
+                settingsPromise
+            ]);
 
             return {
-                result: response.parsed,
-                usage: this.extractUsage(response.raw)
+                result: parsed.data,
+                usage: this.extractUsage(parsed.raw, settings.models.provider)
             };
         }
 
-        const response = await chat.invoke(params.input);
+        const [response, settings] = await Promise.all([chat.invoke(messages), settingsPromise]);
 
         return {
             result: this.extractTextContent(response),
-            usage: this.extractUsage(response)
+            usage: this.extractUsage(response, settings.models.provider)
         };
     }
 
     private async executeInvokeWithTools(params: AiInvokeWithToolsParams): Promise<AiInvokeResult<unknown>> {
-        const chat = await this.ensureChatModel(params.modelId);
+        const chat = this.withReasoning(await this.ensureChatModel(params.modelId), params.reasoning);
 
         const tools = this.toolsRegistry.resolve(params.tools, params.toolContext);
         const toolsByName = new Map(tools.map((item) => [item.name, item]));
@@ -196,7 +219,7 @@ export class AiService implements OnModuleInit {
         const instruction = 'instruction' in params ? params.instruction : null;
 
         const model = chat.bindTools(tools);
-        const messages: BaseMessage<MessageStructure<MessageToolSet>, MessageType>[] = [];
+        const messages: BaseMessage[] = [];
 
         if (instruction) {
             messages.push(new SystemMessage(instruction));
@@ -213,9 +236,12 @@ export class AiService implements OnModuleInit {
         };
 
         for (let step = 0; step < maxSteps; step++) {
-            const response = await model.invoke(messages);
+            const [response, settings] = await Promise.all([
+                model.invoke(messages),
+                this.serviceSettingsService.getJsonForRequest()
+            ]);
 
-            usage = this.mergeUsage(usage, this.extractUsage(response));
+            usage = this.mergeUsage(usage, this.extractUsage(response, settings.models.provider));
             messages.push(response);
 
             const toolCalls = response.tool_calls ?? [];
@@ -241,8 +267,6 @@ export class AiService implements OnModuleInit {
             if (parser) {
                 const parsed = await this.parseNode(parser).invoke(response);
 
-                console.log(parsed.data);
-
                 return {
                     result: parsed.data,
                     usage
@@ -256,6 +280,22 @@ export class AiService implements OnModuleInit {
         }
 
         throw apiError.badRequest('ai.tool_loop_limit');
+    }
+
+    private withReasoning(chat: ChatOpenAI, reasoning?: boolean): ChatOpenAI {
+        if (reasoning === false) {
+            return chat.withConfig({
+                reasoning: { effort: 'none' }
+            }) as ChatOpenAI;
+        }
+
+        if (reasoning === true) {
+            return chat.withConfig({
+                reasoning: { effort: 'medium' }
+            }) as ChatOpenAI;
+        }
+
+        return chat;
     }
 
     private parseNode = <T extends z.ZodObject>(parser: StructuredOutputParser<T>) =>
@@ -387,15 +427,30 @@ export class AiService implements OnModuleInit {
         return JSON.stringify(message.content);
     }
 
-    private extractUsage(message: BaseMessage): AiTokenUsage {
+    private extractUsage(message: BaseMessage, provider: AiProvider): AiTokenUsage {
         const usage = message instanceof AIMessage ? message : undefined;
+
+        let rubCost: number | undefined = undefined;
+
+        const metadataUsage = usage?.response_metadata.usage as { cost?: number };
+
+        if (typeof metadataUsage.cost === 'number') {
+            switch (provider) {
+                case AiProvider.Openrouter:
+                    rubCost = metadataUsage.cost * this.usdRateInRub;
+                    break;
+                case AiProvider.Polza:
+                    rubCost = metadataUsage.cost;
+                    break;
+            }
+        }
 
         return {
             inputTokens: usage?.usage_metadata?.input_tokens ?? 0,
             outputTokens: usage?.usage_metadata?.output_tokens ?? 0,
             totalTokens: usage?.usage_metadata?.total_tokens ?? 0,
-            // TODO
-            price: undefined
+            price: rubCost,
+            provider: provider
         };
     }
 
@@ -410,7 +465,8 @@ export class AiService implements OnModuleInit {
             inputTokens: left.inputTokens + right.inputTokens,
             outputTokens: left.outputTokens + right.outputTokens,
             totalTokens: left.totalTokens + right.totalTokens,
-            price
+            price,
+            provider: right.provider ?? left.provider ?? undefined
         };
     }
 }

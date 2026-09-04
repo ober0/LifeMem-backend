@@ -96,7 +96,6 @@ export class EntryLocationService {
     async processEntryLocationAndPeopleDetect(
         data: DelayedJobPayloads[typeof DelayedJob.EntryLocationAndPeopleDetect]
     ) {
-        // TODO переделвть промпт чтобы не было ложных определений, например заметка я был в москве в парке зарядье. должно определять заарядье а не зарядье и москва
         const entry = await this.repository.getEntryText(data.entryId);
         if (!entry) {
             throw apiError.notFound('entry.not_found');
@@ -111,7 +110,7 @@ export class EntryLocationService {
         const serviceSettings = await this.serviceSettings.getJsonForRequest();
 
         // TODO это надо вытаскивать из тарифа
-        const tariff: 'lite' | 'premium' = 'lite';
+        const tariff: 'lite' | 'premium' = appConstants.userSettings.defaultDevTariff;
 
         const modelId = serviceSettings.models.analyze[tariff];
 
@@ -126,6 +125,7 @@ export class EntryLocationService {
             toolContext: { userId: data.userId },
             parser: detectPeoplePlacesParser,
             instruction: detectPeoplePlacesFormatInstructions,
+            reasoning: false,
             input: [
                 new SystemMessage(entryLocationPrompts.peoplePlacesDetect),
                 new SystemMessage(entryLocationPrompts.parallelToolSearch),
@@ -134,6 +134,9 @@ export class EntryLocationService {
         });
 
         const { result, usage } = await this.waitAiResult<DetectPeoplePlacesResult>(requestId);
+
+        console.log(result);
+        console.log(usage);
 
         await Promise.all([
             this.applyDetectedPeople(data.userId, data.entryId, result.people ?? []),
@@ -235,23 +238,12 @@ export class EntryLocationService {
                 }
             }
 
-            const latitude = this.normalizeCoord(item.latitude);
-            const longitude = this.normalizeCoord(item.longitude);
-            const hasPair = latitude != null && longitude != null;
-
             await this.repository.connectOrCreatePlace(userId, entryId, {
                 name,
-                latitude: hasPair ? latitude : null,
-                longitude: hasPair ? longitude : null,
+                latitude: null,
+                longitude: null,
                 autodetected: true
             });
         }
-    }
-
-    private normalizeCoord(value: number | null | undefined): number | null {
-        if (value == null || Number.isNaN(value)) {
-            return null;
-        }
-        return value;
     }
 }

@@ -5,8 +5,7 @@ import { AI_MODELS_CACHE_PATTERN } from '../../src/common/config/constants/cache
 
 const MODELS: ReadonlyArray<{ name: string; type: ModelType }> = [
     // llm
-    { name: 'openai/gpt-4o', type: ModelType.TextToText },
-    { name: 'openai/gpt-4o-mini', type: ModelType.TextToText },
+    { name: 'openai/gpt-5.4-nano', type: ModelType.TextToText },
     { name: 'anthropic/claude-sonnet-4', type: ModelType.TextToText },
     { name: 'google/gemini-2.5-flash', type: ModelType.TextToText },
     { name: 'meta-llama/llama-4-maverick', type: ModelType.TextToText },

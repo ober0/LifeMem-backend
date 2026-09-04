@@ -52,6 +52,8 @@ model EntryProcessingUsage {
   outputTokens Int?     @map("output_tokens")
   price        Decimal? @db.Decimal(12, 6)
 
+  provider String?
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

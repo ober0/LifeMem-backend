@@ -6,26 +6,40 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class UserEntitiesSearchRepository {
     constructor(private readonly prisma: PrismaService) {}
 
-    async searchPeople(userId: string, query: string, take = 20) {
-        return this.prisma.person.findMany({
+    async searchPeople(userId: string, queries: string[], take = 50) {
+        const normalized = this.normalizeQueries(queries);
+        if (normalized.length === 0) {
+            return [];
+        }
+
+        const rows = await this.prisma.person.findMany({
             where: {
                 userId,
-                name: { contains: query, mode: 'insensitive' }
+                OR: normalized.map((query) => ({
+                    name: { contains: query, mode: 'insensitive' as const }
+                }))
             },
             select: { id: true, name: true },
             take,
             orderBy: { name: 'asc' }
         });
+
+        return rows;
     }
 
-    async searchPlaces(userId: string, query: string, take = 20) {
-        return this.prisma.place.findMany({
+    async searchPlaces(userId: string, queries: string[], take = 50) {
+        const normalized = this.normalizeQueries(queries);
+        if (normalized.length === 0) {
+            return [];
+        }
+
+        const rows = await this.prisma.place.findMany({
             where: {
                 userId,
-                OR: [
-                    { name: { contains: query, mode: 'insensitive' } },
-                    { fullName: { contains: query, mode: 'insensitive' } }
-                ]
+                OR: normalized.flatMap((query) => [
+                    { name: { contains: query, mode: 'insensitive' as const } },
+                    { fullName: { contains: query, mode: 'insensitive' as const } }
+                ])
             },
             select: {
                 id: true,
@@ -37,5 +51,11 @@ export class UserEntitiesSearchRepository {
             take,
             orderBy: { name: 'asc' }
         });
+
+        return rows;
+    }
+
+    private normalizeQueries(queries: string[]): string[] {
+        return [...new Set(queries.map((item) => item.trim()).filter(Boolean))];
     }
 }

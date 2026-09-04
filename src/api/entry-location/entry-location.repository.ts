@@ -144,12 +144,16 @@ export class EntryLocationRepository {
                 jobId: job.id,
                 aiModelId: data.aiModelId,
                 inputTokens: data.usage.inputTokens,
-                outputTokens: data.usage.outputTokens
+                outputTokens: data.usage.outputTokens,
+                provider: data.usage.provider ?? undefined,
+                price: data.usage.price ?? undefined
             },
             update: {
                 aiModelId: data.aiModelId,
                 inputTokens: { increment: data.usage.inputTokens },
-                outputTokens: { increment: data.usage.outputTokens }
+                outputTokens: { increment: data.usage.outputTokens },
+                provider: data.usage.provider ?? undefined,
+                price: data.usage.price ? { increment: data.usage.price } : undefined
             }
         });
     }

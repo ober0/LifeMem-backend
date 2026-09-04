@@ -21,16 +21,19 @@ export class SearchPeopleFactory implements AiToolFactory {
         }
 
         return tool(
-            async ({ query }) => {
-                const items = await this.repository.searchPeople(userId, query);
-                return JSON.stringify({ items });
+            async ({ queries }) => {
+                const items = await this.repository.searchPeople(userId, queries);
+                return JSON.stringify({ queries, items });
             },
             {
                 name: AiToolKey.SearchPeople,
                 description:
-                    "Search people already saved for the current user by name fragment. Search like { contains: query, mode: 'insensitive' }",
+                    'Search people already saved for the current user. Pass one or many name fragments at once, e.g. ["Даша", "мама"]. Returns all matches for all queries (case-insensitive contains).',
                 schema: z.object({
-                    query: z.string().min(1).describe('Name fragment to search')
+                    queries: z
+                        .array(z.string().min(1))
+                        .min(1)
+                        .describe('One or more name/role fragments to search, e.g. ["Даша", "девушка"]')
                 })
             }
         );

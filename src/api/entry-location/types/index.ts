@@ -18,9 +18,7 @@ export const detectedPersonSchema = z.object({
 export const detectedPlaceSchema = z.object({
     name: z.string(),
     exists: z.boolean(),
-    id: z.string().nullable().optional(),
-    latitude: z.number().nullable().optional(),
-    longitude: z.number().nullable().optional()
+    id: z.string().nullable().optional()
 });
 
 export const detectPeoplePlacesZodSchema = z.object({

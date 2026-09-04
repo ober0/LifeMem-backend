@@ -13,5 +13,6 @@ export const aiConstants = {
     responseTtlMs: 3 * 60 * 1000,
     responseCleanupIntervalMs: 60 * 1000,
     resultPollIntervalMs: 5000,
-    resultWaitTimeoutSec: 120
+    resultWaitTimeoutSec: 120,
+    refreshUsdMs: 60 * 60 * 1000 // 1 ч
 } as const;

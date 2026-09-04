@@ -2,6 +2,7 @@ import type { BaseLanguageModelInput } from '@langchain/core/language_models/bas
 import type { StructuredOutputParser } from '@langchain/core/output_parsers';
 import type { z } from 'zod';
 
+import { AiProvider } from '../../common/types/ai/ai-provider.enum';
 import type { AiToolKey } from './tools/ai-tool-key.enum';
 
 export type AiTokenUsage = {
@@ -9,6 +10,7 @@ export type AiTokenUsage = {
     outputTokens: number;
     totalTokens: number;
     price?: number;
+    provider?: AiProvider;
 };
 
 export type AiInvokeResult<T> = {
@@ -21,34 +23,41 @@ export type AiRequestAccepted = {
 };
 
 export type AiRequestLookupResult<T> =
-    { status: 'pending' } | { status: 'ready'; result: T; usage: AiTokenUsage } | { status: 'failed'; error: string };
+    | { status: 'pending' }
+    | { status: 'ready'; result: T; usage: AiTokenUsage }
+    | { status: 'failed'; error: string };
 
 export type AiToolContext = {
     userId: string;
 };
 
-export type AiInvokeParams = {
-    modelId: string;
-    input: BaseLanguageModelInput;
-    schema?: Record<string, unknown>;
-};
-
 export type AiStructuredParser = StructuredOutputParser<z.ZodObject<any>>;
 
-export type AiInvokeWithToolsParams =
-    | {
-          modelId: string;
-          input: BaseLanguageModelInput;
-          tools: AiToolKey[];
-          toolContext?: AiToolContext;
+type AiInvokeBase = {
+    modelId: string;
+    input: BaseLanguageModelInput;
+    reasoning?: boolean;
+};
+
+export type AiInvokeParams =
+    | (AiInvokeBase & {
           parser: AiStructuredParser;
           instruction: string;
-          maxSteps?: number;
-      }
-    | {
-          modelId: string;
-          input: BaseLanguageModelInput;
-          tools: AiToolKey[];
-          toolContext?: AiToolContext;
-          maxSteps?: number;
-      };
+      })
+    | AiInvokeBase;
+
+type AiInvokeWithToolsBase = {
+    modelId: string;
+    input: BaseLanguageModelInput;
+    tools: AiToolKey[];
+    toolContext?: AiToolContext;
+    maxSteps?: number;
+    reasoning?: boolean;
+};
+
+export type AiInvokeWithToolsParams =
+    | (AiInvokeWithToolsBase & {
+          parser: AiStructuredParser;
+          instruction: string;
+      })
+    | AiInvokeWithToolsBase;
