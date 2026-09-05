@@ -66,5 +66,13 @@
     "no_text": {
         "ru": "Нету текста для обработки",
         "en": "No text for processing"
+    },
+    "invalid_embedding": {
+        "ru": "Некорректный embedding-вектор",
+        "en": "Invalid embedding vector"
+    },
+    "invalid_embedding_dimensions": {
+        "ru": "Размерность embedding не совпадает с длиной вектора",
+        "en": "Embedding dimensions do not match vector length"
     }
 }

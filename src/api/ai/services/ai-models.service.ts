@@ -1,4 +1,4 @@
-import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
+import { ChatOpenAI } from '@langchain/openai';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ModelType } from '@prisma/client';
 
@@ -10,8 +10,9 @@ import { collectUniqueModelsSettingsIds } from '../../../common/helpers/models-s
 import { AiProvider } from '../../../common/types/ai/ai-provider.enum';
 import { AiModelService } from '../../ai-model/ai-model.service';
 import { ServiceSettingsService } from '../../service-settings/service-settings.service';
+import { OpenAIEmbeddingsWithUsage } from '../openai-embeddings-with-usage';
 
-export type AiRuntimeModel = ChatOpenAI | OpenAIEmbeddings;
+export type AiRuntimeModel = ChatOpenAI | OpenAIEmbeddingsWithUsage;
 
 type ProviderClientConfig = {
     apiKey: string;
@@ -102,6 +103,33 @@ export class AiModelsService {
             throw apiError.badRequest('ai.unexpected_model_type', { name: modelId });
         }
 
+        const runtime = await this.loadRuntimeModel(modelId);
+        if (!(runtime instanceof ChatOpenAI)) {
+            throw apiError.badRequest('ai.unexpected_model_type', { name: modelId });
+        }
+
+        return runtime;
+    }
+
+    async ensureEmbeddingModel(modelId: string): Promise<OpenAIEmbeddingsWithUsage> {
+        const existing = this.models.get(modelId);
+        if (existing instanceof OpenAIEmbeddingsWithUsage) {
+            return existing;
+        }
+
+        if (existing) {
+            throw apiError.badRequest('ai.unexpected_model_type', { name: modelId });
+        }
+
+        const runtime = await this.loadRuntimeModel(modelId);
+        if (!(runtime instanceof OpenAIEmbeddingsWithUsage)) {
+            throw apiError.badRequest('ai.unexpected_model_type', { name: modelId });
+        }
+
+        return runtime;
+    }
+
+    private async loadRuntimeModel(modelId: string): Promise<AiRuntimeModel> {
         const settings = await this.serviceSettingsService.getJsonForRequest();
         const providerConfig = this.getProviderClientConfig(settings.models.provider);
 
@@ -115,7 +143,7 @@ export class AiModelsService {
         }
 
         const runtime = this.createRuntimeModel(dbModel, providerConfig);
-        if (!(runtime instanceof ChatOpenAI)) {
+        if (!runtime) {
             throw apiError.badRequest('ai.unexpected_model_type', { name: dbModel.name });
         }
 
@@ -135,7 +163,7 @@ export class AiModelsService {
         }
 
         if (dbModel.type === ModelType.Embedding) {
-            return new OpenAIEmbeddings({
+            return new OpenAIEmbeddingsWithUsage({
                 ...providerConfig,
                 model: dbModel.name
             });

@@ -63,3 +63,8 @@ export type AiInvokeWithToolsParams =
           instruction: string;
       })
     | AiInvokeWithToolsBase;
+
+export type AiEmbedParams = {
+    modelId: string;
+    text: string;
+};

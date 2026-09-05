@@ -3,7 +3,7 @@ export type ExecuteTimeResult<T> = {
     timeMs: number;
 };
 
-export async function getExecuteTime<T>(fn: () => Promise<T> | T): Promise<ExecuteTimeResult<T>> {
+export async function getExecuteTime<T>(fn: (...args: any) => Promise<T> | T): Promise<ExecuteTimeResult<T>> {
     const startedAt = Date.now();
     const result = await fn();
 

@@ -1,10 +1,4 @@
-import {
-    AIMessage,
-    type BaseMessage,
-    HumanMessage,
-    SystemMessage,
-    ToolMessage
-} from '@langchain/core/messages';
+import { AIMessage, type BaseMessage, HumanMessage, SystemMessage, ToolMessage } from '@langchain/core/messages';
 import type { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { RunnableLambda } from '@langchain/core/runnables';
 import type { ChatOpenAI } from '@langchain/openai';
@@ -14,7 +8,7 @@ import type { z } from 'zod';
 import { appConstants } from '../../../common/config/app.constants';
 import { apiError } from '../../../common/helpers/errors';
 import { ServiceSettingsService } from '../../service-settings/service-settings.service';
-import type { AiInvokeParams, AiInvokeResult, AiInvokeWithToolsParams, AiTokenUsage } from '../ai.types';
+import type { AiEmbedParams, AiInvokeParams, AiInvokeResult, AiInvokeWithToolsParams, AiTokenUsage } from '../ai.types';
 import { AiToolsRegistry } from '../tools/ai-tools.registry';
 import { AiModelsService } from './ai-models.service';
 import { AiUsageService } from './ai-usage.service';
@@ -61,6 +55,17 @@ export class AiInvokeService {
         return {
             result: this.extractTextContent(response),
             usage: this.usage.extractUsage(response, settings.models.provider)
+        };
+    }
+
+    async executeEmbed(params: AiEmbedParams): Promise<AiInvokeResult<number[]>> {
+        const model = await this.models.ensureEmbeddingModel(params.modelId);
+        const settings = await this.serviceSettingsService.getJsonForRequest();
+        const embedded = await model.embedQueryWithUsage(params.text);
+
+        return {
+            result: embedded.embedding,
+            usage: this.usage.extractEmbeddingUsage(embedded, settings.models.provider)
         };
     }
 

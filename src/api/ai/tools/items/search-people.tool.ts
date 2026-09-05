@@ -22,6 +22,10 @@ export class SearchPeopleFactory implements AiToolFactory {
 
         return tool(
             async ({ queries }) => {
+                if (!queries || queries.length < 0) {
+                    return;
+                }
+
                 const items = await this.repository.searchPeople(userId, queries);
                 return JSON.stringify({ queries, items });
             },

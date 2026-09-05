@@ -132,4 +132,12 @@ export class EntryRepository {
             select: createEntrySelect
         });
     }
+
+    async getById(id: string) {
+        return this.prisma.entry.findUnique({
+            where: {
+                id: id
+            }
+        });
+    }
 }

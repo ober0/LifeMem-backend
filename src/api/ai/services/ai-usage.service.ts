@@ -22,7 +22,7 @@ export class AiUsageService implements OnModuleInit {
 
         let rubCost: number | undefined = undefined;
 
-        const metadataUsage = usage?.response_metadata.usage as { cost?: number };
+        const metadataUsage = usage?.response_metadata.usage as { cost?: number; cost_rub?: number };
 
         if (typeof metadataUsage?.cost === 'number') {
             switch (provider) {
@@ -30,7 +30,7 @@ export class AiUsageService implements OnModuleInit {
                     rubCost = metadataUsage.cost * this.usdRateInRub;
                     break;
                 case AiProvider.Polza:
-                    rubCost = metadataUsage.cost;
+                    rubCost = metadataUsage.cost_rub || metadataUsage.cost;
                     break;
             }
         }
@@ -39,6 +39,32 @@ export class AiUsageService implements OnModuleInit {
             inputTokens: usage?.usage_metadata?.input_tokens ?? 0,
             outputTokens: usage?.usage_metadata?.output_tokens ?? 0,
             totalTokens: usage?.usage_metadata?.total_tokens ?? 0,
+            price: rubCost,
+            provider
+        };
+    }
+
+    extractEmbeddingUsage(
+        data: { inputTokens: number; totalTokens: number; cost?: number; costRub?: number },
+        provider: AiProvider
+    ): AiTokenUsage {
+        let rubCost: number | undefined = undefined;
+
+        if (typeof data.cost === 'number') {
+            switch (provider) {
+                case AiProvider.Openrouter:
+                    rubCost = data.cost * this.usdRateInRub;
+                    break;
+                case AiProvider.Polza:
+                    rubCost = data.costRub || data.cost;
+                    break;
+            }
+        }
+
+        return {
+            inputTokens: data.inputTokens,
+            outputTokens: 0,
+            totalTokens: data.totalTokens,
             price: rubCost,
             provider
         };

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { EntryProcessingType, Prisma } from '@prisma/client';
+import { EntryProcessingType, EntryVectorKind, Prisma } from '@prisma/client';
+import { randomUUID } from 'crypto';
 
 import { apiError } from '../../common/helpers/errors';
 import type { AiTokenUsage } from '../ai/ai.types';
@@ -7,8 +8,11 @@ import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateLocationDto } from './types';
 
+// TODO можно будет вынести
 const delayedJobToProcessingType = {
-    [DelayedJob.EntryLocationAndPeopleDetect]: EntryProcessingType.LocationAndPeopleDetect
+    [DelayedJob.EntryLocationAndPeopleDetect]: EntryProcessingType.LocationAndPeopleDetect,
+    [DelayedJob.EntryEmbedTitle]: EntryProcessingType.EmbedTitle,
+    [DelayedJob.EntryEmbedText]: EntryProcessingType.EmbedText
 } as const;
 
 type UsageTrackedDelayedJob = keyof typeof delayedJobToProcessingType;
@@ -21,6 +25,13 @@ export class EntryLocationRepository {
         return this.prisma.entry.findUnique({
             where: { id: entryId },
             select: { id: true, text: true }
+        });
+    }
+
+    async getEntryTitle(entryId: string): Promise<{ id: string; title: string } | null> {
+        return this.prisma.entry.findUnique({
+            where: { id: entryId },
+            select: { id: true, title: true }
         });
     }
 
@@ -158,5 +169,105 @@ export class EntryLocationRepository {
                 timeMs: data.usage.timeMs ? { increment: data.usage.timeMs } : undefined
             }
         });
+    }
+
+    async createEntryVector(data: {
+        entryId: string;
+        kind: EntryVectorKind;
+        aiModelId: string;
+        embedding: number[];
+        dimensions?: number;
+        imageId?: string | null;
+        id?: string;
+    }): Promise<{ id: string }> {
+        const dimensions = data.dimensions ?? data.embedding.length;
+        const vectorLiteral = `[${data.embedding.join(',')}]`;
+        const imageId = data.imageId ?? null;
+
+        let targetId = data.id;
+
+        if (!targetId && imageId) {
+            const existing = await this.prisma.entryVector.findUnique({
+                where: { imageId },
+                select: { id: true }
+            });
+            targetId = existing?.id;
+        }
+
+        if (!targetId && !imageId) {
+            const existing = await this.prisma.entryVector.findFirst({
+                where: {
+                    entryId: data.entryId,
+                    kind: data.kind,
+                    imageId: null
+                },
+                select: { id: true }
+            });
+            targetId = existing?.id;
+        }
+
+        if (targetId) {
+            await this.prisma.$executeRawUnsafe(
+                `
+                UPDATE "entry_vector"
+                SET
+                    "entry_id" = $1::uuid,
+                    "kind" = $2::"entry_vector_kind",
+                    "ai_model_id" = $3::uuid,
+                    "image_id" = $4::uuid,
+                    "dimensions" = $5,
+                    "embedding" = $6::vector,
+                    "updated_at" = NOW()
+                WHERE "id" = $7::uuid
+                `,
+                data.entryId,
+                data.kind,
+                data.aiModelId,
+                imageId,
+                dimensions,
+                vectorLiteral,
+                targetId
+            );
+
+            return { id: targetId };
+        }
+
+        const id = randomUUID();
+
+        await this.prisma.$executeRawUnsafe(
+            `
+            INSERT INTO "entry_vector" (
+                "id",
+                "entry_id",
+                "kind",
+                "ai_model_id",
+                "image_id",
+                "dimensions",
+                "embedding",
+                "created_at",
+                "updated_at"
+            )
+            VALUES (
+                $1::uuid,
+                $2::uuid,
+                $3::"entry_vector_kind",
+                $4::uuid,
+                $5::uuid,
+                $6,
+                $7::vector,
+                NOW(),
+                NOW()
+            )
+            `,
+            id,
+            data.entryId,
+            data.kind,
+            data.aiModelId,
+            imageId,
+            dimensions,
+            vectorLiteral
+        );
+
+        return { id };
     }
 }

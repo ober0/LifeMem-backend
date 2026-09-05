@@ -52,6 +52,8 @@ export type ErrorsTranslationKey =
   | 'common.validation_failed'
   | 'entry.duplicate_job'
   | 'entry.geo_incomplete'
+  | 'entry.invalid_embedding'
+  | 'entry.invalid_embedding_dimensions'
   | 'entry.invalid_job_type'
   | 'entry.invalid_locations'
   | 'entry.invalid_photo_descriptions'

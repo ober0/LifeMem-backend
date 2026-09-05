@@ -40,6 +40,8 @@ model EntryImage {
   aiTranscription String? @map("ai_transcription")
   description     String?
 
+  vector EntryVector?
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -75,16 +77,22 @@ model EntryVector {
   entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
   entryId String @map("entry_id") @db.Uuid
 
-  kind       EntryVectorKind        @default(Text)
-  model      String
+  kind EntryVectorKind @default(Text)
+
+  model     AiModel @relation(fields: [aiModelId], references: [id])
+  aiModelId String  @map("ai_model_id") @db.Uuid
+
+  image   EntryImage? @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  imageId String?     @unique @map("image_id") @db.Uuid
+
   dimensions Int
   embedding  Unsupported("vector")?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([entryId, kind])
   @@index([entryId])
+  @@index([aiModelId])
   @@index([dimensions])
   @@map("entry_vector")
 }

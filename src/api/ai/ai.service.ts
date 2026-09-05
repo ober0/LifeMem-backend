@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { getExecuteTime } from '../../common/helpers/get-execute-time';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
 import type {
+    AiEmbedParams,
     AiInvokeParams,
     AiInvokeResult,
     AiInvokeWithToolsParams,
@@ -35,6 +36,10 @@ export class AiService implements OnModuleInit {
 
     async invokeWithTools(params: AiInvokeWithToolsParams): Promise<AiRequestAccepted> {
         return this.enqueueRequest(() => this.invokeService.executeWithTools(params));
+    }
+
+    async embed(params: AiEmbedParams): Promise<AiRequestAccepted> {
+        return this.enqueueRequest(() => this.invokeService.executeEmbed(params));
     }
 
     getResult<T = unknown>(requestId: string): AiRequestLookupResult<T> {

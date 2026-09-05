@@ -1,5 +1,6 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { Injectable, Logger } from '@nestjs/common';
+import { EntryVectorKind } from '@prisma/client';
 
 import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
@@ -246,5 +247,126 @@ export class EntryLocationService {
                 autodetected: true
             });
         }
+    }
+
+    async processEntryEmbedTitle(data: DelayedJobPayloads[typeof DelayedJob.EntryEmbedTitle]) {
+        const entry = await this.repository.getEntryTitle(data.entryId);
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        const title = entry.title?.trim();
+        if (!title) {
+            this.logger.warn(`skip embed title: empty title entryId=${data.entryId}`);
+            return true;
+        }
+
+        const serviceSettings = await this.serviceSettings.getJsonForRequest();
+
+        // TODO это надо вытаскивать из тарифа
+        const tariff: 'lite' | 'premium' = appConstants.userSettings.defaultDevTariff;
+
+        const modelId = serviceSettings.models.embedding[tariff];
+
+        if (!modelId) {
+            throw apiError.internal('service_settings.model_not_found');
+        }
+
+        const { requestId } = await this.ai.embed({
+            modelId,
+            text: title
+        });
+
+        const { result, usage, timeMs } = await this.waitAiResult<number[]>(requestId);
+
+        await Promise.all([
+            this.repository.updateUsage(data.entryId, DelayedJob.EntryEmbedTitle, {
+                aiModelId: modelId,
+                usage: {
+                    ...usage,
+                    timeMs
+                }
+            }),
+            this.createEntryVector({
+                entryId: entry.id,
+                kind: EntryVectorKind.Title,
+                aiModelId: modelId,
+                embedding: result,
+                dimensions: result.length
+            })
+        ]);
+
+        return true;
+    }
+
+    private async createEntryVector(data: {
+        entryId: string;
+        kind: EntryVectorKind;
+        aiModelId: string;
+        embedding: number[];
+        dimensions?: number;
+        imageId?: string | null;
+        id?: string;
+    }) {
+        if (data.embedding.length === 0 || data.embedding.some((value) => !Number.isFinite(value))) {
+            throw apiError.badRequest('entry.invalid_embedding');
+        }
+
+        const dimensions = data.dimensions ?? data.embedding.length;
+        if (dimensions !== data.embedding.length) {
+            throw apiError.badRequest('entry.invalid_embedding_dimensions');
+        }
+
+        return this.repository.createEntryVector(data);
+    }
+
+    async processEntryEmbedText(data: DelayedJobPayloads[typeof DelayedJob.EntryEmbedTitle]) {
+        const entry = await this.repository.getEntryText(data.entryId);
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        const text = entry.text?.trim();
+        if (!text) {
+            this.logger.warn(`skip embed title: empty text entryId=${data.entryId}`);
+            return true;
+        }
+
+        const serviceSettings = await this.serviceSettings.getJsonForRequest();
+
+        // TODO это надо вытаскивать из тарифа
+        const tariff: 'lite' | 'premium' = appConstants.userSettings.defaultDevTariff;
+
+        const modelId = serviceSettings.models.embedding[tariff];
+
+        if (!modelId) {
+            throw apiError.internal('service_settings.model_not_found');
+        }
+
+        const { requestId } = await this.ai.embed({
+            modelId,
+            text: text
+        });
+
+        const { result, usage, timeMs } = await this.waitAiResult<number[]>(requestId);
+
+        await Promise.all([
+            this.repository.updateUsage(data.entryId, DelayedJob.EntryEmbedText, {
+                aiModelId: modelId,
+                usage: {
+                    ...usage,
+                    timeMs
+                }
+            }),
+            this.createEntryVector({
+                entryId: entry.id,
+                kind: EntryVectorKind.Text,
+                aiModelId: modelId,
+                embedding: result,
+                dimensions: result.length
+            })
+        ]);
+
+        return true;
     }
 }

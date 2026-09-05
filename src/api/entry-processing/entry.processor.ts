@@ -42,6 +42,16 @@ export class EntryProcessor extends WorkerHost {
                         job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocationAndPeopleDetect]
                     );
                     break;
+                case DelayedJob.EntryEmbedTitle:
+                    await this.entryLocationService.processEntryEmbedTitle(
+                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedTitle]
+                    );
+                    break;
+                case DelayedJob.EntryEmbedText:
+                    await this.entryLocationService.processEntryEmbedText(
+                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedText]
+                    );
+                    break;
                 default:
                     this.logger.warn(`Unknown delayed job: ${job.name}`);
                     await this.entryProcessingService.markJobFailed(data.jobId, `Unknown job: ${job.name}`);
@@ -64,7 +74,11 @@ export class EntryProcessor extends WorkerHost {
         if (error instanceof HttpException) {
             const response = error.getResponse();
 
-            if (typeof response === 'object' && response !== null && typeof (response as { code?: unknown }).code === 'string') {
+            if (
+                typeof response === 'object' &&
+                response !== null &&
+                typeof (response as { code?: unknown }).code === 'string'
+            ) {
                 const code = (response as { code: string }).code;
                 const variables =
                     'variables' in response && typeof response.variables === 'object' && response.variables !== null
@@ -79,9 +93,7 @@ export class EntryProcessor extends WorkerHost {
             }
 
             if (typeof response === 'string') {
-                return errorTranslations.hasKey(response)
-                    ? errorTranslations.byCode({ code: response })
-                    : response;
+                return errorTranslations.hasKey(response) ? errorTranslations.byCode({ code: response }) : response;
             }
 
             return error.message;

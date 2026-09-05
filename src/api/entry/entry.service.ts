@@ -268,4 +268,13 @@ export class EntryService {
             description
         };
     }
+
+    async getById(id: string) {
+        const data = await this.entryRepository.getById(id);
+        if (!data) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        return data;
+    }
 }
