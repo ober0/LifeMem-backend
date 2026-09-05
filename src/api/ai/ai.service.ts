@@ -1,6 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
+import { appConstants } from '../../common/config/app.constants';
+import { apiError } from '../../common/helpers/errors';
 import { getExecuteTime } from '../../common/helpers/get-execute-time';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
 import type {
@@ -44,6 +46,45 @@ export class AiService implements OnModuleInit {
 
     getResult<T = unknown>(requestId: string): AiRequestLookupResult<T> {
         return this.responseStore.take<T>(requestId);
+    }
+
+    waitResult<T = unknown>(requestId: string): Promise<AiInvokeResult<T>> {
+        const timeoutMs = appConstants.ai.resultWaitTimeoutSec * 1000;
+        const startedAt = Date.now();
+
+        return new Promise<AiInvokeResult<T>>((resolve, reject) => {
+            const timer = setInterval(() => {
+                try {
+                    if (Date.now() - startedAt >= timeoutMs) {
+                        clearInterval(timer);
+                        reject(apiError.internal('ai.request_timeout'));
+                        return;
+                    }
+
+                    const lookup = this.getResult<T>(requestId);
+
+                    if (lookup.status === 'pending') {
+                        return;
+                    }
+
+                    clearInterval(timer);
+
+                    if (lookup.status === 'failed') {
+                        reject(apiError.internal('ai.request_failed', { error: lookup.error }));
+                        return;
+                    }
+
+                    resolve({
+                        result: lookup.result,
+                        usage: lookup.usage,
+                        timeMs: lookup.timeMs
+                    });
+                } catch (error) {
+                    clearInterval(timer);
+                    reject(error);
+                }
+            }, appConstants.ai.resultPollIntervalMs);
+        });
     }
 
     async refreshModels(): Promise<void> {
