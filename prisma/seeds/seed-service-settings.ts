@@ -1,11 +1,20 @@
 import type { PrismaClient } from '@prisma/client';
 import Redis from 'ioredis';
 
+import type { ServiceSettingsJsonDto } from '../../src/api/service-settings/dto/settings-json.dto';
 import { appConstants } from '../../src/common/config/app.constants';
 import { cacheConstants, CacheKey } from '../../src/common/config/constants/cache.constants';
+import { deepMerge } from '../../src/common/helpers/deep-merge';
 
 export async function seedServiceSettings(prisma: PrismaClient, redis: Redis): Promise<void> {
     const existing = await prisma.serviceSettings.findFirst();
+
+    const json = existing
+        ? deepMerge(
+              { ...appConstants.serviceSettings.base },
+              (existing.json as unknown as ServiceSettingsJsonDto) ?? {}
+          )
+        : { ...appConstants.serviceSettings.base };
 
     if (existing) {
         await prisma.serviceSettings.update({
@@ -13,16 +22,13 @@ export async function seedServiceSettings(prisma: PrismaClient, redis: Redis): P
                 id: existing.id
             },
             data: {
-                json: {
-                    ...appConstants.serviceSettings.base,
-                    ...((existing?.json as Record<string, unknown>) ?? {})
-                }
+                json
             }
         });
     } else {
         await prisma.serviceSettings.create({
             data: {
-                json: appConstants.serviceSettings.base
+                json
             }
         });
     }

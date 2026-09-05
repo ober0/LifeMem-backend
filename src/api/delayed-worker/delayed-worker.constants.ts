@@ -44,7 +44,10 @@ export type DelayedJobPayloads = {
         userLang?: LangEnum;
     };
     [DelayedJob.EntryStt]: baseEntryJobPayload;
-    [DelayedJob.EntryVision]: baseEntryJobPayload;
+    [DelayedJob.EntryVision]: baseEntryJobPayload & {
+        entryVideoIds?: string[];
+        userLang?: LangEnum;
+    };
     [DelayedJob.EntryLocationAndPeopleDetect]: baseEntryJobPayload;
     [DelayedJob.EntryEmbedText]: baseEntryJobPayload;
     [DelayedJob.EntryEmbedTitle]: baseEntryJobPayload;

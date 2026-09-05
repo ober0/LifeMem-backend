@@ -12,6 +12,9 @@ const MODELS: ReadonlyArray<{ name: string; type: ModelType }> = [
     { name: 'deepseek/deepseek-chat', type: ModelType.TextToText },
     { name: 'mistralai/mistral-large', type: ModelType.TextToText },
 
+    // vision
+    { name: 'google/gemini-2.5-flash-lite', type: ModelType.ImageToText },
+
     // векторы
     { name: 'openai/text-embedding-3-small', type: ModelType.Embedding }
 ];

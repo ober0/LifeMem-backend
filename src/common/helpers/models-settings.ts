@@ -5,6 +5,7 @@ import type { ModelsSettingsDto } from '../../api/service-settings/dto/settings-
 type ModelsSettingsLike = Partial<{
     analyze: Partial<{ premium: string | null; lite: string | null }>;
     embedding: Partial<{ premium: string | null; lite: string | null }>;
+    vision: Partial<{ premium: string | null; lite: string | null }>;
 }>;
 
 export type ModelsSettingsSlot = {
@@ -18,7 +19,9 @@ export function getModelsSettingsSlots(models: ModelsSettingsDto): ModelsSetting
         { id: models.analyze.premium, expectedType: ModelType.TextToText, slot: 'models.analyze.premium' },
         { id: models.analyze.lite, expectedType: ModelType.TextToText, slot: 'models.analyze.lite' },
         { id: models.embedding.premium, expectedType: ModelType.Embedding, slot: 'models.embedding.premium' },
-        { id: models.embedding.lite, expectedType: ModelType.Embedding, slot: 'models.embedding.lite' }
+        { id: models.embedding.lite, expectedType: ModelType.Embedding, slot: 'models.embedding.lite' },
+        { id: models.vision.premium, expectedType: ModelType.ImageToText, slot: 'models.vision.premium' },
+        { id: models.vision.lite, expectedType: ModelType.ImageToText, slot: 'models.vision.lite' }
     ];
 }
 
@@ -27,9 +30,14 @@ function collectModelsSettingsIds(models?: ModelsSettingsLike | null): string[] 
         return [];
     }
 
-    return [models.analyze?.premium, models.analyze?.lite, models.embedding?.premium, models.embedding?.lite].filter(
-        (id): id is string => typeof id === 'string' && id.length > 0
-    );
+    return [
+        models.analyze?.premium,
+        models.analyze?.lite,
+        models.embedding?.premium,
+        models.embedding?.lite,
+        models.vision?.premium,
+        models.vision?.lite
+    ].filter((id): id is string => typeof id === 'string' && id.length > 0);
 }
 
 export function collectUniqueModelsSettingsIds(models?: ModelsSettingsLike | null): string[] {

@@ -52,10 +52,13 @@ export class ServiceSettingsService {
         }
 
         if (actor.hasPermission(Permission.ServiceSettingsGetFull)) {
-            return data;
+            return {
+                ...data,
+                json: this.toJson(data)
+            };
         }
 
-        const { authMethods, appVersion, ..._rest } = data.json as ServiceSettingsJsonDto;
+        const { authMethods, appVersion } = this.toJson(data);
         return {
             json: {
                 authMethods,
@@ -80,12 +83,12 @@ export class ServiceSettingsService {
 
             if (dto.models?.provider) {
                 await this.delayedWorker.delayed(DelayedJob.AiRefreshModels, {}, { queue: 'ai' });
-            } else if (dto.models?.analyze || dto.models?.embedding) {
+            } else if (dto.models?.analyze || dto.models?.embedding || dto.models?.vision) {
                 await this.delayedWorker.delayed(DelayedJob.AiAddModels, {}, { queue: 'ai' });
             }
         });
 
-        return updated.json as unknown as ServiceSettingsJsonDto;
+        return this.toJson(this.toDto(updated));
     }
 
     private async validateModelsSettings(models: ModelsSettingsDto): Promise<void> {
@@ -133,10 +136,9 @@ export class ServiceSettingsService {
     }
 
     private toJson(data: ServiceSettingsDto): ServiceSettingsJsonDto {
-        return (
-            (data.json as unknown as ServiceSettingsJsonDto | null) ?? {
-                ...appConstants.serviceSettings.base
-            }
+        return deepMerge(
+            { ...appConstants.serviceSettings.base },
+            (data.json as unknown as ServiceSettingsJsonDto) ?? {}
         );
     }
 }

@@ -132,7 +132,10 @@ export class EntryService {
                     }
                 }),
                 [DelayedJob.EntryStt]: basePayload,
-                [DelayedJob.EntryVision]: basePayload,
+                [DelayedJob.EntryVision]: {
+                    ...basePayload,
+                    userLang: actor.settings?.lang
+                },
                 [DelayedJob.EntryEmbedText]: basePayload,
                 [DelayedJob.EntryEmbedTitle]: basePayload,
                 [DelayedJob.EntryLocationAndPeopleDetect]: basePayload,

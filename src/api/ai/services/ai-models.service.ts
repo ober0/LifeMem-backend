@@ -155,7 +155,7 @@ export class AiModelsService {
         dbModel: { id: string; name: string; type: ModelType; isActive: boolean },
         providerConfig: ProviderClientConfig
     ): AiRuntimeModel | null {
-        if (dbModel.type === ModelType.TextToText) {
+        if (dbModel.type === ModelType.TextToText || dbModel.type === ModelType.ImageToText) {
             return new ChatOpenAI({
                 ...providerConfig,
                 model: dbModel.name

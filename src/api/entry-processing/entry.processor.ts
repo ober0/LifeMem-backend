@@ -13,6 +13,7 @@ import {
 } from '../delayed-worker/delayed-worker.constants';
 import { EntryEmbeddingService } from '../entry-embedding/entry-embedding.service';
 import { EntryLocationService } from '../entry-location/entry-location.service';
+import { EntryVisionService } from '../entry-vision/entry-vision.service';
 import { EntryProcessingService } from './entry-processing.service';
 
 @Processor(ENTRY_QUEUE)
@@ -22,7 +23,8 @@ export class EntryProcessor extends WorkerHost {
     constructor(
         private readonly entryLocationService: EntryLocationService,
         private readonly entryEmbeddingService: EntryEmbeddingService,
-        private readonly entryProcessingService: EntryProcessingService
+        private readonly entryProcessingService: EntryProcessingService,
+        private readonly entryVisionService: EntryVisionService
     ) {
         super();
     }
@@ -52,6 +54,11 @@ export class EntryProcessor extends WorkerHost {
                 case DelayedJob.EntryEmbedText:
                     await this.entryEmbeddingService.processEntryEmbedText(
                         job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedText]
+                    );
+                    break;
+                case DelayedJob.EntryVision:
+                    await this.entryVisionService.processEntryVision(
+                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryVision]
                     );
                     break;
                 default:

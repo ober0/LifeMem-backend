@@ -29,6 +29,7 @@ import { CacheModule } from '../cache/cache.module';
 import { DelayedWorkerModule } from '../delayed-worker/delayed-worker.module';
 import { EntryModule } from '../entry/entry.module';
 import { EntryLocationModule } from '../entry-location/entry-location.module';
+import { EntryVisionModule } from '../entry-vision/entry-vision.module';
 import { HealthModule } from '../health/health.module';
 import { LogsModule } from '../logs/logs.module';
 import { MobileSmsModule } from '../mobile-sms/mobile-sms.module';
@@ -93,7 +94,8 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         EntryModule,
         DelayedWorkerModule,
         EntryLocationModule,
-        OpenstreetmapModule
+        OpenstreetmapModule,
+        EntryVisionModule
     ],
     providers: [
         {

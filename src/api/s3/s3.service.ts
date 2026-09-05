@@ -74,6 +74,22 @@ export class S3Service implements OnModuleInit {
         );
     }
 
+    async getObjectBuffer(key: string): Promise<Buffer> {
+        const response = await this._s3.send(
+            new GetObjectCommand({
+                Bucket: this._bucket,
+                Key: key
+            })
+        );
+
+        const body = response.Body;
+        if (!body) {
+            throw new Error(`S3 object body is empty: ${key}`);
+        }
+
+        return Buffer.from(await body.transformToByteArray());
+    }
+
     private async createBucketIfMissing(): Promise<void> {
         try {
             await this._s3.send(new HeadBucketCommand({ Bucket: this._bucket }));

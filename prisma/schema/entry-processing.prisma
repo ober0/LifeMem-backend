@@ -22,6 +22,7 @@ enum EntryProcessingType {
 model EntryProcessingJob {
   id String @id @default(uuid()) @db.Uuid
 
+  // TODO убрать cascade, добавить isEntryDeleted
   entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
   entryId String @map("entry_id") @db.Uuid
 
@@ -43,6 +44,7 @@ model EntryProcessingJob {
 model EntryProcessingUsage {
   id String @id @default(uuid()) @db.Uuid
 
+  // TODO убрать cascade
   job   EntryProcessingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
   jobId String             @unique @map("job_id") @db.Uuid
 
