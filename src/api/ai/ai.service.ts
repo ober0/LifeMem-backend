@@ -190,10 +190,8 @@ export class AiService implements OnModuleInit {
         const settingsPromise = this.serviceSettingsService.getJsonForRequest();
 
         if ('parser' in params) {
-            const [parsed, settings] = await Promise.all([
-                chat.pipe(this.parseNode(params.parser)).invoke(messages),
-                settingsPromise
-            ]);
+            const [response, settings] = await Promise.all([chat.invoke(messages), settingsPromise]);
+            const parsed = await this.parseNode(params.parser).invoke(response);
 
             return {
                 result: parsed.data,
