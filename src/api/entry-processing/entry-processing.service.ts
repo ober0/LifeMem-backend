@@ -109,6 +109,7 @@ export class EntryProcessingService {
                 continue;
             }
 
+            // TODO передавать data
             await this.createJob(data.entryId, key, basePayload as Omit<DelayedJobPayloads[typeof key], 'jobId'>, {
                 ignoreDuplicate: true
             });

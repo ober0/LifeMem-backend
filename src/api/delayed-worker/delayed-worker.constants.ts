@@ -51,7 +51,7 @@ export type DelayedJobPayloads = {
     [DelayedJob.EntryLocationAndPeopleDetect]: baseEntryJobPayload;
     [DelayedJob.EntryEmbedText]: baseEntryJobPayload;
     [DelayedJob.EntryEmbedTitle]: baseEntryJobPayload;
-    [DelayedJob.EntryEmbedImage]: baseEntryJobPayload;
+    [DelayedJob.EntryEmbedImage]: baseEntryJobPayload & { entryVideoIds?: string[] };
     [DelayedJob.AiRefreshModels]: Record<string, never>;
     [DelayedJob.AiAddModels]: Record<string, never>;
 };

@@ -8,6 +8,9 @@ import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker/delayed-w
 import { ServiceSettingsService } from '../service-settings/service-settings.service';
 import { EntryEmbeddingRepository } from './entry-embedding.repository';
 
+type EmbedDelayedJob =
+    typeof DelayedJob.EntryEmbedTitle | typeof DelayedJob.EntryEmbedText | typeof DelayedJob.EntryEmbedImage;
+
 @Injectable()
 export class EntryEmbeddingService {
     private readonly logger = new Logger(EntryEmbeddingService.name);
@@ -58,11 +61,40 @@ export class EntryEmbeddingService {
         });
     }
 
+    async processEntryEmbedImage(data: DelayedJobPayloads[typeof DelayedJob.EntryEmbedImage]) {
+        const images = await this.repository.getEntryImages(data.entryId, data.entryVideoIds);
+
+        if (images.length === 0) {
+            this.logger.warn(`skip embed image: no images entryId=${data.entryId}`);
+            return true;
+        }
+
+        for (const image of images) {
+            const text = `image.description \n\n image.aiTranscription`.trim();
+
+            if (!text) {
+                this.logger.warn(`skip embed image: empty text imageId=${image.id}`);
+                continue;
+            }
+
+            await this.embedAndStore({
+                entryId: data.entryId,
+                text,
+                kind: EntryVectorKind.Image,
+                delayedJob: DelayedJob.EntryEmbedImage,
+                imageId: image.id
+            });
+        }
+
+        return true;
+    }
+
     private async embedAndStore(data: {
         entryId: string;
         text: string;
         kind: EntryVectorKind;
-        delayedJob: typeof DelayedJob.EntryEmbedTitle | typeof DelayedJob.EntryEmbedText;
+        delayedJob: EmbedDelayedJob;
+        imageId?: string;
     }) {
         const serviceSettings = await this.serviceSettings.getJsonForRequest();
 
@@ -95,7 +127,8 @@ export class EntryEmbeddingService {
                 kind: data.kind,
                 aiModelId: modelId,
                 embedding: result,
-                dimensions: result.length
+                dimensions: result.length,
+                imageId: data.imageId
             })
         ]);
 

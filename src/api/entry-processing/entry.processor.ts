@@ -56,6 +56,11 @@ export class EntryProcessor extends WorkerHost {
                         job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedText]
                     );
                     break;
+                case DelayedJob.EntryEmbedImage:
+                    await this.entryEmbeddingService.processEntryEmbedImage(
+                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedImage]
+                    );
+                    break;
                 case DelayedJob.EntryVision:
                     await this.entryVisionService.processEntryVision(
                         job.data as DelayedJobPayloads[typeof DelayedJob.EntryVision]

@@ -33,6 +33,27 @@ export class EntryEmbeddingRepository {
         });
     }
 
+    async getEntryImages(
+        entryId: string,
+        ids?: string[]
+    ): Promise<Array<{ id: string; description: string | null; aiTranscription: string | null }>> {
+        return this.prisma.entryImage.findMany({
+            where: {
+                entryId,
+                ...(ids && {
+                    id: {
+                        in: ids
+                    }
+                })
+            },
+            select: {
+                id: true,
+                description: true,
+                aiTranscription: true
+            }
+        });
+    }
+
     async updateUsage(
         entryId: string,
         delayedJob: UsageTrackedDelayedJob,
