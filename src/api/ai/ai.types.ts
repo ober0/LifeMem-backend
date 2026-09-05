@@ -11,11 +11,13 @@ export type AiTokenUsage = {
     totalTokens: number;
     price?: number;
     provider?: AiProvider;
+    timeMs?: number;
 };
 
 export type AiInvokeResult<T> = {
     result: T;
     usage: AiTokenUsage;
+    timeMs?: number;
 };
 
 export type AiRequestAccepted = {
@@ -24,7 +26,7 @@ export type AiRequestAccepted = {
 
 export type AiRequestLookupResult<T> =
     | { status: 'pending' }
-    | { status: 'ready'; result: T; usage: AiTokenUsage }
+    | { status: 'ready'; result: T; usage: AiTokenUsage; timeMs: number }
     | { status: 'failed'; error: string };
 
 export type AiToolContext = {

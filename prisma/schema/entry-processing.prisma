@@ -54,6 +54,8 @@ model EntryProcessingUsage {
 
   provider String?
 
+  timeMs Int? @map("time_ms")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

@@ -14,6 +14,7 @@ type AiStoredResponse =
           status: 'ready';
           expiresAt: number;
           result: unknown;
+          timeMs: number;
           usage: AiTokenUsage;
       }
     | {
@@ -34,7 +35,7 @@ export class AiResponseStore {
         });
     }
 
-    setReady(requestId: string, payload: AiInvokeResult<unknown>): void {
+    setReady(requestId: string, payload: AiInvokeResult<unknown> & { timeMs: number }): void {
         if (!this.responses.has(requestId)) {
             return;
         }
@@ -43,6 +44,7 @@ export class AiResponseStore {
             status: 'ready',
             expiresAt: Date.now() + appConstants.ai.responseTtlMs,
             result: payload.result,
+            timeMs: payload.timeMs,
             usage: payload.usage
         });
     }
@@ -83,6 +85,7 @@ export class AiResponseStore {
         return {
             status: 'ready',
             result: entry.result as T,
+            timeMs: entry.timeMs,
             usage: entry.usage
         };
     }

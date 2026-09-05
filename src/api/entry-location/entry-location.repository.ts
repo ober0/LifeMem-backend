@@ -146,14 +146,16 @@ export class EntryLocationRepository {
                 inputTokens: data.usage.inputTokens,
                 outputTokens: data.usage.outputTokens,
                 provider: data.usage.provider ?? undefined,
-                price: data.usage.price ?? undefined
+                price: data.usage.price ?? undefined,
+                timeMs: data.usage.timeMs ?? undefined
             },
             update: {
                 aiModelId: data.aiModelId,
                 inputTokens: { increment: data.usage.inputTokens },
                 outputTokens: { increment: data.usage.outputTokens },
                 provider: data.usage.provider ?? undefined,
-                price: data.usage.price ? { increment: data.usage.price } : undefined
+                price: data.usage.price ? { increment: data.usage.price } : undefined,
+                timeMs: data.usage.timeMs ? { increment: data.usage.timeMs } : undefined
             }
         });
     }

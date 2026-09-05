@@ -133,17 +133,17 @@ export class EntryLocationService {
             ]
         });
 
-        const { result, usage } = await this.waitAiResult<DetectPeoplePlacesResult>(requestId);
-
-        console.log(result);
-        console.log(usage);
+        const { result, usage, timeMs } = await this.waitAiResult<DetectPeoplePlacesResult>(requestId);
 
         await Promise.all([
             this.applyDetectedPeople(data.userId, data.entryId, result.people ?? []),
             this.applyDetectedPlaces(data.userId, data.entryId, result.places ?? []),
             this.repository.updateUsage(data.entryId, DelayedJob.EntryLocationAndPeopleDetect, {
                 aiModelId: modelId,
-                usage
+                usage: {
+                    ...usage,
+                    timeMs
+                }
             })
         ]);
 
@@ -178,7 +178,8 @@ export class EntryLocationService {
 
                     resolve({
                         result: lookup.result,
-                        usage: lookup.usage
+                        usage: lookup.usage,
+                        timeMs: lookup.timeMs
                     });
                 } catch (error) {
                     clearInterval(timer);

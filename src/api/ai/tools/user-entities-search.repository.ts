@@ -12,7 +12,7 @@ export class UserEntitiesSearchRepository {
             return [];
         }
 
-        const rows = await this.prisma.person.findMany({
+        return this.prisma.person.findMany({
             where: {
                 userId,
                 OR: normalized.map((query) => ({
@@ -23,8 +23,6 @@ export class UserEntitiesSearchRepository {
             take,
             orderBy: { name: 'asc' }
         });
-
-        return rows;
     }
 
     async searchPlaces(userId: string, queries: string[], take = 50) {
@@ -33,7 +31,7 @@ export class UserEntitiesSearchRepository {
             return [];
         }
 
-        const rows = await this.prisma.place.findMany({
+        return this.prisma.place.findMany({
             where: {
                 userId,
                 OR: normalized.flatMap((query) => [
@@ -51,8 +49,6 @@ export class UserEntitiesSearchRepository {
             take,
             orderBy: { name: 'asc' }
         });
-
-        return rows;
     }
 
     private normalizeQueries(queries: string[]): string[] {
