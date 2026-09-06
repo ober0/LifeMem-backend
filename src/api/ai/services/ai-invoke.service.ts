@@ -8,7 +8,6 @@ import type { z } from 'zod';
 
 import { appConstants } from '../../../common/config/app.constants';
 import { apiError } from '../../../common/helpers/errors';
-import { LocalEmbeddingClient } from '../../local-embedding/local-embedding.client';
 import { ServiceSettingsService } from '../../service-settings/service-settings.service';
 import type {
     AiEmbedParams,
@@ -34,8 +33,7 @@ export class AiInvokeService {
         private readonly models: AiModelsService,
         private readonly usage: AiUsageService,
         private readonly toolsRegistry: AiToolsRegistry,
-        private readonly serviceSettingsService: ServiceSettingsService,
-        private readonly localEmbedding: LocalEmbeddingClient
+        private readonly serviceSettingsService: ServiceSettingsService
     ) {}
 
     async execute(params: AiInvokeParams): Promise<AiInvokeResult<unknown>> {
@@ -69,19 +67,13 @@ export class AiInvokeService {
     }
 
     async executeEmbed(params: AiEmbedParams): Promise<AiInvokeResult<number[]>> {
-        const embedded = await this.localEmbedding.embed({
-            modelName: appConstants.localEmbedding.defaultModel,
-            text: params.text,
-            kind: params.kind ?? 'passage'
-        });
+        const model = await this.models.ensureEmbeddingModel(params.modelId);
+        const settings = await this.serviceSettingsService.getJsonForRequest();
+        const embedded = await model.embedQueryWithUsage(params.text);
 
         return {
             result: embedded.embedding,
-            usage: {
-                inputTokens: 0,
-                outputTokens: 0,
-                totalTokens: 0
-            }
+            usage: this.usage.extractEmbeddingUsage(embedded, settings.models.provider)
         };
     }
 

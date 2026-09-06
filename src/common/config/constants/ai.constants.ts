@@ -9,6 +9,7 @@ export const aiConstants = {
             baseURL: 'https://polza.ai/api/v1'
         }
     },
+    defaultEmbeddingModel: 'openai/text-embedding-3-small',
     defaultMaxToolSteps: 10,
     responseTtlMs: 3 * 60 * 1000,
     responseCleanupIntervalMs: 60 * 1000,

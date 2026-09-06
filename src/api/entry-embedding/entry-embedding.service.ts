@@ -1,11 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EntryVectorKind } from '@prisma/client';
 
-import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
-import { AiService } from '../ai/ai.service';
-import { AiModelService } from '../ai-model/ai-model.service';
 import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker/delayed-worker.constants';
+import { EmbeddingService } from '../embedding/embedding.service';
 import { EntryEmbeddingRepository } from './entry-embedding.repository';
 
 type EmbedDelayedJob =
@@ -17,8 +15,7 @@ export class EntryEmbeddingService {
 
     constructor(
         private readonly repository: EntryEmbeddingRepository,
-        private readonly aiModelService: AiModelService,
-        private readonly ai: AiService
+        private readonly embeddingService: EmbeddingService
     ) {}
 
     async processEntryEmbedTitle(data: DelayedJobPayloads[typeof DelayedJob.EntryEmbedTitle]) {
@@ -96,32 +93,19 @@ export class EntryEmbeddingService {
         delayedJob: EmbedDelayedJob;
         imageId?: string;
     }) {
-        const dbModel = await this.aiModelService.findByName(appConstants.localEmbedding.defaultModel);
-        if (!dbModel || !dbModel.isActive) {
-            throw apiError.notFound('ai_model.not_found');
-        }
-
-        const { requestId } = await this.ai.embed({
-            text: data.text,
-            kind: 'passage'
-        });
-
-        const { result, usage, timeMs } = await this.ai.waitResult<number[]>(requestId);
+        const embedData = await this.embeddingService.embedText(data.text, 'passage');
 
         await Promise.all([
             this.repository.updateUsage(data.entryId, data.delayedJob, {
-                aiModelId: dbModel.id,
-                usage: {
-                    ...usage,
-                    timeMs
-                }
+                aiModelId: embedData.modelId,
+                usage: embedData.usage
             }),
             this.repository.createEntryVector({
                 entryId: data.entryId,
                 kind: data.kind,
-                aiModelId: dbModel.id,
-                embedding: result,
-                dimensions: result.length,
+                aiModelId: embedData.modelId,
+                embedding: embedData.result,
+                dimensions: embedData.result.length,
                 imageId: data.imageId
             })
         ]);

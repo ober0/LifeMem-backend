@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { type FeatureExtractionPipeline, pipeline } from '@xenova/transformers';
+import type { FeatureExtractionPipeline } from '@xenova/transformers';
 
 import {
     getLocalEmbeddingModelConfig,
@@ -11,15 +11,30 @@ import {
 } from '../common/config/constants/local-embedding.constants';
 import { apiError } from '../common/helpers/errors';
 
+type TransformersPipeline = (
+    task: 'feature-extraction',
+    model: string
+) => Promise<FeatureExtractionPipeline>;
+
 @Injectable()
 export class LocalEmbeddingRuntimeService implements OnModuleDestroy {
     private readonly logger = new Logger(LocalEmbeddingRuntimeService.name);
     private readonly models = new Map<LocalEmbeddingModelName, FeatureExtractionPipeline>();
     private readonly loading = new Map<LocalEmbeddingModelName, Promise<void>>();
+    private pipelineFn: TransformersPipeline | null = null;
 
     async onModuleDestroy(): Promise<void> {
         this.models.clear();
         this.loading.clear();
+    }
+
+    private async getPipelineFn(): Promise<TransformersPipeline> {
+        if (!this.pipelineFn) {
+            const { pipeline } = await import('@xenova/transformers');
+            this.pipelineFn = pipeline as TransformersPipeline;
+        }
+
+        return this.pipelineFn;
     }
 
     async loadModel(modelName: string): Promise<void> {
@@ -40,6 +55,7 @@ export class LocalEmbeddingRuntimeService implements OnModuleDestroy {
         const config = getLocalEmbeddingModelConfig(modelName)!;
         const loadPromise = (async () => {
             this.logger.log(`loading embedding model ${modelName}`);
+            const pipeline = await this.getPipelineFn();
             const extract = await pipeline('feature-extraction', config.hf);
             this.models.set(modelName, extract);
             this.logger.log(`loaded ${modelName}`);
