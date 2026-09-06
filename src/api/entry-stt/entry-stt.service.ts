@@ -1,12 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { appConstants } from '../../common/config/app.constants';
-import { apiError } from '../../common/helpers/errors';
-import { AiService } from '../ai/ai.service';
-import type { AiTokenUsage } from '../ai/ai.types';
 import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker';
 import { S3Service } from '../s3/s3.service';
-import { ServiceSettingsService } from '../service-settings/service-settings.service';
+import { SttService } from '../stt/stt.service';
 import { EntrySttRepository } from './entry-stt.repository';
 
 @Injectable()
@@ -16,8 +12,7 @@ export class EntrySttService {
     constructor(
         private readonly s3: S3Service,
         private readonly repository: EntrySttRepository,
-        private readonly serviceSettings: ServiceSettingsService,
-        private readonly ai: AiService
+        private readonly stt: SttService
     ) {}
 
     async processEntryStt(data: DelayedJobPayloads[typeof DelayedJob.EntryStt]) {
@@ -35,41 +30,24 @@ export class EntrySttService {
             return true;
         }
 
-        const serviceSettings = await this.serviceSettings.getJsonForRequest();
+        //TODO доставать тарифф из юзера и передвать в stt.transcribe
 
-        // TODO: брать из тарифа пользователя
-        const tariff: 'lite' | 'premium' = appConstants.userSettings.defaultDevTariff;
-
-        const sttModelId = serviceSettings.models.stt[tariff];
-
-        if (!sttModelId) {
-            throw apiError.internal('service_settings.model_not_found');
-        }
-
-        const { requestId: sttRequestId } = await this.ai.transcribe({
-            modelId: sttModelId,
+        const sttResult = await this.stt.transcribe({
             audio,
             filename: voice.file.filename ?? 'voice.webm',
             mimeType: voice.file.mimeType ?? 'audio/webm'
         });
 
-        const sttResult = await this.ai.waitResult<string>(sttRequestId);
-        const text = sttResult.result?.trim() ?? '';
-        const usage: AiTokenUsage = {
-            ...sttResult.usage,
-            timeMs: sttResult.timeMs
-        };
-
-        if (!text) {
+        if (!sttResult.result) {
             this.logger.warn(`skip stt: empty transcript entryId=${data.entryId}`);
             return true;
         }
 
         await Promise.all([
-            this.repository.updateEntryText(data.entryId, text),
+            this.repository.updateEntryText(data.entryId, sttResult.result),
             this.repository.updateUsage(data.entryId, DelayedJob.EntryStt, {
-                aiModelId: sttModelId,
-                usage
+                aiModelId: sttResult.modelId,
+                usage: sttResult.usage
             })
         ]);
 

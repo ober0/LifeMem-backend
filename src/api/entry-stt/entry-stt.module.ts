@@ -1,13 +1,12 @@
 import { Module } from '@nestjs/common';
 
-import { AiModule } from '../ai/ai.module';
 import { S3Module } from '../s3/s3.module';
-import { ServiceSettingsModule } from '../service-settings/service-settings.module';
+import { SttModule } from '../stt/stt.module';
 import { EntrySttRepository } from './entry-stt.repository';
 import { EntrySttService } from './entry-stt.service';
 
 @Module({
-    imports: [AiModule, S3Module, ServiceSettingsModule],
+    imports: [S3Module, SttModule],
     providers: [EntrySttService, EntrySttRepository],
     exports: [EntrySttService]
 })

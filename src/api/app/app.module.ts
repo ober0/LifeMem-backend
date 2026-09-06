@@ -43,6 +43,7 @@ import { RoleModule } from '../role/role.module';
 import { S3Module } from '../s3/s3.module';
 import { ServiceSettingsModule } from '../service-settings/service-settings.module';
 import { SmtpModule } from '../smtp/smtp.module';
+import { SttModule } from '../stt/stt.module';
 import { UserModule } from '../user/user.module';
 import { UserSettingsModule } from '../user-settings/user-settings.module';
 
@@ -99,7 +100,8 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         OpenstreetmapModule,
         EntryVisionModule,
         EntrySttModule,
-        BullMqModule
+        BullMqModule,
+        SttModule
     ],
     providers: [
         {
