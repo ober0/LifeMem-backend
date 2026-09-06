@@ -39,6 +39,10 @@ class EnvironmentVariables {
 
     @IsString()
     @IsNotEmpty()
+    S3_PUBLIC_ENDPOINT?: string;
+
+    @IsString()
+    @IsNotEmpty()
     S3_REGION: string;
 
     @IsString()

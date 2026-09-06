@@ -3,12 +3,20 @@ import type { StructuredOutputParser } from '@langchain/core/output_parsers';
 import { RunnableLambda } from '@langchain/core/runnables';
 import type { ChatOpenAI } from '@langchain/openai';
 import { Injectable } from '@nestjs/common';
+import { toFile } from 'openai';
 import type { z } from 'zod';
 
 import { appConstants } from '../../../common/config/app.constants';
 import { apiError } from '../../../common/helpers/errors';
 import { ServiceSettingsService } from '../../service-settings/service-settings.service';
-import type { AiEmbedParams, AiInvokeParams, AiInvokeResult, AiInvokeWithToolsParams, AiTokenUsage } from '../ai.types';
+import type {
+    AiEmbedParams,
+    AiInvokeParams,
+    AiInvokeResult,
+    AiInvokeWithToolsParams,
+    AiTokenUsage,
+    AiTranscribeParams
+} from '../ai.types';
 import { AiToolsRegistry } from '../tools/ai-tools.registry';
 import { AiModelsService } from './ai-models.service';
 import { AiUsageService } from './ai-usage.service';
@@ -66,6 +74,47 @@ export class AiInvokeService {
         return {
             result: embedded.embedding,
             usage: this.usage.extractEmbeddingUsage(embedded, settings.models.provider)
+        };
+    }
+
+    async executeTranscribe(params: AiTranscribeParams): Promise<AiInvokeResult<string>> {
+        const { name, client, provider } = await this.models.resolveSpeechToTextModel(params.modelId);
+        const file = await toFile(params.audio, params.filename ?? 'audio.webm', {
+            type: params.mimeType ?? 'audio/webm'
+        });
+
+        const response = await client.audio.transcriptions.create({
+            file,
+            model: name,
+            ...(params.language ? { language: params.language } : {})
+        });
+
+        const text = typeof response === 'string' ? response : response.text;
+        const usageMeta =
+            typeof response === 'object' && response !== null && 'usage' in response
+                ? (response.usage as {
+                      input_tokens?: number;
+                      output_tokens?: number;
+                      total_tokens?: number;
+                      prompt_tokens?: number;
+                      completion_tokens?: number;
+                      cost?: number;
+                      cost_rub?: number;
+                  })
+                : undefined;
+
+        return {
+            result: text?.trim() ?? '',
+            usage: this.usage.extractTranscriptionUsage(
+                {
+                    inputTokens: usageMeta?.input_tokens ?? usageMeta?.prompt_tokens ?? 0,
+                    outputTokens: usageMeta?.output_tokens ?? usageMeta?.completion_tokens ?? 0,
+                    totalTokens: usageMeta?.total_tokens,
+                    cost: typeof usageMeta?.cost === 'number' ? usageMeta.cost : undefined,
+                    costRub: typeof usageMeta?.cost_rub === 'number' ? usageMeta.cost_rub : undefined
+                },
+                provider
+            )
         };
     }
 

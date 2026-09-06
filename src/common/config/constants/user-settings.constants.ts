@@ -6,5 +6,5 @@ export const userSettingsConstants = {
         enableNotification: true,
         lang: LangEnum.Ru
     } satisfies UserSettingsDto,
-    defaultDevTariff: 'lite'
+    defaultDevTariff: 'lite' as 'lite' | 'premium'
 } as const;

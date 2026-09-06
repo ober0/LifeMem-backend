@@ -100,6 +100,18 @@ export class ModelsSettingsUpdateDto {
     @Type(() => ModelTierSettingsUpdateDto)
     vision?: ModelTierSettingsUpdateDto;
 
+    @ApiPropertyOptional({ type: ModelTierSettingsUpdateDto })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => ModelTierSettingsUpdateDto)
+    stt?: ModelTierSettingsUpdateDto;
+
+    @ApiPropertyOptional({ type: ModelTierSettingsUpdateDto })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => ModelTierSettingsUpdateDto)
+    sttRefine?: ModelTierSettingsUpdateDto;
+
     @ApiPropertyOptional({ enum: AiProvider })
     @IsOptional()
     @IsEnum(AiProvider)

@@ -49,6 +49,14 @@ export const serviceSettingsConstants = {
                 premium: null,
                 lite: null
             },
+            stt: {
+                premium: null,
+                lite: null
+            },
+            sttRefine: {
+                premium: null,
+                lite: null
+            },
             provider: AiProvider.Polza
         }
     } satisfies ServiceSettingsJsonDto

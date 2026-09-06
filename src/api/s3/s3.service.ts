@@ -16,22 +16,33 @@ export class S3Service implements OnModuleInit {
     private static ensureBucketPromise: Promise<void> | null = null;
 
     private readonly _s3: S3Client;
+    private readonly _s3Public: S3Client;
     private readonly _bucket: string;
-    private readonly _endpoint: string;
 
     constructor(@Inject(s3Config.KEY) private readonly s3: S3Config) {
         this._bucket = this.s3.bucket;
-        this._endpoint = this.s3.endpoint;
+
+        const credentials = {
+            accessKeyId: this.s3.accessKeyId,
+            secretAccessKey: this.s3.secretAccessKey
+        };
 
         this._s3 = new S3Client({
             region: this.s3.region,
-            endpoint: this._endpoint,
+            endpoint: this.s3.endpoint,
             forcePathStyle: true,
-            credentials: {
-                accessKeyId: this.s3.accessKeyId,
-                secretAccessKey: this.s3.secretAccessKey
-            }
+            credentials
         });
+
+        this._s3Public =
+            this.s3.publicEndpoint === this.s3.endpoint
+                ? this._s3
+                : new S3Client({
+                      region: this.s3.region,
+                      endpoint: this.s3.publicEndpoint,
+                      forcePathStyle: true,
+                      credentials
+                  });
     }
 
     async onModuleInit(): Promise<void> {
@@ -63,7 +74,7 @@ export class S3Service implements OnModuleInit {
 
     async getSignedUrl(params: { key: string; expiresIn?: number }): Promise<string> {
         return getSignedUrl(
-            this._s3,
+            this._s3Public,
             new GetObjectCommand({
                 Bucket: this._bucket,
                 Key: params.key

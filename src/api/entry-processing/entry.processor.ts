@@ -13,6 +13,7 @@ import {
 } from '../delayed-worker/delayed-worker.constants';
 import { EntryEmbeddingService } from '../entry-embedding/entry-embedding.service';
 import { EntryLocationService } from '../entry-location/entry-location.service';
+import { EntrySttService } from '../entry-stt/entry-stt.service';
 import { EntryVisionService } from '../entry-vision/entry-vision.service';
 import { EntryProcessingService } from './entry-processing.service';
 
@@ -24,7 +25,8 @@ export class EntryProcessor extends WorkerHost {
         private readonly entryLocationService: EntryLocationService,
         private readonly entryEmbeddingService: EntryEmbeddingService,
         private readonly entryProcessingService: EntryProcessingService,
-        private readonly entryVisionService: EntryVisionService
+        private readonly entryVisionService: EntryVisionService,
+        private readonly entrySttService: EntrySttService
     ) {
         super();
     }
@@ -64,6 +66,11 @@ export class EntryProcessor extends WorkerHost {
                 case DelayedJob.EntryVision:
                     await this.entryVisionService.processEntryVision(
                         job.data as DelayedJobPayloads[typeof DelayedJob.EntryVision]
+                    );
+                    break;
+                case DelayedJob.EntryStt:
+                    await this.entrySttService.processEntryStt(
+                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryStt]
                     );
                     break;
                 default:

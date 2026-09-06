@@ -2,6 +2,8 @@ enum ModelType {
   ImageToText
   TextToText
   Embedding
+  SpeechToText
+  TextToSpeech
 
   @@map("model_type")
 }

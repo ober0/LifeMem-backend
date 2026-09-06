@@ -68,3 +68,11 @@ export type AiEmbedParams = {
     modelId: string;
     text: string;
 };
+
+export type AiTranscribeParams = {
+    modelId: string;
+    audio: Buffer;
+    filename?: string;
+    mimeType?: string;
+    language?: string;
+};

@@ -15,6 +15,9 @@ const MODELS: ReadonlyArray<{ name: string; type: ModelType }> = [
     // vision
     { name: 'google/gemini-2.5-flash-lite', type: ModelType.ImageToText },
 
+    // stt
+    { name: 'openai/whisper-large-v3-turbo', type: ModelType.SpeechToText },
+
     // векторы
     { name: 'openai/text-embedding-3-small', type: ModelType.Embedding }
 ];

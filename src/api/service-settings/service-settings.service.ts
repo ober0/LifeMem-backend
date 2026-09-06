@@ -83,7 +83,13 @@ export class ServiceSettingsService {
 
             if (dto.models?.provider) {
                 await this.delayedWorker.delayed(DelayedJob.AiRefreshModels, {}, { queue: 'ai' });
-            } else if (dto.models?.analyze || dto.models?.embedding || dto.models?.vision) {
+            } else if (
+                dto.models?.analyze ||
+                dto.models?.embedding ||
+                dto.models?.vision ||
+                dto.models?.stt ||
+                dto.models?.sttRefine
+            ) {
                 await this.delayedWorker.delayed(DelayedJob.AiAddModels, {}, { queue: 'ai' });
             }
         });

@@ -70,6 +70,35 @@ export class AiUsageService implements OnModuleInit {
         };
     }
 
+    extractTranscriptionUsage(
+        data: { inputTokens?: number; outputTokens?: number; totalTokens?: number; cost?: number; costRub?: number },
+        provider: AiProvider
+    ): AiTokenUsage {
+        let rubCost: number | undefined = undefined;
+
+        if (typeof data.cost === 'number') {
+            switch (provider) {
+                case AiProvider.Openrouter:
+                    rubCost = data.cost * this.usdRateInRub;
+                    break;
+                case AiProvider.Polza:
+                    rubCost = data.costRub || data.cost;
+                    break;
+            }
+        }
+
+        const inputTokens = data.inputTokens ?? 0;
+        const outputTokens = data.outputTokens ?? 0;
+
+        return {
+            inputTokens,
+            outputTokens,
+            totalTokens: data.totalTokens ?? inputTokens + outputTokens,
+            price: rubCost,
+            provider
+        };
+    }
+
     mergeUsage(left: AiTokenUsage, right: AiTokenUsage): AiTokenUsage {
         let price: number | undefined = undefined;
 

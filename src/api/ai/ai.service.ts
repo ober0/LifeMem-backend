@@ -11,7 +11,8 @@ import type {
     AiInvokeResult,
     AiInvokeWithToolsParams,
     AiRequestAccepted,
-    AiRequestLookupResult
+    AiRequestLookupResult,
+    AiTranscribeParams
 } from './ai.types';
 import { AiResponseStore } from './ai-response.store';
 import { AiInvokeService } from './services/ai-invoke.service';
@@ -42,6 +43,10 @@ export class AiService implements OnModuleInit {
 
     async embed(params: AiEmbedParams): Promise<AiRequestAccepted> {
         return this.enqueueRequest(() => this.invokeService.executeEmbed(params));
+    }
+
+    async transcribe(params: AiTranscribeParams): Promise<AiRequestAccepted> {
+        return this.enqueueRequest(() => this.invokeService.executeTranscribe(params));
     }
 
     getResult<T = unknown>(requestId: string): AiRequestLookupResult<T> {

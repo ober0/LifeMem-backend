@@ -100,6 +100,16 @@ export class ModelsSettingsDto {
     @Type(() => ModelTierSettingsDto)
     vision: ModelTierSettingsDto;
 
+    @ApiProperty({ type: ModelTierSettingsDto })
+    @ValidateNested()
+    @Type(() => ModelTierSettingsDto)
+    stt: ModelTierSettingsDto;
+
+    @ApiProperty({ type: ModelTierSettingsDto })
+    @ValidateNested()
+    @Type(() => ModelTierSettingsDto)
+    sttRefine: ModelTierSettingsDto;
+
     @ApiProperty({ enum: AiProvider })
     @IsEnum(AiProvider)
     provider: AiProvider;
