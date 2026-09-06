@@ -30,6 +30,7 @@ export async function seedUser(prisma: PrismaClient): Promise<void> {
         data: {
             nickname,
             email,
+            isEmailVerified: true,
             role: {
                 connect: { id: role.id }
             },
