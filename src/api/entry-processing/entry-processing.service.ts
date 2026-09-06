@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EntryProcessingStatus, EntryProcessingType, Prisma } from '@prisma/client';
 
 import { apiError } from '../../common/helpers/errors';
+import { BullMqQueue } from '../bullmq/bullmq.constants';
 import {
     type baseEntryJobPayload,
     type DelayedJobPayloads,
@@ -154,7 +155,7 @@ export class EntryProcessingService {
                 ...data,
                 jobId: job.id
             } as DelayedJobPayloads[K],
-            { queue: 'entry' }
+            { queue: BullMqQueue.Entry }
         );
     }
 

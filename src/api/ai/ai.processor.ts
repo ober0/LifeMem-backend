@@ -2,10 +2,11 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 
-import { AI_QUEUE, DelayedJob } from '../delayed-worker/delayed-worker.constants';
+import { BullMqQueue } from '../bullmq/bullmq.constants';
+import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
 import { AiService } from './ai.service';
 
-@Processor(AI_QUEUE)
+@Processor(BullMqQueue.Ai)
 export class AiProcessor extends WorkerHost {
     private readonly logger = new Logger(AiProcessor.name);
 

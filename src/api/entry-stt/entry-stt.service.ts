@@ -1,14 +1,12 @@
-import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
 import { AiService } from '../ai/ai.service';
 import type { AiTokenUsage } from '../ai/ai.types';
-import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker/delayed-worker.constants';
+import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker';
 import { S3Service } from '../s3/s3.service';
 import { ServiceSettingsService } from '../service-settings/service-settings.service';
-import { entrySttPrompts } from './consts/prompts.const';
 import { EntrySttRepository } from './entry-stt.repository';
 
 @Injectable()
@@ -66,40 +64,6 @@ export class EntrySttService {
             this.logger.warn(`skip stt: empty transcript entryId=${data.entryId}`);
             return true;
         }
-
-        // TODO по отдельной кнопке
-        // if (tariff === 'premium') {
-        //     const refineModelId = serviceSettings.models.sttRefine[tariff];
-        //
-        //     if (!refineModelId) {
-        //         throw apiError.internal('service_settings.model_not_found');
-        //     }
-        //
-        //     const { requestId: refineRequestId } = await this.ai.invoke({
-        //         modelId: refineModelId,
-        //         reasoning: false,
-        //         input: [new SystemMessage(entrySttPrompts.refineTranscript()), new HumanMessage(text)]
-        //     });
-        //
-        //     const refineResult = await this.ai.waitResult<string>(refineRequestId);
-        //     const refined = refineResult.result?.trim();
-        //
-        //     if (refined) {
-        //         text = refined;
-        //     }
-        //
-        //     usage = {
-        //         inputTokens: usage.inputTokens + refineResult.usage.inputTokens,
-        //         outputTokens: usage.outputTokens + refineResult.usage.outputTokens,
-        //         totalTokens: usage.totalTokens + refineResult.usage.totalTokens,
-        //         price:
-        //             usage.price != null || refineResult.usage.price != null
-        //                 ? (usage.price ?? 0) + (refineResult.usage.price ?? 0)
-        //                 : undefined,
-        //         provider: refineResult.usage.provider ?? usage.provider,
-        //         timeMs: (usage.timeMs ?? 0) + (refineResult.timeMs ?? 0)
-        //     };
-        // }
 
         await Promise.all([
             this.repository.updateEntryText(data.entryId, text),

@@ -2,15 +2,15 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 
+import { BullMqQueue } from '../api/bullmq/bullmq.constants';
 import {
     DelayedJob,
     type DelayedJobPayloads,
-    LOCAL_EMBEDDING_QUEUE,
     type LocalEmbedJobResult
 } from '../api/delayed-worker/delayed-worker.constants';
 import { LocalEmbeddingRuntimeService } from './local-embedding.runtime.service';
 
-@Processor(LOCAL_EMBEDDING_QUEUE)
+@Processor(BullMqQueue.LocalEmbedding)
 export class LocalEmbeddingProcessor extends WorkerHost {
     private readonly logger = new Logger(LocalEmbeddingProcessor.name);
 

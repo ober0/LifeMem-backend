@@ -2,7 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { LOCAL_EMBEDDING_QUEUE } from '../api/delayed-worker/delayed-worker.constants';
+import { BullMqQueue } from '../api/bullmq/bullmq.constants';
 import type { RedisConfig } from '../common/config/env';
 import { envConfigs, validateEnv } from '../common/config/env';
 import { LocalEmbeddingProcessor } from './local-embedding.processor';
@@ -29,7 +29,7 @@ import { LocalEmbeddingSyncService } from './local-embedding.sync.service';
                 };
             }
         }),
-        BullModule.registerQueue({ name: LOCAL_EMBEDDING_QUEUE })
+        BullModule.registerQueue({ name: BullMqQueue.LocalEmbedding })
     ],
     providers: [LocalEmbeddingRuntimeService, LocalEmbeddingSyncService, LocalEmbeddingProcessor]
 })

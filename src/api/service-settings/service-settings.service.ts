@@ -9,6 +9,7 @@ import { deepMerge } from '../../common/helpers/deep-merge';
 import { apiError } from '../../common/helpers/errors';
 import { collectUniqueModelsSettingsIds, getModelsSettingsSlots } from '../../common/helpers/models-settings';
 import { AiModelService } from '../ai-model/ai-model.service';
+import { BullMqQueue } from '../bullmq/bullmq.constants';
 import { CacheService } from '../cache/cache.service';
 import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
@@ -85,9 +86,9 @@ export class ServiceSettingsService {
             await this.cacheService.invalidateCache(cacheConstants[CacheKey.ServiceSettings]());
 
             if (dto.models?.provider) {
-                await this.delayedWorker.delayed(DelayedJob.AiRefreshModels, {}, { queue: 'ai' });
+                await this.delayedWorker.delayed(DelayedJob.AiRefreshModels, {}, { queue: BullMqQueue.Ai });
             } else if (dto.models?.analyze || dto.models?.vision || dto.models?.stt || dto.models?.sttRefine) {
-                await this.delayedWorker.delayed(DelayedJob.AiAddModels, {}, { queue: 'ai' });
+                await this.delayedWorker.delayed(DelayedJob.AiAddModels, {}, { queue: BullMqQueue.Ai });
             }
         });
 

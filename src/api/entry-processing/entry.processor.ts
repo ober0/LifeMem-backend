@@ -4,11 +4,11 @@ import type { Job } from 'bullmq';
 
 import type { ErrorVariables } from '../../common/helpers/errors';
 import { errorTranslations } from '../../common/translation/error-translations';
+import { BullMqQueue } from '../bullmq/bullmq.constants';
 import {
     type baseEntryJobPayload,
     DelayedJob,
     type DelayedJobPayloads,
-    ENTRY_QUEUE,
     type EntryJobName
 } from '../delayed-worker/delayed-worker.constants';
 import { EntryEmbeddingService } from '../entry-embedding/entry-embedding.service';
@@ -17,7 +17,7 @@ import { EntrySttService } from '../entry-stt/entry-stt.service';
 import { EntryVisionService } from '../entry-vision/entry-vision.service';
 import { EntryProcessingService } from './entry-processing.service';
 
-@Processor(ENTRY_QUEUE)
+@Processor(BullMqQueue.Entry)
 export class EntryProcessor extends WorkerHost {
     private readonly logger = new Logger(EntryProcessor.name);
 

@@ -1,14 +1,8 @@
-import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
-import type { Queue } from 'bullmq';
 
-import {
-    AI_QUEUE,
-    DELAYED_QUEUE,
-    type DelayedJobName,
-    type DelayedJobPayloads,
-    ENTRY_QUEUE
-} from './delayed-worker.constants';
+import { BullMqQueue, type BullMqQueueName } from '../bullmq/bullmq.constants';
+import { BullMqService } from '../bullmq/bullmq.service';
+import type { DelayedJobName, DelayedJobPayloads } from './delayed-worker.types';
 
 const formatError = (err: unknown) => {
     if (err instanceof Error) {
@@ -26,11 +20,7 @@ const formatError = (err: unknown) => {
 export class DelayedWorkerService {
     private tasks: Map<string, NodeJS.Timeout> = new Map();
 
-    constructor(
-        @InjectQueue(DELAYED_QUEUE) private readonly delayedQueue: Queue,
-        @InjectQueue(ENTRY_QUEUE) private readonly entryQueue: Queue,
-        @InjectQueue(AI_QUEUE) private readonly aiQueue: Queue
-    ) {}
+    constructor(private readonly bullMq: BullMqService) {}
 
     schedule(taskId: string, delayMs: number, action: () => void) {
         const timeout = setTimeout(() => {
@@ -55,10 +45,9 @@ export class DelayedWorkerService {
         key: K,
         data: DelayedJobPayloads[K],
         meta: {
-            queue: 'entry' | 'delayed' | 'ai';
-        } = { queue: 'delayed' }
+            queue: Exclude<BullMqQueueName, typeof BullMqQueue.LocalEmbedding>;
+        } = { queue: BullMqQueue.Delayed }
     ) {
-        const queue = meta.queue === 'entry' ? this.entryQueue : meta.queue === 'ai' ? this.aiQueue : this.delayedQueue;
-        await queue.add(key, data);
+        await this.bullMq.add(meta.queue, key, data);
     }
 }

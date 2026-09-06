@@ -25,6 +25,7 @@ import { AiModule } from '../ai/ai.module';
 import { AiModelModule } from '../ai-model/ai-model.module';
 import { AuthModule } from '../auth/auth.module';
 import { AuthLogModule } from '../auth-log/auth-log.module';
+import { BullMqModule } from '../bullmq/bullmq.module';
 import { CacheModule } from '../cache/cache.module';
 import { DelayedWorkerModule } from '../delayed-worker/delayed-worker.module';
 import { EntryModule } from '../entry/entry.module';
@@ -97,7 +98,8 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         EntryLocationModule,
         OpenstreetmapModule,
         EntryVisionModule,
-        EntrySttModule
+        EntrySttModule,
+        BullMqModule
     ],
     providers: [
         {
