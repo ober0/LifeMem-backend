@@ -41,10 +41,6 @@ export const serviceSettingsConstants = {
                 premium: null,
                 lite: null
             },
-            embedding: {
-                premium: null,
-                lite: null
-            },
             vision: {
                 premium: null,
                 lite: null

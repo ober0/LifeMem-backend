@@ -3,6 +3,7 @@ import { cacheConstants } from './constants/cache.constants';
 import { codeConstants } from './constants/code.constants';
 import { entryConstants } from './constants/entry.constants';
 import { languageConstants } from './constants/language.constants';
+import { localEmbeddingConstants } from './constants/local-embedding.constants';
 import { phoneConstants } from './constants/phone.constants';
 import { serviceSettingsConstants } from './constants/service-settings.constants';
 import { telegramConstants } from './constants/telegram.constants';
@@ -21,5 +22,6 @@ export const appConstants = {
     throttle: throttleConstants,
     cache: cacheConstants,
     telegram: telegramConstants,
-    ai: aiConstants
+    ai: aiConstants,
+    localEmbedding: localEmbeddingConstants
 } as const;

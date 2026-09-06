@@ -8,9 +8,7 @@ const MODELS: ReadonlyArray<{ name: string; type: ModelType }> = [
     { name: 'openai/gpt-5.4-nano', type: ModelType.TextToText },
     { name: 'anthropic/claude-sonnet-4', type: ModelType.TextToText },
     { name: 'google/gemini-2.5-flash', type: ModelType.TextToText },
-    { name: 'meta-llama/llama-4-maverick', type: ModelType.TextToText },
     { name: 'deepseek/deepseek-chat', type: ModelType.TextToText },
-    { name: 'mistralai/mistral-large', type: ModelType.TextToText },
 
     // vision
     { name: 'google/gemini-2.5-flash-lite', type: ModelType.ImageToText },
@@ -19,7 +17,8 @@ const MODELS: ReadonlyArray<{ name: string; type: ModelType }> = [
     { name: 'openai/whisper-large-v3-turbo', type: ModelType.SpeechToText },
 
     // векторы
-    { name: 'openai/text-embedding-3-small', type: ModelType.Embedding }
+    { name: 'openai/text-embedding-3-small', type: ModelType.Embedding },
+    { name: 'local/multilingual-e5-small', type: ModelType.Embedding }
 ];
 
 export async function seedAiModels(prisma: PrismaClient, redis: Redis): Promise<void> {

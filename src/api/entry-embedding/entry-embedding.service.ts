@@ -4,8 +4,8 @@ import { EntryVectorKind } from '@prisma/client';
 import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
 import { AiService } from '../ai/ai.service';
+import { AiModelService } from '../ai-model/ai-model.service';
 import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker/delayed-worker.constants';
-import { ServiceSettingsService } from '../service-settings/service-settings.service';
 import { EntryEmbeddingRepository } from './entry-embedding.repository';
 
 type EmbedDelayedJob =
@@ -17,7 +17,7 @@ export class EntryEmbeddingService {
 
     constructor(
         private readonly repository: EntryEmbeddingRepository,
-        private readonly serviceSettings: ServiceSettingsService,
+        private readonly aiModelService: AiModelService,
         private readonly ai: AiService
     ) {}
 
@@ -96,27 +96,21 @@ export class EntryEmbeddingService {
         delayedJob: EmbedDelayedJob;
         imageId?: string;
     }) {
-        const serviceSettings = await this.serviceSettings.getJsonForRequest();
-
-        // TODO это надо вытаскивать из тарифа
-        const tariff: 'lite' | 'premium' = appConstants.userSettings.defaultDevTariff;
-
-        const modelId = serviceSettings.models.embedding[tariff];
-
-        if (!modelId) {
-            throw apiError.internal('service_settings.model_not_found');
+        const dbModel = await this.aiModelService.findByName(appConstants.localEmbedding.defaultModel);
+        if (!dbModel || !dbModel.isActive) {
+            throw apiError.notFound('ai_model.not_found');
         }
 
         const { requestId } = await this.ai.embed({
-            modelId,
-            text: data.text
+            text: data.text,
+            kind: 'passage'
         });
 
         const { result, usage, timeMs } = await this.ai.waitResult<number[]>(requestId);
 
         await Promise.all([
             this.repository.updateUsage(data.entryId, data.delayedJob, {
-                aiModelId: modelId,
+                aiModelId: dbModel.id,
                 usage: {
                     ...usage,
                     timeMs
@@ -125,7 +119,7 @@ export class EntryEmbeddingService {
             this.repository.createEntryVector({
                 entryId: data.entryId,
                 kind: data.kind,
-                aiModelId: modelId,
+                aiModelId: dbModel.id,
                 embedding: result,
                 dimensions: result.length,
                 imageId: data.imageId

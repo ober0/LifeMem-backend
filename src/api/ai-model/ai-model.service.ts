@@ -36,6 +36,10 @@ export class AiModelService {
         return this.repository.findByIds(ids);
     }
 
+    async findByName(name: string) {
+        return this.repository.findByName(name);
+    }
+
     async update(id: string, dto: AiModelUpdateDto, serverSettings: ServerSettings): Promise<AiModelDto> {
         const existing = await this.repository.findById(id);
 

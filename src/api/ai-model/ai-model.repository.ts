@@ -43,6 +43,10 @@ export class AiModelRepository {
         });
     }
 
+    async findByName(name: string) {
+        return this.prisma.aiModel.findFirst({ where: { name } });
+    }
+
     async updateIsActive(id: string, isActive: boolean) {
         return this.prisma.aiModel.update({
             where: { id },

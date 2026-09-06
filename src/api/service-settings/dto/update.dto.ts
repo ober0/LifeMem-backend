@@ -92,12 +92,6 @@ export class ModelsSettingsUpdateDto {
     @IsOptional()
     @ValidateNested()
     @Type(() => ModelTierSettingsUpdateDto)
-    embedding?: ModelTierSettingsUpdateDto;
-
-    @ApiPropertyOptional({ type: ModelTierSettingsUpdateDto })
-    @IsOptional()
-    @ValidateNested()
-    @Type(() => ModelTierSettingsUpdateDto)
     vision?: ModelTierSettingsUpdateDto;
 
     @ApiPropertyOptional({ type: ModelTierSettingsUpdateDto })

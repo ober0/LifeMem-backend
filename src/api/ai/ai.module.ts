@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AiModelModule } from '../ai-model/ai-model.module';
+import { LocalEmbeddingModule } from '../local-embedding/local-embedding.module';
 import { ServiceSettingsModule } from '../service-settings/service-settings.module';
 import { AiProcessor } from './ai.processor';
 import { AiService } from './ai.service';
@@ -14,7 +15,7 @@ import { SearchPlacesFactory } from './tools/items/search-places.tool';
 import { UserEntitiesSearchRepository } from './tools/user-entities-search.repository';
 
 @Module({
-    imports: [ServiceSettingsModule, AiModelModule],
+    imports: [ServiceSettingsModule, AiModelModule, LocalEmbeddingModule],
     providers: [
         AiService,
         AiModelsService,

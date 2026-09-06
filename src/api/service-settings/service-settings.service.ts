@@ -73,7 +73,10 @@ export class ServiceSettingsService {
             ? deepMerge({ ...appConstants.serviceSettings.base }, current.json as unknown as ServiceSettingsJsonDto)
             : { ...appConstants.serviceSettings.base };
 
-        const merged = deepMerge(base, dto);
+        const merged = deepMerge(base, dto) as ServiceSettingsJsonDto;
+        const models = { ...merged.models } as ModelsSettingsDto & { embedding?: unknown };
+        delete models.embedding;
+        merged.models = models;
         await this.validateModelsSettings(merged.models);
 
         const updated = await this.repository.upsert(merged);
@@ -83,13 +86,7 @@ export class ServiceSettingsService {
 
             if (dto.models?.provider) {
                 await this.delayedWorker.delayed(DelayedJob.AiRefreshModels, {}, { queue: 'ai' });
-            } else if (
-                dto.models?.analyze ||
-                dto.models?.embedding ||
-                dto.models?.vision ||
-                dto.models?.stt ||
-                dto.models?.sttRefine
-            ) {
+            } else if (dto.models?.analyze || dto.models?.vision || dto.models?.stt || dto.models?.sttRefine) {
                 await this.delayedWorker.delayed(DelayedJob.AiAddModels, {}, { queue: 'ai' });
             }
         });
@@ -132,19 +129,22 @@ export class ServiceSettingsService {
         }
     }
 
-    private toDto(data: ServiceSettings): ServiceSettingsDto {
+    private toDto(row: ServiceSettings): ServiceSettingsDto {
         return {
-            id: data.id,
-            json: data.json,
-            createdAt: data.createdAt,
-            updatedAt: data.updatedAt
+            id: row.id,
+            json: row.json as unknown as ServiceSettingsJsonDto,
+            createdAt: row.createdAt,
+            updatedAt: row.updatedAt
         };
     }
 
     private toJson(data: ServiceSettingsDto): ServiceSettingsJsonDto {
-        return deepMerge(
+        const merged = deepMerge(
             { ...appConstants.serviceSettings.base },
-            (data.json as unknown as ServiceSettingsJsonDto) ?? {}
-        );
+            data.json
+        ) as ServiceSettingsJsonDto;
+        const models = { ...merged.models } as ModelsSettingsDto & { embedding?: unknown };
+        delete models.embedding;
+        return { ...merged, models };
     }
 }

@@ -94,6 +94,23 @@ services:
             lifemem-app:
                 condition: service_started
 
+    lifemem-local-embed:
+        image: lifemem-app:local
+        container_name: lifemem-local-embed
+        restart: unless-stopped
+        env_file:
+            - .env.prod
+        environment:
+            NODE_ENV: production
+        command: ['node', 'dist/src/local-embedding-worker.js']
+        depends_on:
+            lifemem-redis:
+                condition: service_healthy
+            lifemem-postgres:
+                condition: service_healthy
+            lifemem-app:
+                condition: service_started
+
 volumes:
     lifemem_pgdata:
     lifemem_minio_data:

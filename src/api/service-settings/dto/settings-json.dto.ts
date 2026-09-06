@@ -93,11 +93,6 @@ export class ModelsSettingsDto {
     @ApiProperty({ type: ModelTierSettingsDto })
     @ValidateNested()
     @Type(() => ModelTierSettingsDto)
-    embedding: ModelTierSettingsDto;
-
-    @ApiProperty({ type: ModelTierSettingsDto })
-    @ValidateNested()
-    @Type(() => ModelTierSettingsDto)
     vision: ModelTierSettingsDto;
 
     @ApiProperty({ type: ModelTierSettingsDto })

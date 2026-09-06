@@ -65,8 +65,8 @@ export type AiInvokeWithToolsParams =
     | AiInvokeWithToolsBase;
 
 export type AiEmbedParams = {
-    modelId: string;
     text: string;
+    kind?: 'query' | 'passage';
 };
 
 export type AiTranscribeParams = {
