@@ -45,10 +45,10 @@ services:
             start_period: 15s
 
     lifemem-app:
+        image: ${LIFEMEM_APP_IMAGE:-lifemem-app:local}
         build:
             context: .
             dockerfile: deploy/Dockerfile
-        image: lifemem-app:local
         container_name: lifemem-app
         restart: unless-stopped
         env_file:
@@ -66,7 +66,7 @@ services:
                 condition: service_healthy
 
     lifemem-cron:
-        image: lifemem-app:local
+        image: ${LIFEMEM_APP_IMAGE:-lifemem-app:local}
         container_name: lifemem-cron
         restart: unless-stopped
         env_file:
@@ -82,7 +82,7 @@ services:
                 condition: service_started
 
     lifemem-telegram:
-        image: lifemem-app:local
+        image: ${LIFEMEM_APP_IMAGE:-lifemem-app:local}
         container_name: lifemem-telegram
         restart: unless-stopped
         env_file:
@@ -95,7 +95,7 @@ services:
                 condition: service_started
 
     lifemem-local-embed:
-        image: lifemem-app:local
+        image: ${LIFEMEM_APP_IMAGE:-lifemem-app:local}
         container_name: lifemem-local-embed
         restart: unless-stopped
         env_file:
