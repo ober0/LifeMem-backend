@@ -13,7 +13,6 @@ const LOCAL_EMBEDDING_MODELS: Record<string, LocalEmbeddingModelConfig> = {
 
 export const localEmbeddingConstants = {
     modelPrefix: 'local/' as const,
-    dbDims: 1536,
     defaultModel: 'local/multilingual-e5-small',
     models: LOCAL_EMBEDDING_MODELS
 } as const;
@@ -48,14 +47,10 @@ export function withLocalEmbeddingPrefix(text: string, kind: 'query' | 'passage'
     return kind === 'query' ? `query: ${text}` : `passage: ${text}`;
 }
 
-export function padLocalEmbeddingToDbDims(embedding: number[], targetDims = localEmbeddingConstants.dbDims): number[] {
-    if (embedding.length === targetDims) {
-        return embedding;
+export function assertLocalEmbeddingDims(embedding: number[], expectedDims: number): number[] {
+    if (embedding.length !== expectedDims) {
+        throw new Error(`expected embedding dims ${expectedDims}, got ${embedding.length}`);
     }
 
-    if (embedding.length > targetDims) {
-        return embedding.slice(0, targetDims);
-    }
-
-    return embedding.concat(new Array(targetDims - embedding.length).fill(0));
+    return embedding;
 }

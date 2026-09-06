@@ -6,7 +6,7 @@ import {
     isLocalEmbeddingModelName,
     LOCAL_EMBEDDING_MODEL_NAMES,
     type LocalEmbeddingModelName,
-    padLocalEmbeddingToDbDims,
+    assertLocalEmbeddingDims,
     withLocalEmbeddingPrefix
 } from '../common/config/constants/local-embedding.constants';
 import { apiError } from '../common/helpers/errors';
@@ -117,7 +117,7 @@ export class LocalEmbeddingRuntimeService implements OnModuleDestroy {
         const embedding = Array.from(output.data as ArrayLike<number>);
 
         return {
-            embedding: padLocalEmbeddingToDbDims(embedding),
+            embedding: assertLocalEmbeddingDims(embedding, config.dims),
             dims: config.dims
         };
     }
