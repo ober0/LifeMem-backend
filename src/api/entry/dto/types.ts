@@ -1,6 +1,6 @@
-import type { EntryProcessingStatus, EntryProcessingType } from '@prisma/client';
-
 import { EntryPlacesResponse } from './create-entry-response.dto';
+import type { EntryImageDto } from './entry-images';
+import { EntryVoiceDto } from './entry-voices';
 
 export type EntryRelationSource = {
     id: string;
@@ -15,14 +15,18 @@ export type EntryImageSource = {
     updatedAt: Date;
 };
 
-export type CreateEntryJobSource = {
-    type: EntryProcessingType;
-    status: EntryProcessingStatus;
+export type EntryVoiceSource = {
+    id: string;
+    fileId: string;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 export type CreateEntrySource = {
     id: string;
     places: EntryPlacesResponse;
+    images: EntryImageDto[];
+    voice: EntryVoiceDto | null;
 };
 
 export type BaseEntrySource = {

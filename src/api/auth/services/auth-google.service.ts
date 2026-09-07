@@ -80,7 +80,7 @@ export class AuthGoogleService {
 
         await this.authService.saveToken({ userId: user.id, refreshToken, ip });
 
-        return { accessToken, refreshToken, user };
+        return { accessToken, refreshToken, user, isLoggedIn: true };
     }
 
     async link(dto: GoogleLinkDto, actor: Actor, serverSettings: ServerSettings): Promise<void> {

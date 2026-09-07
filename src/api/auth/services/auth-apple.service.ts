@@ -82,7 +82,7 @@ export class AuthAppleService {
 
         await this.authService.saveToken({ userId: user.id, refreshToken, ip });
 
-        return { accessToken, refreshToken, user };
+        return { accessToken, refreshToken, user, isLoggedIn: true };
     }
 
     async link(dto: AppleLinkAuthDto, actor: Actor, serverSettings: ServerSettings): Promise<void> {

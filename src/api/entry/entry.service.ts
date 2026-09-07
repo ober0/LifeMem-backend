@@ -12,7 +12,8 @@ import type { BaseEntryDto, BaseEntryUpdateDto } from './dto/base';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import type { EntryImageDto } from './dto/entry-images';
-import { EntryImageSource } from './dto/types';
+import { EntryVoiceDto } from './dto/entry-voices';
+import { EntryImageSource, EntryVoiceSource } from './dto/types';
 import { entryMapper } from './entry.mapper';
 import { EntryRepository } from './entry.repository';
 import {
@@ -144,17 +145,17 @@ export class EntryService {
         );
 
         const images = await this.mapImages(entry.images);
+        const voice = await this.mapVoice(entry.voice);
 
-        return entryMapper.toCreateResponse(
-            {
-                id: entry.id,
-                places: {
-                    ready: dto.placeIds?.length ?? 0,
-                    processing: locations.length ?? 0
-                }
+        return entryMapper.toCreateResponse({
+            id: entry.id,
+            places: {
+                ready: dto.placeIds?.length ?? 0,
+                processing: locations.length ?? 0
             },
-            images
-        );
+            images,
+            voice
+        });
     }
 
     async updateBase(actor: Actor, id: string, dto: BaseEntryUpdateDto): Promise<BaseEntryDto> {
@@ -214,6 +215,21 @@ export class EntryService {
                 return entryMapper.toImage(image, url);
             })
         );
+    }
+
+    private async mapVoice(
+        voice: (EntryVoiceSource & { file: { key: string } }) | null
+    ): Promise<EntryVoiceDto | null> {
+        if (!voice) {
+            return null;
+        }
+
+        const url = await this.s3Service.getSignedUrl({
+            key: voice.file.key,
+            expiresIn: appConstants.entry.imageLifeTime
+        });
+
+        return entryMapper.toVoice(voice, url);
     }
 
     private async checkLinkedEntities(userId: string, personIds: string[], placeIds: string[]) {

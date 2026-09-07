@@ -54,7 +54,8 @@ export class AuthGoogleController {
         });
 
         let res: LoginResponseDto = {
-            user: data.user
+            user: data.user,
+            isLoggedIn: true
         };
 
         if (device.type === 'mobile') {

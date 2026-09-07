@@ -36,6 +36,9 @@ export class WebLoginResponseDto {
     @ValidateNested()
     @Type(() => UserDto)
     user: UserDto;
+
+    @ApiProperty({ example: true })
+    isLoggedIn: boolean;
 }
 
 export class LoginResponseDto {
@@ -43,6 +46,9 @@ export class LoginResponseDto {
     @ValidateNested()
     @Type(() => UserDto)
     user: UserDto;
+
+    @ApiProperty({ example: true })
+    isLoggedIn: boolean;
 
     @ApiProperty({ required: false, description: 'Только для mobile (x-client-type: mobile)' })
     accessToken?: string;
@@ -57,7 +63,10 @@ export type LoginTokensResult = {
     user: UserDto;
 };
 
-export class LoginPhoneCodeResponseDto extends AlertBaseDto {}
+export class LoginPhoneCodeResponseDto extends AlertBaseDto {
+    @ApiProperty({ example: false })
+    isLoggedIn: boolean;
+}
 
 export type LoginFullResponseDto = LoginTokensResult | LoginPhoneCodeResponseDto;
 

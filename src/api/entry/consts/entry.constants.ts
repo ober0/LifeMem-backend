@@ -34,7 +34,19 @@ const entryImagesSelect = {
             updatedAt: true
         }
     }
-} satisfies Prisma.EntrySelect;
+};
+
+const entryVoicesSelect = {
+    voice: {
+        select: {
+            id: true,
+            file: true,
+            fileId: true,
+            createdAt: true,
+            updatedAt: true
+        }
+    }
+};
 
 export const createEntrySelect = {
     id: true,
@@ -45,6 +57,7 @@ export const createEntrySelect = {
         }
     },
     ...entryImagesSelect,
+    ...entryVoicesSelect,
     ...entryRelationsSelect
 } satisfies Prisma.EntrySelect;
 

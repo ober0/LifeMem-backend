@@ -105,7 +105,8 @@ export class AuthService {
                     lang: actor.requestLang,
                     variables: { code }
                 }),
-                alert: true
+                alert: true,
+                isLoggedIn: false
             };
         }
 
@@ -176,7 +177,8 @@ export class AuthService {
                 lang,
                 variables: { code }
             }),
-            alert: true
+            alert: true,
+            isLoggedIn: false
         };
     }
 

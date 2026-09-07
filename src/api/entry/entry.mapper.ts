@@ -1,7 +1,14 @@
 import type { BaseEntryDto, EntryRelations } from './dto/base';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import type { EntryImageDto } from './dto/entry-images';
-import { BaseEntrySource, CreateEntrySource, EntryImageSource, EntryRelationSource } from './dto/types';
+import { EntryVoiceDto } from './dto/entry-voices';
+import {
+    BaseEntrySource,
+    CreateEntrySource,
+    EntryImageSource,
+    EntryRelationSource,
+    EntryVoiceSource
+} from './dto/types';
 
 function toRelations(items: EntryRelationSource[]): EntryRelations[] {
     return items.map(({ id, name }) => ({ id, name }));
@@ -19,10 +26,21 @@ export const entryMapper = {
         };
     },
 
-    toCreateResponse(entry: CreateEntrySource, images: EntryImageDto[]): CreateEntryResponseDto {
+    toVoice(image: EntryVoiceSource, url: string): EntryVoiceDto {
+        return {
+            id: image.id,
+            fileId: image.fileId,
+            url,
+            createdAt: image.createdAt,
+            updatedAt: image.updatedAt
+        };
+    },
+
+    toCreateResponse(entry: CreateEntrySource): CreateEntryResponseDto {
         return {
             id: entry.id,
-            images,
+            images: entry.images,
+            voice: entry.voice ?? null,
             places: {
                 ready: entry.places.ready,
                 processing: entry.places.processing

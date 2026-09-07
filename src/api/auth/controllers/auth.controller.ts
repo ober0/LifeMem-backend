@@ -168,11 +168,12 @@ export class AuthController {
             return {
                 user: data.user,
                 accessToken: data.accessToken,
-                refreshToken: data.refreshToken
+                refreshToken: data.refreshToken,
+                isLoggedIn: true
             };
         }
 
-        return { user: data.user };
+        return { user: data.user, isLoggedIn: true };
     }
 
     private setAuthCookies(response: express.Response, accessToken: string, refreshToken: string): void {

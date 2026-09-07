@@ -58,11 +58,12 @@ export class AuthTelegramController {
             return {
                 user: data.user,
                 accessToken: data.accessToken,
-                refreshToken: data.refreshToken
+                refreshToken: data.refreshToken,
+                isLoggedIn: true
             };
         }
 
-        return { user: data.user };
+        return { user: data.user, isLoggedIn: true };
     }
 
     @ApiOperation({ summary: 'Привязка Telegram к существующему аккаунту' })
