@@ -77,4 +77,15 @@ export class EntryProcessingRepository {
             }
         });
     }
+
+    async markEntryReady(entryId: string) {
+        return this.prisma.entry.update({
+            where: {
+                id: entryId
+            },
+            data: {
+                isReady: true
+            }
+        });
+    }
 }

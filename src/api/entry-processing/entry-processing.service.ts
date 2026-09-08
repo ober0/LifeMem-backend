@@ -59,10 +59,19 @@ export class EntryProcessingService {
                 await this.createJob(data.entryId, key, data as Omit<DelayedJobPayloads[typeof key], 'jobId'>);
             })
         );
+
+        const entryId = Object.values(payloads).find((payload) => payload != null)?.entryId;
+        if (entryId) {
+            await this.tryMarkEntryReady(entryId, pipelineName, ctx);
+        }
     }
 
     async markJobRunning(jobId: string) {
         await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Running);
+    }
+
+    async markJobPending(jobId: string) {
+        await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Pending);
     }
 
     async markJobFailed(jobId: string) {
@@ -79,6 +88,12 @@ export class EntryProcessingService {
 
     get maxJobErrorAttempts() {
         return entryProcessingConstants.maxJobErrorAttempts;
+    }
+
+    async requeueJob<K extends EntryJobName>(jobName: K, data: DelayedJobPayloads[K]) {
+        await this.markJobPending(data.jobId);
+
+        await this.delayedWorker.delayed(jobName, data, { queue: BullMqQueue.Entry }, { attempts: 1 });
     }
 
     async markJobDone(jobId: string) {
@@ -131,6 +146,8 @@ export class EntryProcessingService {
                 ignoreDuplicate: true
             });
         }
+
+        await this.tryMarkEntryReady(data.entryId, data.pipeline, ctx);
     }
 
     async createJob<K extends EntryJobName>(
@@ -183,6 +200,40 @@ export class EntryProcessingService {
             } as DelayedJobPayloads[K],
             { queue: BullMqQueue.Entry },
             { attempts: 1 }
+        );
+    }
+
+    private async tryMarkEntryReady(entryId: string, pipelineName: EntryPipelinesEnum, ctx: PipelineContext) {
+        const pipeline = EntryPipelines[pipelineName];
+        const jobs = await this.repository.findJobsByEntryId(entryId);
+
+        if (!this.isPipelineComplete(pipeline, ctx, jobs)) {
+            return;
+        }
+
+        await this.repository.markEntryReady(entryId);
+    }
+
+    private isPipelineComplete(
+        pipeline: (typeof EntryPipelines)[EntryPipelinesEnum],
+        ctx: PipelineContext,
+        jobs: Array<{ type: EntryProcessingType; status: EntryProcessingStatus }>
+    ): boolean {
+        const hasActive = jobs.some(
+            (job) =>
+                job.status === EntryProcessingStatus.Pending || job.status === EntryProcessingStatus.Running
+        );
+
+        if (hasActive) {
+            return false;
+        }
+
+        const expectedTypes = (Object.values(pipeline) as PipelineStep[])
+            .filter((step) => !step.when || step.when(ctx))
+            .map((step) => step.type);
+
+        return expectedTypes.every((type) =>
+            jobs.some((job) => job.type === type && job.status === EntryProcessingStatus.Done)
         );
     }
 

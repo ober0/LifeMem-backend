@@ -7,6 +7,9 @@ export class EntryProcessingStatusDto {
 
     @ApiProperty({ example: 5 })
     total: number;
+
+    @ApiProperty({ example: 1 })
+    error: number;
 }
 
 export class EntrySearchItemDto {

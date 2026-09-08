@@ -47,7 +47,7 @@ export class EntryProcessor extends WorkerHost {
             const errorMessages = await this.entryProcessingService.appendJobError(data.jobId, message);
 
             if (errorMessages.length < this.entryProcessingService.maxJobErrorAttempts) {
-                await job.retry();
+                await this.entryProcessingService.requeueJob(job.name as EntryJobName, job.data as DelayedJobPayloads[EntryJobName]);
                 return;
             }
 

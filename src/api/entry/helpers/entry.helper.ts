@@ -10,10 +10,13 @@ import type { UploadedFile } from '../types/uploaded-file.type';
 import type { ParsedLocation } from './parse-form-data.helper';
 
 export function calcEntryProcessingStatus(jobs: Array<{ status: EntryProcessingStatus }>) {
-    const total = jobs.length;
-    const done = jobs.filter((job) => job.status === EntryProcessingStatus.Done).length;
+    const activeJobs = jobs.filter((job) => job.status !== EntryProcessingStatus.Cancelled);
 
-    return { done, total };
+    return {
+        done: activeJobs.filter((job) => job.status === EntryProcessingStatus.Done).length,
+        total: activeJobs.length,
+        error: activeJobs.filter((job) => job.status === EntryProcessingStatus.Failed).length
+    };
 }
 
 export function checkEntryInput(text: string | undefined, voiceFile: UploadedFile | undefined): void {
