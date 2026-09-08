@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { EntryProcessingStatus, Prisma } from '@prisma/client';
 
 const entryRelationsSelect = {
     people: {
@@ -46,6 +46,44 @@ const entryVoicesSelect = {
             updatedAt: true
         }
     }
+};
+
+export const searchEntrySelect = {
+    id: true,
+    title: true,
+    text: true,
+    isReady: true,
+    createdAt: true,
+    voice: {
+        select: { id: true }
+    },
+    jobs: {
+        select: {
+            status: true
+        }
+    },
+    _count: {
+        select: {
+            images: true,
+            people: true,
+            places: true
+        }
+    }
+};
+
+export type SearchEntrySource = {
+    id: string;
+    title: string;
+    text: string | null;
+    isReady: boolean;
+    createdAt: Date;
+    voice: { id: string } | null;
+    jobs: Array<{ status: EntryProcessingStatus }>;
+    _count: {
+        images: number;
+        people: number;
+        places: number;
+    };
 };
 
 export const createEntrySelect = {

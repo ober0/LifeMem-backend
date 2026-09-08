@@ -37,57 +37,62 @@ export class EntryProcessor extends WorkerHost {
         await this.entryProcessingService.markJobRunning(data.jobId);
 
         try {
-            switch (job.name) {
-                case DelayedJob.EntryLocation:
-                    await this.entryLocationService.processEntryLocation(
-                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocation]
-                    );
-                    break;
-                case DelayedJob.EntryLocationAndPeopleDetect:
-                    await this.entryLocationService.processEntryLocationAndPeopleDetect(
-                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocationAndPeopleDetect]
-                    );
-                    break;
-                case DelayedJob.EntryEmbedTitle:
-                    await this.entryEmbeddingService.processEntryEmbedTitle(
-                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedTitle]
-                    );
-                    break;
-                case DelayedJob.EntryEmbedText:
-                    await this.entryEmbeddingService.processEntryEmbedText(
-                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedText]
-                    );
-                    break;
-                case DelayedJob.EntryEmbedImage:
-                    await this.entryEmbeddingService.processEntryEmbedImage(
-                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedImage]
-                    );
-                    break;
-                case DelayedJob.EntryVision:
-                    await this.entryVisionService.processEntryVision(
-                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryVision]
-                    );
-                    break;
-                case DelayedJob.EntryStt:
-                    await this.entrySttService.processEntryStt(
-                        job.data as DelayedJobPayloads[typeof DelayedJob.EntryStt]
-                    );
-                    break;
-                default:
-                    this.logger.warn(`Unknown delayed job: ${job.name}`);
-                    await this.entryProcessingService.markJobFailed(data.jobId, `Unknown job: ${job.name}`);
-                    return;
-            }
-
+            await this.runJob(job);
             this.logger.log(`end job ${job.name} for entry`);
             await this.entryProcessingService.onJobFinished(job.name as EntryJobName, data);
         } catch (error: unknown) {
             const message = this.resolveErrorMessage(error);
             this.logger.error(`Job end with error ${message}`, error instanceof Error ? error.stack : undefined);
 
-            await this.entryProcessingService.markJobFailed(data.jobId, message);
+            const errorMessages = await this.entryProcessingService.appendJobError(data.jobId, message);
 
+            if (errorMessages.length < this.entryProcessingService.maxJobErrorAttempts) {
+                await job.retry();
+                return;
+            }
+
+            await this.entryProcessingService.markJobFailed(data.jobId);
             throw error;
+        }
+    }
+
+    private async runJob(job: Job): Promise<void> {
+        switch (job.name) {
+            case DelayedJob.EntryLocation:
+                await this.entryLocationService.processEntryLocation(
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocation]
+                );
+                return;
+            case DelayedJob.EntryLocationAndPeopleDetect:
+                await this.entryLocationService.processEntryLocationAndPeopleDetect(
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocationAndPeopleDetect]
+                );
+                return;
+            case DelayedJob.EntryEmbedTitle:
+                await this.entryEmbeddingService.processEntryEmbedTitle(
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedTitle]
+                );
+                return;
+            case DelayedJob.EntryEmbedText:
+                await this.entryEmbeddingService.processEntryEmbedText(
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedText]
+                );
+                return;
+            case DelayedJob.EntryEmbedImage:
+                await this.entryEmbeddingService.processEntryEmbedImage(
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedImage]
+                );
+                return;
+            case DelayedJob.EntryVision:
+                await this.entryVisionService.processEntryVision(
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryVision]
+                );
+                return;
+            case DelayedJob.EntryStt:
+                await this.entrySttService.processEntryStt(job.data as DelayedJobPayloads[typeof DelayedJob.EntryStt]);
+                return;
+            default:
+                throw new Error(`Unknown job: ${job.name}`);
         }
     }
 

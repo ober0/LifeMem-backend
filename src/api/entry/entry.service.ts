@@ -13,6 +13,8 @@ import { CreateEntryDto } from './dto/create-entry.dto';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import type { EntryImageDto } from './dto/entry-images';
 import { EntryVoiceDto } from './dto/entry-voices';
+import type { EntrySearchDto } from './dto/search/search-request.dto';
+import type { EntrySearchResponseDto } from './dto/search/search-response.dto';
 import { EntryImageSource, EntryVoiceSource } from './dto/types';
 import { entryMapper } from './entry.mapper';
 import { EntryRepository } from './entry.repository';
@@ -295,5 +297,21 @@ export class EntryService {
         }
 
         return data;
+    }
+
+    async search(actor: Actor, dto: EntrySearchDto): Promise<EntrySearchResponseDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        const [entries, count] = await Promise.all([
+            this.entryRepository.search(actor.user.id, dto),
+            this.entryRepository.count(actor.user.id, dto)
+        ]);
+
+        return {
+            data: entries.map((entry) => entryMapper.toSearchItem(entry)),
+            count
+        };
     }
 }

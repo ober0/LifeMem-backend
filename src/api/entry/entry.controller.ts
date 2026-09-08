@@ -23,6 +23,8 @@ import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { BaseEntryDto, BaseEntryUpdateDto } from './dto/base';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { CreateEntryResponseDto } from './dto/create-entry-response.dto';
+import { EntrySearchDto } from './dto/search/search-request.dto';
+import { EntrySearchResponseDto } from './dto/search/search-response.dto';
 import { EntryService } from './entry.service';
 import { parseLocations } from './helpers/parse-form-data.helper';
 import { createSchema } from './types/entry.schema';
@@ -70,5 +72,15 @@ export class EntryController {
         @Body() dto: BaseEntryUpdateDto
     ): Promise<BaseEntryDto> {
         return this.entryService.updateBase(actor, id, dto);
+    }
+
+    @Post('search')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiOperation({ summary: 'Поиск заметок' })
+    @ApiOkResponse({ type: EntrySearchResponseDto })
+    @ApiErrorResponses(400, 401)
+    async search(@CurrentActor() actor: Actor, @Body() dto: EntrySearchDto): Promise<EntrySearchResponseDto> {
+        return this.entryService.search(actor, dto);
     }
 }

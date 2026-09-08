@@ -9,6 +9,7 @@ import {
     type EntryJobName
 } from '../delayed-worker/delayed-worker.constants';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
+import { entryProcessingConstants } from './entry-processing.constants';
 import { EntryProcessingRepository } from './entry-processing.repository';
 import { EntryPipelines, EntryPipelinesEnum } from './pipelines';
 import type { PipelineContext, PipelineStep } from './pipelines/types';
@@ -64,12 +65,28 @@ export class EntryProcessingService {
         await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Running);
     }
 
-    async markJobFailed(jobId: string, errorMessage: string) {
-        await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Failed, errorMessage);
+    async markJobFailed(jobId: string) {
+        await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Failed);
+    }
+
+    async markJobCancelled(jobId: string) {
+        await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Cancelled);
+    }
+
+    async appendJobError(jobId: string, message: string) {
+        return this.repository.appendJobError(jobId, message);
+    }
+
+    get maxJobErrorAttempts() {
+        return entryProcessingConstants.maxJobErrorAttempts;
+    }
+
+    async markJobDone(jobId: string) {
+        await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Done);
     }
 
     async onJobFinished(finishedKey: EntryJobName, data: baseEntryJobPayload) {
-        await this.repository.updateJobStatus(data.jobId, EntryProcessingStatus.Done);
+        await this.markJobDone(data.jobId);
 
         const pipeline = EntryPipelines[data.pipeline];
         const jobs = await this.repository.findJobsByEntryId(data.entryId);
@@ -92,7 +109,7 @@ export class EntryProcessingService {
                 continue;
             }
 
-            if (jobs.some((job) => job.type === step.type)) {
+            if (this.hasActiveJob(jobs, step.type)) {
                 continue;
             }
 
@@ -110,7 +127,6 @@ export class EntryProcessingService {
                 continue;
             }
 
-            // TODO передавать data
             await this.createJob(data.entryId, key, basePayload as Omit<DelayedJobPayloads[typeof key], 'jobId'>, {
                 ignoreDuplicate: true
             });
@@ -128,6 +144,16 @@ export class EntryProcessingService {
         if (!type) {
             this.logger.fatal(`Ошибка при обработке, не найден тип ${key}`);
             throw apiError.internal('entry.invalid_job_type');
+        }
+
+        const activeJob = await this.repository.findActiveJob(entryId, type);
+        if (activeJob) {
+            if (options?.ignoreDuplicate) {
+                return;
+            }
+
+            this.logger.fatal(`Ошибка при обработке, активный job ${key}`);
+            throw apiError.internal('entry.duplicate_job');
         }
 
         const job = await this.repository.createJob(entryId, type).catch((e) => {
@@ -155,7 +181,8 @@ export class EntryProcessingService {
                 ...data,
                 jobId: job.id
             } as DelayedJobPayloads[K],
-            { queue: BullMqQueue.Entry }
+            { queue: BullMqQueue.Entry },
+            { attempts: 1 }
         );
     }
 
@@ -172,5 +199,16 @@ export class EntryProcessingService {
             hasText: Boolean(entry.text?.trim()),
             hasImage: entry._count.images > 0
         };
+    }
+
+    private hasActiveJob(
+        jobs: Array<{ type: EntryProcessingType; status: EntryProcessingStatus }>,
+        type: EntryProcessingType
+    ) {
+        return jobs.some(
+            (job) =>
+                job.type === type &&
+                (job.status === EntryProcessingStatus.Pending || job.status === EntryProcessingStatus.Running)
+        );
     }
 }

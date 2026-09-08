@@ -31,6 +31,7 @@ export class EntryEmbeddingService {
         }
 
         return this.embedAndStore({
+            jobId: data.jobId,
             entryId: entry.id,
             text: title,
             kind: EntryVectorKind.Title,
@@ -51,6 +52,7 @@ export class EntryEmbeddingService {
         }
 
         return this.embedAndStore({
+            jobId: data.jobId,
             entryId: entry.id,
             text,
             kind: EntryVectorKind.Text,
@@ -75,6 +77,7 @@ export class EntryEmbeddingService {
             }
 
             await this.embedAndStore({
+                jobId: data.jobId,
                 entryId: data.entryId,
                 text,
                 kind: EntryVectorKind.Image,
@@ -87,6 +90,7 @@ export class EntryEmbeddingService {
     }
 
     private async embedAndStore(data: {
+        jobId: string;
         entryId: string;
         text: string;
         kind: EntryVectorKind;
@@ -96,7 +100,7 @@ export class EntryEmbeddingService {
         const embedData = await this.embeddingService.embedText(data.text, 'passage');
 
         await Promise.all([
-            this.repository.updateUsage(data.entryId, data.delayedJob, {
+            this.repository.updateUsage(data.jobId, {
                 aiModelId: embedData.modelId,
                 usage: embedData.usage
             }),

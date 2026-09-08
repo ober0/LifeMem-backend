@@ -137,7 +137,7 @@ export class EntryLocationService {
         await Promise.all([
             this.applyDetectedPeople(data.userId, data.entryId, result.people ?? []),
             this.applyDetectedPlaces(data.userId, data.entryId, result.places ?? []),
-            this.repository.updateUsage(data.entryId, DelayedJob.EntryLocationAndPeopleDetect, {
+            this.repository.updateUsage(data.jobId, {
                 aiModelId: modelId,
                 usage: {
                     ...usage,

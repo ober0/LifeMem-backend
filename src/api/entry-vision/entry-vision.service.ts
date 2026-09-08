@@ -108,7 +108,7 @@ export class EntryVisionService {
 
             await Promise.all([
                 this.repository.updateAiTranscription(imageEntity.id, description),
-                this.repository.updateUsage(data.entryId, DelayedJob.EntryVision, {
+                this.repository.updateUsage(data.jobId, {
                     aiModelId: modelId,
                     usage: {
                         ...usage,

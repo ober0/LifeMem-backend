@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { type Prisma } from '@prisma/client';
 
+import { mapPagination } from '../../common/helpers/map.pagination';
+import { mapSearch } from '../../common/helpers/map.search';
+import { mapSort } from '../../common/helpers/map.sort';
 import { PrismaService } from '../prisma/prisma.service';
-import { baseEntrySelect, createEntrySelect } from './consts/entry.constants';
+import { baseEntrySelect, createEntrySelect, searchEntrySelect } from './consts/entry.constants';
+import { EntrySearchDto, EntrySearchFilterDto } from './dto/search/search-request.dto';
 import type { ParsedLocation } from './helpers/parse-form-data.helper';
 import { CreateEntryInput } from './types/uploaded-file.type';
 
@@ -138,6 +142,31 @@ export class EntryRepository {
             where: {
                 id: id
             }
+        });
+    }
+
+    private buildSearchWhere(userId: string, dto: EntrySearchDto): Prisma.EntryWhereInput {
+        return {
+            userId,
+            ...mapSearch(dto.filters, [], [], dto.query, [], EntrySearchFilterDto)
+        };
+    }
+
+    async search(userId: string, dto: EntrySearchDto) {
+        const orderBy = mapSort(dto.sorts);
+        const defaultOrder: Prisma.EntryOrderByWithRelationInput[] = [{ createdAt: 'desc' }];
+
+        return this.prisma.entry.findMany({
+            where: this.buildSearchWhere(userId, dto),
+            select: searchEntrySelect,
+            orderBy: orderBy.length > 0 ? orderBy : defaultOrder,
+            ...mapPagination(dto.pagination)
+        });
+    }
+
+    async count(userId: string, dto: EntrySearchDto) {
+        return this.prisma.entry.count({
+            where: this.buildSearchWhere(userId, dto)
         });
     }
 }

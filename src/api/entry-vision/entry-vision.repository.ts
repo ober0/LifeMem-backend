@@ -1,16 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { EntryProcessingType } from '@prisma/client';
 
-import { apiError } from '../../common/helpers/errors';
 import type { AiTokenUsage } from '../ai/ai.types';
-import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
 import { PrismaService } from '../prisma/prisma.service';
-
-const delayedJobToProcessingType = {
-    [DelayedJob.EntryVision]: EntryProcessingType.Vision
-} as const;
-
-type UsageTrackedDelayedJob = keyof typeof delayedJobToProcessingType;
 
 @Injectable()
 export class EntryVisionRepository {
@@ -46,30 +37,16 @@ export class EntryVisionRepository {
     }
 
     async updateUsage(
-        entryId: string,
-        delayedJob: UsageTrackedDelayedJob,
+        jobId: string,
         data: {
             aiModelId: string;
             usage: AiTokenUsage;
         }
     ) {
-        const type = delayedJobToProcessingType[delayedJob];
-
-        const job = await this.prisma.entryProcessingJob.findUnique({
-            where: {
-                entryId_type: { entryId, type }
-            },
-            select: { id: true }
-        });
-
-        if (!job) {
-            throw apiError.notFound('entry.not_found');
-        }
-
         return this.prisma.entryProcessingUsage.upsert({
-            where: { jobId: job.id },
+            where: { jobId },
             create: {
-                jobId: job.id,
+                jobId,
                 aiModelId: data.aiModelId,
                 inputTokens: data.usage.inputTokens,
                 outputTokens: data.usage.outputTokens,

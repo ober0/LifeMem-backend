@@ -1,7 +1,9 @@
+import type { SearchEntrySource } from './consts/entry.constants';
 import type { BaseEntryDto, EntryRelations } from './dto/base';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import type { EntryImageDto } from './dto/entry-images';
 import { EntryVoiceDto } from './dto/entry-voices';
+import type { EntrySearchItemDto } from './dto/search/search-response.dto';
 import {
     BaseEntrySource,
     CreateEntrySource,
@@ -9,6 +11,7 @@ import {
     EntryRelationSource,
     EntryVoiceSource
 } from './dto/types';
+import { calcEntryProcessingStatus } from './helpers/entry.helper';
 
 function toRelations(items: EntryRelationSource[]): EntryRelations[] {
     return items.map(({ id, name }) => ({ id, name }));
@@ -60,6 +63,21 @@ export const entryMapper = {
             places: toRelations(entry.places),
             createdAt: entry.createdAt,
             updatedAt: entry.updatedAt
+        };
+    },
+
+    toSearchItem(entry: SearchEntrySource): EntrySearchItemDto {
+        return {
+            id: entry.id,
+            title: entry.title,
+            text: entry.text,
+            createdAt: entry.createdAt,
+            isHasVoice: Boolean(entry.voice),
+            photoCount: entry._count.images,
+            isReady: entry.isReady,
+            processingStatus: calcEntryProcessingStatus(entry.jobs),
+            peopleCount: entry._count.people,
+            placesCount: entry._count.places
         };
     }
 };

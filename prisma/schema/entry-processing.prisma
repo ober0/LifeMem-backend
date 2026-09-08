@@ -3,6 +3,7 @@ enum EntryProcessingStatus {
   Running
   Done
   Failed
+  Cancelled
 
   @@map("entry_processing_status")
 }
@@ -29,15 +30,15 @@ model EntryProcessingJob {
   type   EntryProcessingType
   status EntryProcessingStatus @default(Pending)
 
-  errorMessage String? @map("error_message")
+  errorMessages String[] @default([]) @map("error_messages")
 
   usage EntryProcessingUsage?
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([entryId, type])
   @@index([entryId, status])
+  @@index([entryId, type, status])
   @@map("entry_processing_job")
 }
 

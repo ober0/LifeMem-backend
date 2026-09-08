@@ -1,11 +1,20 @@
 import { randomUUID } from 'node:crypto';
 
+import { EntryProcessingStatus } from '@prisma/client';
+
 import { appConstants } from '../../../common/config/app.constants';
 import { apiError } from '../../../common/helpers/errors';
 import { translations } from '../../../common/translation/text-translations';
 import { LangEnum } from '../../../common/types/common/lang.enum';
 import type { UploadedFile } from '../types/uploaded-file.type';
 import type { ParsedLocation } from './parse-form-data.helper';
+
+export function calcEntryProcessingStatus(jobs: Array<{ status: EntryProcessingStatus }>) {
+    const total = jobs.length;
+    const done = jobs.filter((job) => job.status === EntryProcessingStatus.Done).length;
+
+    return { done, total };
+}
 
 export function checkEntryInput(text: string | undefined, voiceFile: UploadedFile | undefined): void {
     const hasText = Boolean(text?.trim());

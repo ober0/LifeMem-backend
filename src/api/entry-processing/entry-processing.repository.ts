@@ -7,6 +7,23 @@ import { PrismaService } from '../prisma/prisma.service';
 export class EntryProcessingRepository {
     constructor(private readonly prisma: PrismaService) {}
 
+    private readonly activeStatuses = [EntryProcessingStatus.Pending, EntryProcessingStatus.Running] as const;
+
+    async findActiveJob(entryId: string, type: EntryProcessingType) {
+        return this.prisma.entryProcessingJob.findFirst({
+            where: {
+                entryId,
+                type,
+                status: { in: [...this.activeStatuses] }
+            },
+            select: {
+                id: true,
+                type: true,
+                status: true
+            }
+        });
+    }
+
     async createJob(entryId: string, type: EntryProcessingType) {
         return this.prisma.entryProcessingJob.create({
             data: {
@@ -23,18 +40,30 @@ export class EntryProcessingRepository {
                 id: true,
                 type: true,
                 status: true
-            }
+            },
+            orderBy: { createdAt: 'asc' }
         });
     }
 
-    async updateJobStatus(jobId: string, status: EntryProcessingStatus, errorMessage?: string) {
+    async updateJobStatus(jobId: string, status: EntryProcessingStatus) {
         return this.prisma.entryProcessingJob.update({
             where: { id: jobId },
+            data: { status }
+        });
+    }
+
+    async appendJobError(jobId: string, message: string) {
+        const job = await this.prisma.entryProcessingJob.update({
+            where: { id: jobId },
             data: {
-                status,
-                ...(errorMessage !== undefined && { errorMessage })
+                errorMessages: { push: message }
+            },
+            select: {
+                errorMessages: true
             }
         });
+
+        return job.errorMessages;
     }
 
     async findEntryContext(entryId: string) {

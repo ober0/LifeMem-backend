@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import type { JobsOptions } from 'bullmq';
 
 import { BullMqQueue, type BullMqQueueName } from '../bullmq/bullmq.constants';
 import { BullMqService } from '../bullmq/bullmq.service';
@@ -46,8 +47,9 @@ export class DelayedWorkerService {
         data: DelayedJobPayloads[K],
         meta: {
             queue: Exclude<BullMqQueueName, typeof BullMqQueue.LocalEmbedding>;
-        } = { queue: BullMqQueue.Delayed }
+        } = { queue: BullMqQueue.Delayed },
+        opts?: JobsOptions
     ) {
-        await this.bullMq.add(meta.queue, key, data);
+        await this.bullMq.add(meta.queue, key, data, opts);
     }
 }

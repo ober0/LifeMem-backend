@@ -45,7 +45,7 @@ export class EntrySttService {
 
         await Promise.all([
             this.repository.updateEntryText(data.entryId, sttResult.result),
-            this.repository.updateUsage(data.entryId, DelayedJob.EntryStt, {
+            this.repository.updateUsage(data.jobId, {
                 aiModelId: sttResult.modelId,
                 usage: sttResult.usage
             })
