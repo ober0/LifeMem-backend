@@ -15,7 +15,7 @@ minio server /data --console-address ":9001" &
 MINIO_PID=$!
 
 i=0
-until curl -sf http://127.0.0.1:9000/minio/health/live >/dev/null 2>&1; do
+until mc alias set local http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1 && mc ready local >/dev/null 2>&1; do
   i=$((i + 1))
   if [ "$i" -gt 60 ]; then
     echo "MinIO did not become ready in time" >&2
@@ -24,8 +24,6 @@ until curl -sf http://127.0.0.1:9000/minio/health/live >/dev/null 2>&1; do
   fi
   sleep 1
 done
-
-mc alias set local http://127.0.0.1:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" || echo "mc alias failed" >&2
 mc mb -p "local/${BUCKET}" || true
 
 wait "$MINIO_PID" || true

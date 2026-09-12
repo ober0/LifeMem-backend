@@ -37,12 +37,6 @@ services:
             - .env.prod
         volumes:
             - lifemem_minio_data:/data
-        healthcheck:
-            test: ['CMD', 'curl', '-f', 'http://127.0.0.1:9000/minio/health/live']
-            interval: 10s
-            timeout: 5s
-            retries: 10
-            start_period: 15s
 
     lifemem-app:
         image: ${LIFEMEM_APP_IMAGE:-lifemem-app:local}
