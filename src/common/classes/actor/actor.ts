@@ -10,10 +10,10 @@ import type { DeviceDto } from '../../types/user';
 import type { PermissionDto } from '../../types/user';
 
 export class Actor {
-    private _user: UserDto | null = null;
+    private _user: UserDto;
     private _permissions: PermissionDto[] = [];
-    private _device: DeviceDto | null = null;
-    private _settings: UserSettingsDto | null = null;
+    private _device: DeviceDto;
+    private _settings: UserSettingsDto;
     private _headerLang: LangEnum = LangEnum.En;
     private _userLang: LangEnum;
     private _requestCountry: CountryCode | null = null;
@@ -24,11 +24,11 @@ export class Actor {
         return new Actor();
     }
 
-    get user(): Readonly<UserDto> | null {
+    get user(): Readonly<UserDto> {
         return this._user;
     }
 
-    get device(): Readonly<DeviceDto> | null {
+    get device(): Readonly<DeviceDto> {
         return this._device;
     }
 
@@ -44,7 +44,7 @@ export class Actor {
         return this._requestCountry;
     }
 
-    get settings(): Readonly<UserSettingsDto> | null {
+    get settings(): Readonly<UserSettingsDto> {
         return this._settings;
     }
 

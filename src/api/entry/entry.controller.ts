@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Get,
     HttpCode,
     HttpStatus,
     Param,
@@ -23,6 +24,7 @@ import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { BaseEntryDto, BaseEntryUpdateDto } from './dto/base';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { CreateEntryResponseDto } from './dto/create-entry-response.dto';
+import { EntryDetailResponseDto } from './dto/get-entry-response.dto';
 import { EntrySearchDto } from './dto/search/search-request.dto';
 import { EntrySearchResponseDto } from './dto/search/search-response.dto';
 import { EntryService } from './entry.service';
@@ -60,6 +62,16 @@ export class EntryController {
         console.log(files.photos?.length);
 
         return this.entryService.create(actor, dto, files, locations);
+    }
+
+    @Get(':id')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiOperation({ summary: 'Получение заметки по id' })
+    @ApiOkResponse({ type: EntryDetailResponseDto })
+    @ApiErrorResponses(401, 404)
+    async getById(@CurrentActor() actor: Actor, @Param('id') id: string): Promise<EntryDetailResponseDto> {
+        return this.entryService.getById(actor, id);
     }
 
     @Patch(':id/base')

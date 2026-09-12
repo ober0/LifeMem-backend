@@ -99,6 +99,53 @@ export const createEntrySelect = {
     ...entryRelationsSelect
 } satisfies Prisma.EntrySelect;
 
+export const entryDetailSelect = {
+    id: true,
+    userId: true,
+    title: true,
+    text: true,
+    isReady: true,
+    createdAt: true,
+    updatedAt: true,
+    ...entryImagesSelect,
+    ...entryVoicesSelect,
+    jobs: {
+        select: {
+            id: true,
+            type: true,
+            status: true,
+            errorMessages: true,
+            createdAt: true,
+            updatedAt: true
+        },
+        orderBy: { createdAt: 'asc' as const }
+    },
+    people: {
+        select: {
+            person: {
+                select: {
+                    id: true,
+                    name: true,
+                    createdAt: true
+                }
+            }
+        }
+    },
+    places: {
+        select: {
+            place: {
+                select: {
+                    id: true,
+                    name: true,
+                    createdAt: true
+                }
+            }
+        }
+    }
+};
+
+export type EntryDetailSource = Prisma.EntryGetPayload<{ select: typeof entryDetailSelect }>;
+
 export const baseEntrySelect = {
     id: true,
     title: true,

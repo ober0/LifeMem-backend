@@ -5,7 +5,7 @@ import { mapPagination } from '../../common/helpers/map.pagination';
 import { mapSearch } from '../../common/helpers/map.search';
 import { mapSort } from '../../common/helpers/map.sort';
 import { PrismaService } from '../prisma/prisma.service';
-import { baseEntrySelect, createEntrySelect, searchEntrySelect } from './consts/entry.constants';
+import { baseEntrySelect, createEntrySelect, entryDetailSelect, searchEntrySelect } from './consts/entry.constants';
 import { EntrySearchDto, EntrySearchFilterDto } from './dto/search/search-request.dto';
 import type { ParsedLocation } from './helpers/parse-form-data.helper';
 import { CreateEntryInput } from './types/uploaded-file.type';
@@ -137,11 +137,10 @@ export class EntryRepository {
         });
     }
 
-    async getById(id: string) {
-        return this.prisma.entry.findUnique({
-            where: {
-                id: id
-            }
+    async findOwnedDetailById(id: string, userId: string) {
+        return this.prisma.entry.findFirst({
+            where: { id, userId },
+            select: entryDetailSelect
         });
     }
 

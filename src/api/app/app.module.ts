@@ -36,6 +36,8 @@ import { HealthModule } from '../health/health.module';
 import { LogsModule } from '../logs/logs.module';
 import { MobileSmsModule } from '../mobile-sms/mobile-sms.module';
 import { OpenstreetmapModule } from '../openstreetmap/openstreetmap.module';
+import { PersonModule } from '../person/person.module';
+import { PlaceModule } from '../place/place.module';
 import { PrismaModule } from '../prisma/prisma.module';
 import { REDIS_CLIENT } from '../redis/redis.constants';
 import { RedisModule } from '../redis/redis.module';
@@ -95,6 +97,8 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         MobileSmsModule,
         CacheModule,
         EntryModule,
+        PersonModule,
+        PlaceModule,
         DelayedWorkerModule,
         EntryLocationModule,
         OpenstreetmapModule,

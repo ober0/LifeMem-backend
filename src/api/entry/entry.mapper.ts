@@ -1,8 +1,9 @@
-import type { SearchEntrySource } from './consts/entry.constants';
+import type { EntryDetailSource, SearchEntrySource } from './consts/entry.constants';
 import type { BaseEntryDto, EntryRelations } from './dto/base';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import type { EntryImageDto } from './dto/entry-images';
 import { EntryVoiceDto } from './dto/entry-voices';
+import type { EntryDetailResponseDto } from './dto/get-entry-response.dto';
 import type { EntrySearchItemDto } from './dto/search/search-response.dto';
 import {
     BaseEntrySource,
@@ -63,6 +64,38 @@ export const entryMapper = {
             places: toRelations(entry.places),
             createdAt: entry.createdAt,
             updatedAt: entry.updatedAt
+        };
+    },
+
+    toDetail(entry: EntryDetailSource, photos: EntryImageDto[], voice: EntryVoiceDto | null): EntryDetailResponseDto {
+        return {
+            id: entry.id,
+            userId: entry.userId,
+            title: entry.title,
+            text: entry.text,
+            isReady: entry.isReady,
+            createdAt: entry.createdAt,
+            updatedAt: entry.updatedAt,
+            voice,
+            photos,
+            jobs: entry.jobs.map((job) => ({
+                id: job.id,
+                type: job.type,
+                status: job.status,
+                errorMessages: job.errorMessages,
+                createdAt: job.createdAt,
+                updatedAt: job.updatedAt
+            })),
+            people: entry.people.map(({ person }) => ({
+                id: person.id,
+                name: person.name,
+                createdAt: person.createdAt
+            })),
+            places: entry.places.map(({ place }) => ({
+                id: place.id,
+                name: place.name,
+                createdAt: place.createdAt
+            }))
         };
     },
 

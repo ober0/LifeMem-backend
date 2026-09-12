@@ -13,6 +13,7 @@ import { CreateEntryDto } from './dto/create-entry.dto';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import type { EntryImageDto } from './dto/entry-images';
 import { EntryVoiceDto } from './dto/entry-voices';
+import type { EntryDetailResponseDto } from './dto/get-entry-response.dto';
 import type { EntrySearchDto } from './dto/search/search-request.dto';
 import type { EntrySearchResponseDto } from './dto/search/search-response.dto';
 import { EntryImageSource, EntryVoiceSource } from './dto/types';
@@ -292,13 +293,23 @@ export class EntryService {
         };
     }
 
-    async getById(id: string) {
-        const data = await this.entryRepository.getById(id);
-        if (!data) {
+    async getById(actor: Actor, id: string): Promise<EntryDetailResponseDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        const entry = await this.entryRepository.findOwnedDetailById(id, actor.user.id);
+
+        if (!entry) {
             throw apiError.notFound('entry.not_found');
         }
 
-        return data;
+        const [photos, voice] = await Promise.all([
+            this.mapImages(entry.images),
+            this.mapVoice(entry.voice)
+        ]);
+
+        return entryMapper.toDetail(entry, photos, voice);
     }
 
     async search(actor: Actor, dto: EntrySearchDto): Promise<EntrySearchResponseDto> {
