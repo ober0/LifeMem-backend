@@ -1,5 +1,4 @@
 import type { EntryDetailSource, SearchEntrySource } from './consts/entry.constants';
-import { entryBaseMapper } from './entry-base.mapper';
 import type { BaseEntryDto, EntryRelations } from './dto/base';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import type { EntryImageDto } from './dto/entry-images';
@@ -13,6 +12,7 @@ import {
     EntryRelationSource,
     EntryVoiceSource
 } from './dto/types';
+import { entryBaseMapper } from './entry-base.mapper';
 import { calcEntryProcessingStatus } from './helpers/entry.helper';
 
 function toRelations(items: EntryRelationSource[]): EntryRelations[] {

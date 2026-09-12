@@ -19,8 +19,8 @@ import type { EntrySearchDto } from './dto/search/search-request.dto';
 import type { EntrySearchResponseDto } from './dto/search/search-response.dto';
 import { EntryImageSource, EntryVoiceSource } from './dto/types';
 import { entryMapper } from './entry.mapper';
-import { EntrySearchRepository } from './entry-search.repository';
 import { EntryRepository } from './entry.repository';
+import { EntrySearchRepository } from './entry-search.repository';
 import {
     buildEntryFileKey,
     checkEntryInput,
