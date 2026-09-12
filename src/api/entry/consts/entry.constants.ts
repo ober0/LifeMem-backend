@@ -1,4 +1,4 @@
-import type { EntryProcessingStatus, Prisma } from '@prisma/client';
+import type { EntryFormattedTextFormat, EntryProcessingStatus, Prisma } from '@prisma/client';
 
 const entryRelationsSelect = {
     people: {
@@ -52,6 +52,8 @@ export const searchEntrySelect = {
     id: true,
     title: true,
     text: true,
+    formattedText: true,
+    formattedTextFormat: true,
     isReady: true,
     createdAt: true,
     voice: {
@@ -75,6 +77,8 @@ export type SearchEntrySource = {
     id: string;
     title: string;
     text: string | null;
+    formattedText: string | null;
+    formattedTextFormat: EntryFormattedTextFormat | null;
     isReady: boolean;
     createdAt: Date;
     voice: { id: string } | null;
@@ -104,6 +108,8 @@ export const entryDetailSelect = {
     userId: true,
     title: true,
     text: true,
+    formattedText: true,
+    formattedTextFormat: true,
     isReady: true,
     createdAt: true,
     updatedAt: true,
@@ -150,6 +156,8 @@ export const baseEntrySelect = {
     id: true,
     title: true,
     text: true,
+    formattedText: true,
+    formattedTextFormat: true,
     isReady: true,
     createdAt: true,
     updatedAt: true,

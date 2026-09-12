@@ -198,6 +198,8 @@ export class EntryService {
                 id: entry.id,
                 title: entry.title,
                 text: entry.text,
+                formattedText: entry.formattedText,
+                formattedTextFormat: entry.formattedTextFormat,
                 isHasVoice: Boolean(entry.voice),
                 isReady: entry.isReady,
                 peoples: entry.people.map((el) => el.person),

@@ -4,8 +4,10 @@ model Entry {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @map("user_id") @db.Uuid
 
-  title String
-  text  String?
+  title               String
+  text                String?
+  formattedText       String?                  @map("formatted_text")
+  formattedTextFormat EntryFormattedTextFormat? @map("formatted_text_format")
 
   voice  EntryVoice?
   images EntryImage[]
@@ -26,6 +28,14 @@ model Entry {
   @@index([userId, createdAt])
   @@index([userId, isReady, createdAt])
   @@map("entry")
+}
+
+enum EntryFormattedTextFormat {
+  plain
+  markdown
+  html
+
+  @@map("entry_formatted_text_format")
 }
 
 model EntryImage {

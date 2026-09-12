@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { EntryFormattedTextFormat } from '@prisma/client';
 import { EntryProcessingStatus, EntryProcessingType } from '@prisma/client';
 import { Type } from 'class-transformer';
 
@@ -48,6 +49,12 @@ export class EntryDetailResponseDto extends BaseEntity {
 
     @ApiProperty({ type: String, nullable: true })
     text: string | null;
+
+    @ApiProperty({ type: String, nullable: true })
+    formattedText: string | null;
+
+    @ApiProperty({ enum: EntryFormattedTextFormat, nullable: true })
+    formattedTextFormat: EntryFormattedTextFormat | null;
 
     @ApiProperty()
     isReady: boolean;

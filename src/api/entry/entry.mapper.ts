@@ -1,4 +1,5 @@
 import type { EntryDetailSource, SearchEntrySource } from './consts/entry.constants';
+import { entryBaseMapper } from './entry-base.mapper';
 import type { BaseEntryDto, EntryRelations } from './dto/base';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import type { EntryImageDto } from './dto/entry-images';
@@ -54,28 +55,18 @@ export const entryMapper = {
 
     toBaseEntry(entry: BaseEntrySource, images: EntryImageDto[]): BaseEntryDto {
         return {
-            id: entry.id,
-            title: entry.title,
-            text: entry.text,
+            ...entryBaseMapper.withTimestamps(entry),
             isHasVoice: entry.isHasVoice,
             images,
-            isReady: entry.isReady,
             peoples: toRelations(entry.peoples),
-            places: toRelations(entry.places),
-            createdAt: entry.createdAt,
-            updatedAt: entry.updatedAt
+            places: toRelations(entry.places)
         };
     },
 
     toDetail(entry: EntryDetailSource, photos: EntryImageDto[], voice: EntryVoiceDto | null): EntryDetailResponseDto {
         return {
-            id: entry.id,
+            ...entryBaseMapper.withTimestamps(entry),
             userId: entry.userId,
-            title: entry.title,
-            text: entry.text,
-            isReady: entry.isReady,
-            createdAt: entry.createdAt,
-            updatedAt: entry.updatedAt,
             voice,
             photos,
             jobs: entry.jobs.map((job) => ({
@@ -101,13 +92,9 @@ export const entryMapper = {
 
     toSearchItem(entry: SearchEntrySource): EntrySearchItemDto {
         return {
-            id: entry.id,
-            title: entry.title,
-            text: entry.text,
-            createdAt: entry.createdAt,
+            ...entryBaseMapper.withReady(entry),
             isHasVoice: Boolean(entry.voice),
             photoCount: entry._count.images,
-            isReady: entry.isReady,
             processingStatus: calcEntryProcessingStatus(entry.jobs),
             peopleCount: entry._count.people,
             placesCount: entry._count.places

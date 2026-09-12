@@ -1,3 +1,5 @@
+import type { EntryFormattedTextFormat } from '@prisma/client';
+
 import { EntryPlacesResponse } from './create-entry-response.dto';
 import type { EntryImageDto } from './entry-images';
 import { EntryVoiceDto } from './entry-voices';
@@ -33,6 +35,8 @@ export type BaseEntrySource = {
     id: string;
     title: string;
     text: string | null;
+    formattedText: string | null;
+    formattedTextFormat: EntryFormattedTextFormat | null;
     isHasVoice: boolean;
     isReady: boolean;
     peoples: EntryRelationSource[];
