@@ -2,7 +2,7 @@ FROM alpine:3.20 AS entrypoint
 COPY minio-entrypoint.sh /minio-entrypoint.sh
 RUN sed -i 's/\r$//' /minio-entrypoint.sh && chmod +x /minio-entrypoint.sh
 
-FROM ghcr.io/coollabsio/minio:RELEASE.2025-04-22T22-12-26Z
+FROM ghcr.io/ober0/minio:official-cpuv1-2025-04-22
 
 COPY --from=entrypoint /minio-entrypoint.sh /usr/local/bin/minio-entrypoint.sh
 

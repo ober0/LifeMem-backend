@@ -82,6 +82,13 @@ jobs:
       - run: npm ci
       - run: cp .env.e2e.example .env.e2e
       - run: npm run generate
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
       - run: npm run docker:e2e
       - run: npm run test:e2e
 

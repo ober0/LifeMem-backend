@@ -26,7 +26,7 @@ services:
             retries: 10
 
     lifemem-e2e-minio:
-        image: ghcr.io/coollabsio/minio:RELEASE.2025-04-22T22-12-26Z
+        image: ghcr.io/ober0/minio:official-cpuv1-2025-04-22
         container_name: lifemem-e2e-minio
         env_file:
             - .env.e2e
