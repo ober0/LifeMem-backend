@@ -39,7 +39,7 @@ export class SearchPlacesFactory implements AiToolFactory {
             {
                 name: AiToolKey.SearchPlaces,
                 description:
-                    'Search places already saved for the current user. Pass one or many place name fragments at once, e.g. ["Москва", "Питер"]. Returns all matches for all queries (case-insensitive contains on name/fullName).',
+                    'Search places already saved for the current user. Pass one or many place name fragments at once, e.g. ["Москва", "Питер"]. Fuzzy match (PostgreSQL pg_trgm) on name and fullName.',
                 schema: z.object({
                     queries: z
                         .array(z.string().min(1))

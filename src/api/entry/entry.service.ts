@@ -83,8 +83,6 @@ export class EntryService {
         const voiceFile = files.voice?.[0];
         const photoFiles = files.photos ?? [];
 
-        console.log(photoFiles.length);
-
         await this.validateCreateInput(dto, voiceFile, photoFiles, locations);
 
         const personIds = dto.personIds ?? [];
@@ -322,10 +320,7 @@ export class EntryService {
             throw apiError.notFound('entry.not_found');
         }
 
-        const [photos, voice] = await Promise.all([
-            this.mapImages(entry.images),
-            this.mapVoice(entry.voice)
-        ]);
+        const [photos, voice] = await Promise.all([this.mapImages(entry.images), this.mapVoice(entry.voice)]);
 
         return entryMapper.toDetail(entry, photos, voice);
     }

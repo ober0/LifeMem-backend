@@ -15,5 +15,10 @@ export const aiConstants = {
     responseCleanupIntervalMs: 60 * 1000,
     resultPollIntervalMs: 5000,
     resultWaitTimeoutSec: 120,
-    refreshUsdMs: 60 * 60 * 1000 // 1 ч
+    refreshUsdMs: 60 * 60 * 1000, // 1 ч
+    entitySearch: {
+        trgmMinScore: 0.2,
+        containsBoostScore: 0.4,
+        defaultTake: 50
+    }
 } as const;

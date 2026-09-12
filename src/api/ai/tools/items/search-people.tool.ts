@@ -32,7 +32,7 @@ export class SearchPeopleFactory implements AiToolFactory {
             {
                 name: AiToolKey.SearchPeople,
                 description:
-                    'Search people already saved for the current user. Pass one or many name fragments at once, e.g. ["Даша", "мама"]. Returns all matches for all queries (case-insensitive contains).',
+                    'Search people already saved for the current user. Pass one or many name fragments at once, e.g. ["Даша", "мама"]. Fuzzy match (PostgreSQL pg_trgm): typos and partial names, not only exact substring.',
                 schema: z.object({
                     queries: z
                         .array(z.string().min(1))
