@@ -167,7 +167,7 @@ export class EntryRepository {
         return {
             userId,
             ...this.notDeleted,
-            ...mapSearch(dto.filters, [], [], dto.query, [], EntrySearchFilterDto)
+            ...mapSearch(dto.filters, [], [], undefined, [], EntrySearchFilterDto)
         };
     }
 

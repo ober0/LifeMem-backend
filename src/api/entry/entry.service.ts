@@ -5,6 +5,7 @@ import type { Actor } from '../../common/classes/actor';
 import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
 import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
+import { EmbeddingService } from '../embedding/embedding.service';
 import { EntryProcessingService } from '../entry-processing/entry-processing.service';
 import { EntryPipelinesEnum } from '../entry-processing/pipelines';
 import { S3Service } from '../s3/s3.service';
@@ -18,6 +19,7 @@ import type { EntrySearchDto } from './dto/search/search-request.dto';
 import type { EntrySearchResponseDto } from './dto/search/search-response.dto';
 import { EntryImageSource, EntryVoiceSource } from './dto/types';
 import { entryMapper } from './entry.mapper';
+import { EntrySearchRepository } from './entry-search.repository';
 import { EntryRepository } from './entry.repository';
 import {
     buildEntryFileKey,
@@ -39,7 +41,9 @@ export class EntryService {
     constructor(
         private readonly entryRepository: EntryRepository,
         private readonly s3Service: S3Service,
-        private readonly entryProcessingService: EntryProcessingService
+        private readonly entryProcessingService: EntryProcessingService,
+        private readonly embeddingService: EmbeddingService,
+        private readonly entrySearchRepository: EntrySearchRepository
     ) {}
 
     private async validateCreateInput(
@@ -330,9 +334,26 @@ export class EntryService {
             throw apiError.unauthorized('auth.unauthorized');
         }
 
+        const userId = actor.user.id;
+        const queryText = dto.query?.trim();
+
+        if (queryText) {
+            const embedded = await this.embeddingService.embedText(queryText, 'query');
+
+            const [entries, count] = await Promise.all([
+                this.entrySearchRepository.searchByQuery(userId, dto, queryText, embedded.result),
+                this.entrySearchRepository.countByQuery(userId, dto, queryText, embedded.result)
+            ]);
+
+            return {
+                data: entries.map((entry) => entryMapper.toSearchItem(entry)),
+                count
+            };
+        }
+
         const [entries, count] = await Promise.all([
-            this.entryRepository.search(actor.user.id, dto),
-            this.entryRepository.count(actor.user.id, dto)
+            this.entryRepository.search(userId, dto),
+            this.entryRepository.count(userId, dto)
         ]);
 
         return {
