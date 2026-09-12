@@ -4,6 +4,7 @@ import { EntryVectorKind } from '@prisma/client';
 import { apiError } from '../../common/helpers/errors';
 import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker/delayed-worker.constants';
 import { EmbeddingService } from '../embedding/embedding.service';
+import { buildEntryImageEmbedText } from '../entry-vision/entry-vision.types';
 import { EntryEmbeddingRepository } from './entry-embedding.repository';
 
 type EmbedDelayedJob =
@@ -69,7 +70,11 @@ export class EntryEmbeddingService {
         }
 
         for (const image of images) {
-            const text = `image.description \n\n image.aiTranscription`.trim();
+            const text = buildEntryImageEmbedText({
+                description: image.description,
+                aiTranscription: image.aiTranscription,
+                aiMetadata: image.aiMetadata
+            }).trim();
 
             if (!text) {
                 this.logger.warn(`skip embed image: empty text imageId=${image.id}`);

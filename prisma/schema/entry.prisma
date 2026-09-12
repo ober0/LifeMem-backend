@@ -38,6 +38,7 @@ model EntryImage {
   fileId String @map("file_id") @db.Uuid
 
   aiTranscription String? @map("ai_transcription")
+  aiMetadata      Json?   @map("ai_metadata")
   description     String?
 
   vector EntryVector?

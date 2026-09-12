@@ -27,7 +27,9 @@ export class EntryEmbeddingRepository {
     async getEntryImages(
         entryId: string,
         ids?: string[]
-    ): Promise<Array<{ id: string; description: string | null; aiTranscription: string | null }>> {
+    ): Promise<
+        Array<{ id: string; description: string | null; aiTranscription: string | null; aiMetadata: unknown }>
+    > {
         return this.prisma.entryImage.findMany({
             where: {
                 entryId,
@@ -40,7 +42,8 @@ export class EntryEmbeddingRepository {
             select: {
                 id: true,
                 description: true,
-                aiTranscription: true
+                aiTranscription: true,
+                aiMetadata: true
             }
         });
     }

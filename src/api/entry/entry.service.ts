@@ -82,6 +82,8 @@ export class EntryService {
         const voiceFile = files.voice?.[0];
         const photoFiles = files.photos ?? [];
 
+        console.log(photoFiles.length);
+
         await this.validateCreateInput(dto, voiceFile, photoFiles, locations);
 
         const personIds = dto.personIds ?? [];

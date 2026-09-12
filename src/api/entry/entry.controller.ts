@@ -57,6 +57,8 @@ export class EntryController {
     ): Promise<CreateEntryResponseDto> {
         const locations = parseLocations(req.body?.location);
 
+        console.log(files.photos?.length);
+
         return this.entryService.create(actor, dto, files, locations);
     }
 

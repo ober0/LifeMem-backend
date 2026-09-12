@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import type { AiTokenUsage } from '../ai/ai.types';
 import { PrismaService } from '../prisma/prisma.service';
+import type { EntryImageVisionMetadata } from './entry-vision.types';
 
 @Injectable()
 export class EntryVisionRepository {
@@ -28,10 +30,20 @@ export class EntryVisionRepository {
         });
     }
 
-    async updateAiTranscription(imageId: string, aiTranscription: string) {
+    async updateVisionResult(
+        imageId: string,
+        data: {
+            aiTranscription: string;
+            aiMetadata: EntryImageVisionMetadata | null;
+        }
+    ) {
         return this.prisma.entryImage.update({
             where: { id: imageId },
-            data: { aiTranscription },
+            data: {
+                aiTranscription: data.aiTranscription,
+                aiMetadata:
+                    data.aiMetadata === null ? Prisma.DbNull : (data.aiMetadata as Prisma.InputJsonValue)
+            },
             select: { id: true }
         });
     }
