@@ -191,6 +191,10 @@ export class EntryService {
             placeIds: dto.places || undefined
         });
 
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
         const images = await this.mapImages(entry.images);
 
         return entryMapper.toBaseEntry(
@@ -293,6 +297,18 @@ export class EntryService {
             type: FileType.IMAGE,
             description
         };
+    }
+
+    async softDelete(actor: Actor, id: string): Promise<void> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        const deleted = await this.entryRepository.softDelete(id, actor.user.id);
+
+        if (!deleted) {
+            throw apiError.notFound('entry.not_found');
+        }
     }
 
     async getById(actor: Actor, id: string): Promise<EntryDetailResponseDto> {

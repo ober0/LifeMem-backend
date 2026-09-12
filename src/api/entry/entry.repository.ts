@@ -21,6 +21,8 @@ export type UpdateBaseEntryInput = {
 export class EntryRepository {
     constructor(private readonly prisma: PrismaService) {}
 
+    private readonly notDeleted = { deletedAt: null };
+
     async findPersonsByUser(userId: string, ids: string[]) {
         if (ids.length === 0) {
             return [];
@@ -49,8 +51,17 @@ export class EntryRepository {
 
     async findOwnedById(id: string, userId: string) {
         return this.prisma.entry.findFirst({
-            where: { id, userId }
+            where: { id, userId, ...this.notDeleted }
         });
+    }
+
+    async softDelete(id: string, userId: string) {
+        const result = await this.prisma.entry.updateMany({
+            where: { id, userId, ...this.notDeleted },
+            data: { deletedAt: new Date() }
+        });
+
+        return result.count > 0;
     }
 
     async updateBase(id: string, data: UpdateBaseEntryInput) {
@@ -75,11 +86,19 @@ export class EntryRepository {
                 }
             }
 
-            return tx.entry.update({
-                where: { id },
+            const updated = await tx.entry.updateMany({
+                where: { id, ...this.notDeleted },
                 data: {
                     ...(data.title !== undefined && { title: data.title })
-                },
+                }
+            });
+
+            if (updated.count === 0) {
+                return null;
+            }
+
+            return tx.entry.findFirstOrThrow({
+                where: { id, ...this.notDeleted },
                 select: baseEntrySelect
             });
         });
@@ -139,7 +158,7 @@ export class EntryRepository {
 
     async findOwnedDetailById(id: string, userId: string) {
         return this.prisma.entry.findFirst({
-            where: { id, userId },
+            where: { id, userId, ...this.notDeleted },
             select: entryDetailSelect
         });
     }
@@ -147,6 +166,7 @@ export class EntryRepository {
     private buildSearchWhere(userId: string, dto: EntrySearchDto): Prisma.EntryWhereInput {
         return {
             userId,
+            ...this.notDeleted,
             ...mapSearch(dto.filters, [], [], dto.query, [], EntrySearchFilterDto)
         };
     }

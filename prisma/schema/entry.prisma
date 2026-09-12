@@ -21,12 +21,15 @@ model Entry {
   people EntryPerson[]
   places EntryPlace[]
 
+  deletedAt DateTime? @map("deleted_at")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([userId])
   @@index([userId, createdAt])
   @@index([userId, isReady, createdAt])
+  @@index([userId, deletedAt])
   @@map("entry")
 }
 

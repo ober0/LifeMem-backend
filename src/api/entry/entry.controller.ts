@@ -1,6 +1,7 @@
 import {
     Body,
     Controller,
+    Delete,
     Get,
     HttpCode,
     HttpStatus,
@@ -72,6 +73,15 @@ export class EntryController {
     @ApiErrorResponses(401, 404)
     async getById(@CurrentActor() actor: Actor, @Param('id') id: string): Promise<EntryDetailResponseDto> {
         return this.entryService.getById(actor, id);
+    }
+
+    @Delete(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiOperation({ summary: 'Удаление заметки (soft)' })
+    @ApiErrorResponses(401, 404)
+    async delete(@CurrentActor() actor: Actor, @Param('id') id: string): Promise<void> {
+        await this.entryService.softDelete(actor, id);
     }
 
     @Patch(':id/base')
