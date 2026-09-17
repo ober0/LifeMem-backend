@@ -4,6 +4,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 
 import { AuthRepository } from '../api/auth/repo/auth.repository';
 import { AuthCleanupService } from '../api/auth/services/auth-cleanup.service';
+import { FilesCoreModule } from '../api/files/files-core.module';
 import { PrismaModule } from '../api/prisma/prisma.module';
 import { UserRepository } from '../api/user/user.repository';
 import { UserCleanupService } from '../api/user/user-cleanup.service';
@@ -12,6 +13,7 @@ import { CronWorker } from './cron.worker';
 import { DeleteExpiresConfirmCodesJob } from './tasks/delete-expires-confirm-codes';
 import { DeleteExpiresJwtJob } from './tasks/delete-expires-jwt';
 import { DeleteSoftDeletedUsersJob } from './tasks/delete-soft-deleted-users';
+import { ExpireStaleUploadsJob } from './tasks/expire-stale-uploads';
 
 @Module({
     imports: [
@@ -21,13 +23,15 @@ import { DeleteSoftDeletedUsersJob } from './tasks/delete-soft-deleted-users';
             validate: validateEnv
         }),
         ScheduleModule.forRoot(),
-        PrismaModule
+        PrismaModule,
+        FilesCoreModule
     ],
     providers: [
         CronWorker,
         DeleteExpiresJwtJob,
         DeleteExpiresConfirmCodesJob,
         DeleteSoftDeletedUsersJob,
+        ExpireStaleUploadsJob,
         UserRepository,
         UserCleanupService,
         AuthCleanupService,

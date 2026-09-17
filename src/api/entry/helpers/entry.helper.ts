@@ -1,13 +1,10 @@
-import { randomUUID } from 'node:crypto';
-
 import { EntryProcessingStatus } from '@prisma/client';
 
 import { appConstants } from '../../../common/config/app.constants';
 import { apiError } from '../../../common/helpers/errors';
 import { translations } from '../../../common/translation/text-translations';
 import { LangEnum } from '../../../common/types/common/lang.enum';
-import type { UploadedFile } from '../types/uploaded-file.type';
-import type { ParsedLocation } from './parse-form-data.helper';
+import type { EntryLocationDto } from '../dto/create-entry.dto';
 
 export function calcEntryProcessingStatus(jobs: Array<{ status: EntryProcessingStatus }>) {
     const activeJobs = jobs.filter((job) => job.status !== EntryProcessingStatus.Cancelled);
@@ -19,9 +16,9 @@ export function calcEntryProcessingStatus(jobs: Array<{ status: EntryProcessingS
     };
 }
 
-export function checkEntryInput(text: string | undefined, voiceFile: UploadedFile | undefined): void {
+export function checkEntryInput(text: string | undefined, audioId: string | undefined): void {
     const hasText = Boolean(text?.trim());
-    const hasVoice = Boolean(voiceFile);
+    const hasVoice = Boolean(audioId);
 
     if (!hasText && !hasVoice) {
         throw apiError.badRequest('entry.text_or_voice_required');
@@ -32,28 +29,15 @@ export function checkEntryInput(text: string | undefined, voiceFile: UploadedFil
     }
 }
 
-export function checkPhotosLimit(photoFiles: UploadedFile[]): void {
-    if (photoFiles.length > appConstants.entry.maxPhotosPerEntry) {
+export function checkMediaLimit(mediaCount: number): void {
+    if (mediaCount > appConstants.entry.maxPhotosPerEntry) {
         throw apiError.badRequest('entry.too_many_photos', {
             max: appConstants.entry.maxPhotosPerEntry
         });
     }
 }
 
-export function checkPhotoDescriptions(
-    photoFiles: UploadedFile[],
-    photoDescriptions: (string | null)[] | undefined
-): void {
-    if (!photoDescriptions || photoDescriptions.length === 0) {
-        return;
-    }
-
-    if (photoDescriptions.length !== photoFiles.length) {
-        throw apiError.badRequest('entry.photo_descriptions_mismatch');
-    }
-}
-
-export function checkGeo(location: ParsedLocation): void {
+export function checkGeo(location: EntryLocationDto): void {
     const hasLat = location.latitude !== undefined;
     const hasLng = location.longitude !== undefined;
 
@@ -71,36 +55,18 @@ export function checkPlacesLimit(placeIdsCount: number, locationsCount: number):
 }
 
 export function toLocationCoords(
-    locations: ParsedLocation[]
+    locations: EntryLocationDto[]
 ): Array<{ latitude: number; longitude: number; locationLabel?: string }> {
     return locations
         .filter(
-            (location): location is ParsedLocation & { latitude: number; longitude: number } =>
+            (location): location is EntryLocationDto & { latitude: number; longitude: number } =>
                 location.latitude !== undefined && location.longitude !== undefined
         )
         .map((location) => ({
             latitude: location.latitude,
             longitude: location.longitude,
-            ...(location.locationLabel && { locationLabel: location.locationLabel })
+            ...(location.locationLabel && { locationLabel: location.locationLabel.trim() })
         }));
-}
-
-export function checkVoiceMimeType(file: UploadedFile): void {
-    if (!file.mimetype.startsWith('audio/')) {
-        throw apiError.badRequest('entry.invalid_voice_type');
-    }
-}
-
-export function checkPhotoMimeTypes(photoFiles: UploadedFile[]): void {
-    for (const photo of photoFiles) {
-        if (!photo.mimetype.startsWith('image/')) {
-            throw apiError.badRequest('entry.invalid_photo_type');
-        }
-    }
-}
-
-export function buildEntryFileKey(userId: string, type: 'audio' | 'image'): string {
-    return `users/${userId}/entry-files/${type}/${randomUUID()}`;
 }
 
 export function generateDefaultEntryName(lang: LangEnum = appConstants.language.default): string {
@@ -127,4 +93,14 @@ export function toNumberOrNull(value: unknown): number | null {
     const parsed = Number(value);
 
     return Number.isFinite(parsed) ? parsed : null;
+}
+
+export function normalizeMediaDescription(description: string | null | undefined): string | null {
+    if (description == null) {
+        return null;
+    }
+
+    const trimmed = description.trim();
+
+    return trimmed === '' ? null : trimmed;
 }

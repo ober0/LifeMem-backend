@@ -8,6 +8,7 @@ import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
 import { EmbeddingService } from '../embedding/embedding.service';
 import { EntryProcessingService } from '../entry-processing/entry-processing.service';
 import { EntryPipelinesEnum } from '../entry-processing/pipelines';
+import { FilesRepository } from '../files/files.repository';
 import { S3Service } from '../s3/s3.service';
 import type { BaseEntryDto, BaseEntryUpdateDto } from './dto/base';
 import { CreateEntryDto } from './dto/create-entry.dto';
@@ -22,40 +23,32 @@ import { entryMapper } from './entry.mapper';
 import { EntryRepository } from './entry.repository';
 import { EntrySearchRepository } from './entry-search.repository';
 import {
-    buildEntryFileKey,
     checkEntryInput,
     checkGeo,
-    checkPhotoDescriptions,
-    checkPhotoMimeTypes,
-    checkPhotosLimit,
+    checkMediaLimit,
     checkPlacesLimit,
-    checkVoiceMimeType,
     generateDefaultEntryName,
+    normalizeMediaDescription,
     toLocationCoords
 } from './helpers/entry.helper';
-import type { ParsedLocation } from './helpers/parse-form-data.helper';
-import type { CreateEntryFileInput, UploadedEntryFiles, UploadedFile } from './types/uploaded-file.type';
+import type { CreateEntryImageInput, CreateEntryVoiceInput } from './types/uploaded-file.type';
 
 @Injectable()
 export class EntryService {
     constructor(
         private readonly entryRepository: EntryRepository,
+        private readonly filesRepository: FilesRepository,
         private readonly s3Service: S3Service,
         private readonly entryProcessingService: EntryProcessingService,
         private readonly embeddingService: EmbeddingService,
         private readonly entrySearchRepository: EntrySearchRepository
     ) {}
 
-    private async validateCreateInput(
-        dto: CreateEntryDto,
-        voiceFile: UploadedFile | undefined,
-        photoFiles: UploadedFile[],
-        locations: ParsedLocation[]
-    ) {
-        checkEntryInput(dto.text, voiceFile);
-        checkPhotosLimit(photoFiles);
-        checkPhotoDescriptions(photoFiles, dto.photoDescriptions);
+    private validateCreateInput(dto: CreateEntryDto): void {
+        checkEntryInput(dto.text, dto.audioId);
+        checkMediaLimit(dto.media?.length ?? 0);
 
+        const locations = dto.location ?? [];
         for (const location of locations) {
             checkGeo(location);
 
@@ -65,47 +58,75 @@ export class EntryService {
         }
 
         checkPlacesLimit(dto.placeIds?.length ?? 0, locations.length);
-
-        if (voiceFile) {
-            checkVoiceMimeType(voiceFile);
-        }
-
-        checkPhotoMimeTypes(photoFiles);
     }
 
-    async create(
-        actor: Actor,
-        dto: CreateEntryDto,
-        files: UploadedEntryFiles,
-        locations: ParsedLocation[] = []
-    ): Promise<CreateEntryResponseDto> {
+    private async resolveEntryFiles(
+        userId: string,
+        dto: CreateEntryDto
+    ): Promise<{ images: CreateEntryImageInput[]; voice?: CreateEntryVoiceInput }> {
+        const media = dto.media ?? [];
+        const mediaIds = media.map((item) => item.id);
+
+        if (new Set(mediaIds).size !== mediaIds.length) {
+            throw apiError.badRequest('entry.duplicate_media_ids');
+        }
+
+        if (dto.audioId && mediaIds.includes(dto.audioId)) {
+            throw apiError.badRequest('entry.audio_media_conflict');
+        }
+
+        const fileIds = [...mediaIds, ...(dto.audioId ? [dto.audioId] : [])];
+        const files = await this.filesRepository.findAttachableFilesByIds(userId, fileIds);
+
+        if (files.length !== fileIds.length) {
+            throw apiError.notFound('entry.file_not_found');
+        }
+
+        const fileById = new Map(files.map((file) => [file.id, file]));
+
+        for (const id of mediaIds) {
+            const file = fileById.get(id)!;
+            if (file.type !== FileType.IMAGE && file.type !== FileType.VIDEO) {
+                throw apiError.badRequest('entry.invalid_media_file_type');
+            }
+        }
+
+        if (dto.audioId) {
+            const audioFile = fileById.get(dto.audioId)!;
+            if (audioFile.type !== FileType.AUDIO) {
+                throw apiError.badRequest('entry.invalid_audio_file_type');
+            }
+        }
+
+        return {
+            images: media.map((item) => ({
+                fileId: item.id,
+                description: normalizeMediaDescription(item.description)
+            })),
+            voice: dto.audioId ? { fileId: dto.audioId } : undefined
+        };
+    }
+
+    async create(actor: Actor, dto: CreateEntryDto): Promise<CreateEntryResponseDto> {
         if (!actor.user) {
             throw apiError.unauthorized('auth.unauthorized');
         }
 
         const userId = actor.user.id;
-        const voiceFile = files.voice?.[0];
-        const photoFiles = files.photos ?? [];
-
-        await this.validateCreateInput(dto, voiceFile, photoFiles, locations);
+        this.validateCreateInput(dto);
 
         const personIds = dto.personIds ?? [];
         const placeIds = dto.placeIds ?? [];
+        const locations = dto.location ?? [];
         const locationCoords = toLocationCoords(locations);
 
         await this.checkLinkedEntities(userId, personIds, placeIds);
 
-        const [voiceInput, imageInputs] = await Promise.all([
-            voiceFile ? this.uploadVoice(userId, voiceFile) : Promise.resolve(undefined),
-            Promise.all(
-                photoFiles.map((photo, index) =>
-                    this.uploadPhoto(userId, photo, dto.photoDescriptions?.[index] ?? null)
-                )
-            )
-        ]);
+        const { images, voice } = await this.resolveEntryFiles(userId, dto);
 
         const text = dto.text?.trim() || null;
         const hasLocationCoords = locationCoords.length > 0;
+        const hasMedia = images.length > 0;
 
         const entry = await this.entryRepository.create({
             userId,
@@ -113,8 +134,8 @@ export class EntryService {
             text,
             personIds,
             placeIds,
-            voice: voiceInput,
-            images: imageInputs
+            voice,
+            images
         });
 
         const basePayload = {
@@ -127,9 +148,9 @@ export class EntryService {
             EntryPipelinesEnum.Create,
             {
                 hasCoords: hasLocationCoords,
-                hasVoice: Boolean(voiceFile),
+                hasVoice: Boolean(voice),
                 hasText: Boolean(text),
-                hasImage: photoFiles.length > 0
+                hasImage: hasMedia
             },
             {
                 ...(hasLocationCoords && {
@@ -151,8 +172,8 @@ export class EntryService {
             }
         );
 
-        const images = await this.mapImages(entry.images);
-        const voice = await this.mapVoice(entry.voice);
+        const entryImages = await this.mapImages(entry.images);
+        const entryVoice = await this.mapVoice(entry.voice);
 
         return entryMapper.toCreateResponse({
             id: entry.id,
@@ -160,8 +181,8 @@ export class EntryService {
                 ready: dto.placeIds?.length ?? 0,
                 processing: locations.length ?? 0
             },
-            images,
-            voice
+            images: entryImages,
+            voice: entryVoice
         });
     }
 
@@ -258,47 +279,6 @@ export class EntryService {
         if (places.length !== placeIds.length) {
             throw apiError.notFound('entry.place_not_found');
         }
-    }
-
-    private async uploadVoice(userId: string, file: UploadedFile): Promise<CreateEntryFileInput> {
-        const key = buildEntryFileKey(userId, 'audio');
-
-        await this.s3Service.upload({
-            key,
-            body: file.buffer,
-            contentType: file.mimetype
-        });
-
-        return {
-            key,
-            filename: file.originalname,
-            mimeType: file.mimetype,
-            size: BigInt(file.size),
-            type: FileType.AUDIO
-        };
-    }
-
-    private async uploadPhoto(
-        userId: string,
-        file: UploadedFile,
-        description: string | null
-    ): Promise<CreateEntryFileInput> {
-        const key = buildEntryFileKey(userId, 'image');
-
-        await this.s3Service.upload({
-            key,
-            body: file.buffer,
-            contentType: file.mimetype
-        });
-
-        return {
-            key,
-            filename: file.originalname,
-            mimeType: file.mimetype,
-            size: BigInt(file.size),
-            type: FileType.IMAGE,
-            description
-        };
     }
 
     async softDelete(actor: Actor, id: string): Promise<void> {

@@ -6,14 +6,29 @@ enum FileType {
   OTHER
 }
 
+enum UploadStatus {
+  CREATED
+  UPLOADING
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+  EXPIRED
+}
+
 model File {
   id String @id @default(uuid()) @db.Uuid
 
   key      String
   filename String?
-  mimeType String? @map("mime_type")
+  mimeType String?  @map("mime_type")
   size     BigInt?
   type     FileType
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  uploadProcess UploadFileProcess?
 
   entryImage EntryImage[]
   entryVoice EntryVoice[]
@@ -21,6 +36,41 @@ model File {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@index([key])
+  @@index([userId])
   @@map("file")
+}
+
+model UploadFileProcess {
+  id String @id @default(uuid()) @db.Uuid
+
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+
+  key String
+
+  filename     String?
+  declaredSize BigInt? @map("declared_size")
+  actualSize   BigInt? @map("actual_size")
+
+  declaredMimeType String? @map("declared_mime_type")
+  actualMimeType   String? @map("actual_mime_type")
+
+  type FileType
+
+  status UploadStatus
+
+  partSizeBytes Int
+  totalParts    Int
+
+  isMultipart       Boolean @default(false) @map("is_multipart")
+  multipartUploadId String? @map("multipart_upload_id")
+
+  fileId String? @unique @db.Uuid
+  file   File?   @relation(fields: [fileId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, status])
+  @@map("upload_file_process")
 }

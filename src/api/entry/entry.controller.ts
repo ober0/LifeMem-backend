@@ -8,17 +8,11 @@ import {
     Param,
     Patch,
     Post,
-    Req,
-    UploadedFiles,
-    UseGuards,
-    UseInterceptors
+    UseGuards
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
+import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import type { Actor } from '../../common/classes/actor';
-import { appConstants } from '../../common/config/app.constants';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
@@ -29,9 +23,6 @@ import { EntryDetailResponseDto } from './dto/get-entry-response.dto';
 import { EntrySearchDto } from './dto/search/search-request.dto';
 import { EntrySearchResponseDto } from './dto/search/search-response.dto';
 import { EntryService } from './entry.service';
-import { parseLocations } from './helpers/parse-form-data.helper';
-import { createSchema } from './types/entry.schema';
-import type { UploadedEntryFiles } from './types/uploaded-file.type';
 
 @ApiTags('Entry')
 @Controller('entry')
@@ -41,26 +32,11 @@ export class EntryController {
     @Post()
     @HttpCode(HttpStatus.CREATED)
     @UseGuards(JwtAuthGuardHttp({}))
-    @UseInterceptors(
-        FileFieldsInterceptor([
-            { name: 'voice', maxCount: 1 },
-            { name: 'photos', maxCount: appConstants.entry.maxPhotosPerEntry }
-        ])
-    )
     @ApiOperation({ summary: 'Создание заметки' })
-    @ApiConsumes('multipart/form-data')
-    @ApiBody(createSchema)
     @ApiCreatedResponse({ type: CreateEntryResponseDto })
     @ApiErrorResponses(400, 401, 404)
-    async create(
-        @CurrentActor() actor: Actor,
-        @Body() dto: CreateEntryDto,
-        @Req() req: Request,
-        @UploadedFiles() files: UploadedEntryFiles
-    ): Promise<CreateEntryResponseDto> {
-        const locations = parseLocations(req.body?.location);
-
-        return this.entryService.create(actor, dto, files, locations);
+    async create(@CurrentActor() actor: Actor, @Body() dto: CreateEntryDto): Promise<CreateEntryResponseDto> {
+        return this.entryService.create(actor, dto);
     }
 
     @Get(':id')

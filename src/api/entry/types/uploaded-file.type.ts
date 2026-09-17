@@ -1,27 +1,14 @@
-import { EntryProcessingStatus, EntryProcessingType, FileType } from '@prisma/client';
+import { EntryProcessingStatus, EntryProcessingType } from '@prisma/client';
 
-import { LocationDto } from '../dto/create-entry.dto';
+import type { EntryLocationDto } from '../dto/create-entry.dto';
 
-export type UploadedFile = {
-    fieldname: string;
-    originalname: string;
-    mimetype: string;
-    size: number;
-    buffer: Buffer;
-};
-
-export type UploadedEntryFiles = {
-    voice?: UploadedFile[];
-    photos?: UploadedFile[];
-};
-
-export type CreateEntryFileInput = {
-    key: string;
-    filename?: string;
-    mimeType?: string;
-    size: bigint;
-    type: FileType;
+export type CreateEntryImageInput = {
+    fileId: string;
     description?: string | null;
+};
+
+export type CreateEntryVoiceInput = {
+    fileId: string;
 };
 
 export type CreateEntryJobInput = {
@@ -33,10 +20,10 @@ export type CreateEntryInput = {
     userId: string;
     title: string;
     text?: string | null;
-    location?: LocationDto | null;
+    location?: EntryLocationDto | null;
     personIds: string[];
     placeIds: string[];
-    voice?: CreateEntryFileInput;
-    images: CreateEntryFileInput[];
+    voice?: CreateEntryVoiceInput;
+    images: CreateEntryImageInput[];
     jobs?: CreateEntryJobInput[];
 };

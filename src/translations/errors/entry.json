@@ -12,8 +12,8 @@
         "en": "Provide either text or a voice message, not both"
     },
     "too_many_photos": {
-        "ru": "Можно прикрепить не более {{max}} фото",
-        "en": "You can attach at most {{max}} photos"
+        "ru": "Можно прикрепить не более {{max}} фото или видео",
+        "en": "You can attach at most {{max}} photos or videos"
     },
     "photo_descriptions_mismatch": {
         "ru": "Число описаний должно совпадать с числом фото",
@@ -74,5 +74,25 @@
     "invalid_embedding_dimensions": {
         "ru": "Размерность embedding не совпадает с длиной вектора",
         "en": "Embedding dimensions do not match vector length"
+    },
+    "file_not_found": {
+        "ru": "Файл не найден или недоступен для прикрепления",
+        "en": "File not found or not available for attachment"
+    },
+    "invalid_media_file_type": {
+        "ru": "В media допускаются только файлы типа IMAGE или VIDEO",
+        "en": "Only IMAGE or VIDEO files are allowed in media"
+    },
+    "invalid_audio_file_type": {
+        "ru": "Для audioId нужен файл типа AUDIO",
+        "en": "audioId must reference an AUDIO file"
+    },
+    "duplicate_media_ids": {
+        "ru": "id в media не должны повторяться",
+        "en": "media ids must be unique"
+    },
+    "audio_media_conflict": {
+        "ru": "audioId не может совпадать с id из media",
+        "en": "audioId must not be listed in media"
     }
 }

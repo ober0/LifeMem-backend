@@ -1,0 +1,66 @@
+{
+    "invalid_mime_type": {
+        "ru": "Недопустимый MIME-тип для выбранного типа файла",
+        "en": "MIME type is not allowed for this file type"
+    },
+    "size_too_small": {
+        "ru": "Размер файла должен быть больше 0",
+        "en": "File size must be greater than 0"
+    },
+    "size_exceeds_limit": {
+        "ru": "Размер файла превышает максимально допустимый ({{max}} байт)",
+        "en": "File size exceeds the maximum allowed ({{max}} bytes)"
+    },
+    "size_exceeds_type_limit": {
+        "ru": "Размер файла превышает лимит для этого типа (максимум {{max}} байт)",
+        "en": "File size exceeds the limit for this type (max {{max}} bytes)"
+    },
+    "type_not_allowed": {
+        "ru": "Загрузка файлов этого типа пока недоступна",
+        "en": "Uploads for this file type are not available"
+    },
+    "invalid_file_name": {
+        "ru": "Недопустимое имя файла",
+        "en": "Invalid file name"
+    },
+    "upload_not_multipart": {
+        "ru": "Presigned URL для одиночной загрузки выдаётся при создании сессии",
+        "en": "Single upload URL is issued when the session is created"
+    },
+    "upload_not_found": {
+        "ru": "Сессия загрузки не найдена",
+        "en": "Upload session not found"
+    },
+    "upload_invalid_status": {
+        "ru": "Недопустимый статус сессии загрузки",
+        "en": "Invalid upload session status"
+    },
+    "invalid_part_number": {
+        "ru": "Недопустимый номер части (допустимо от 1 до {{totalParts}})",
+        "en": "Invalid part number (allowed from 1 to {{totalParts}})"
+    },
+    "duplicate_part_numbers": {
+        "ru": "Номера частей не должны повторяться",
+        "en": "Part numbers must be unique"
+    },
+    "multipart_parts_incomplete": {
+        "ru": "Для завершения multipart-загрузки нужны все части",
+        "en": "All parts are required to complete multipart upload"
+    },
+    "multipart_upload_id_missing": {
+        "ru": "Multipart-сессия не инициализирована",
+        "en": "Multipart session is not initialized"
+    },
+    "storage_object_not_found": {
+        "ru": "Объект в хранилище не найден",
+        "en": "Object not found in storage"
+    },
+    "actual_mime_invalid": {
+        "ru": "Фактический MIME-тип файла не допускается",
+        "en": "Actual file MIME type is not allowed"
+    },
+    "actual_size_exceeds_limit": {
+        "ru": "Фактический размер файла превышает лимит",
+        "en": "Actual file size exceeds the limit"
+    }
+}

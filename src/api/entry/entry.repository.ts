@@ -124,17 +124,17 @@ export class EntryRepository {
                 voice: {
                     create: {
                         file: {
-                            create: data.voice
+                            connect: { id: data.voice.fileId }
                         }
                     }
                 }
             }),
             ...(data.images.length > 0 && {
                 images: {
-                    create: data.images.map(({ description, ...file }) => ({
-                        description: description ?? null,
+                    create: data.images.map((image) => ({
+                        description: image.description ?? null,
                         file: {
-                            create: file
+                            connect: { id: image.fileId }
                         }
                     }))
                 }
