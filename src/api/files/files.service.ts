@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
-import { Injectable } from '@nestjs/common';
-import { UploadStatus } from '@prisma/client';
+import { Inject, Injectable } from '@nestjs/common';
+import { FileType, UploadStatus } from '@prisma/client';
 
 import { Actor } from '../../common/classes/actor';
 import { appConstants } from '../../common/config/app.constants';
+import { AppConfig, appConfig } from '../../common/config/env';
 import { apiError } from '../../common/helpers/errors';
 import { S3Service } from '../s3/s3.service';
 import { CompleteUploadResponseDto } from './dto/complete-upload.dto';
@@ -20,7 +21,8 @@ const COMPLETE_ALLOWED_STATUSES: UploadStatus[] = [UploadStatus.UPLOADING];
 export class FilesService {
     constructor(
         private readonly filesRepository: FilesRepository,
-        private readonly s3: S3Service
+        private readonly s3: S3Service,
+        @Inject(appConfig.KEY) private readonly app: AppConfig
     ) {}
 
     private async getOwnedUploadOrThrow(id: string, userId: string) {
@@ -30,6 +32,29 @@ export class FilesService {
         }
 
         return upload;
+    }
+
+    private async ensureStorageObjectOrSubstituteTestImage(upload: { key: string; type: FileType }): Promise<void> {
+        if (await this.s3.objectExists(upload.key)) {
+            return;
+        }
+
+        if (this.app.nodeEnv !== 'development' || upload.type !== FileType.IMAGE) {
+            throw apiError.badRequest('files.storage_object_not_found');
+        }
+
+        const testKey = appConstants.files.testFilePath;
+        if (!(await this.s3.objectExists(testKey))) {
+            throw apiError.badRequest('files.storage_object_not_found');
+        }
+
+        const [body, head] = await Promise.all([this.s3.getObjectBuffer(testKey), this.s3.headObject(testKey)]);
+
+        await this.s3.upload({
+            key: upload.key,
+            body,
+            contentType: head.contentType
+        });
     }
 
     async createUpload(dto: CreateUploadDto, actor: Actor): Promise<CreateUploadResponseDto> {
@@ -184,10 +209,8 @@ export class FilesService {
                 parts: listedParts
             });
         } else {
-            const exists = await this.s3.objectExists(upload.key);
-            if (!exists) {
-                throw apiError.badRequest('files.storage_object_not_found');
-            }
+            // тут логика для дебага, для дев окружения если файла нет - подставится тестовый
+            await this.ensureStorageObjectOrSubstituteTestImage(upload);
         }
 
         await this.filesRepository.updateStatus(upload.id, UploadStatus.PROCESSING);

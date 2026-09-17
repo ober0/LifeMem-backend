@@ -41,5 +41,6 @@ export const filesConstants = {
     orphanedUploadMaxAgeMs: 24 * 60 * 60 * 1000,
     uploadPresignExpiresInSec: 3 * 60,
     uploadMultipartPresignExpiresInSec: 30 * 60,
-    presignUrlParallelBatchSize: 10
+    presignUrlParallelBatchSize: 10,
+    testFilePath: 'test/public/test-image.jpg'
 } as const;
