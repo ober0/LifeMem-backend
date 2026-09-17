@@ -2,20 +2,20 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { HttpException, Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
 
-import type { ErrorVariables } from '../../common/helpers/errors';
-import { errorTranslations } from '../../common/translation/error-translations';
-import { BullMqQueue } from '../bullmq/bullmq.constants';
+import { BullMqQueue } from '../api/bullmq/bullmq.constants';
 import {
     type baseEntryJobPayload,
     DelayedJob,
     type DelayedJobPayloads,
     type EntryJobName
-} from '../delayed-worker/delayed-worker.constants';
-import { EntryEmbeddingService } from '../entry-embedding/entry-embedding.service';
-import { EntryLocationService } from '../entry-location/entry-location.service';
-import { EntrySttService } from '../entry-stt/entry-stt.service';
-import { EntryVisionService } from '../entry-vision/entry-vision.service';
-import { EntryProcessingService } from './entry-processing.service';
+} from '../api/delayed-worker/delayed-worker.constants';
+import { EntryEmbeddingService } from '../api/entry-embedding/entry-embedding.service';
+import { EntryLocationService } from '../api/entry-location/entry-location.service';
+import { EntrySttService } from '../api/entry-stt/entry-stt.service';
+import { EntryVisionService } from '../api/entry-vision/entry-vision.service';
+import type { ErrorVariables } from '../common/helpers/errors';
+import { errorTranslations } from '../common/translation/error-translations';
+import { EntryProcessingWorkerService } from './entry-processing-worker.service';
 
 @Processor(BullMqQueue.Entry)
 export class EntryProcessor extends WorkerHost {
@@ -24,7 +24,7 @@ export class EntryProcessor extends WorkerHost {
     constructor(
         private readonly entryLocationService: EntryLocationService,
         private readonly entryEmbeddingService: EntryEmbeddingService,
-        private readonly entryProcessingService: EntryProcessingService,
+        private readonly entryProcessingWorkerService: EntryProcessingWorkerService,
         private readonly entryVisionService: EntryVisionService,
         private readonly entrySttService: EntrySttService
     ) {
@@ -34,24 +34,27 @@ export class EntryProcessor extends WorkerHost {
     async process(job: Job): Promise<void> {
         const data = job.data as baseEntryJobPayload;
 
-        await this.entryProcessingService.markJobRunning(data.jobId);
+        await this.entryProcessingWorkerService.markJobRunning(data.jobId);
 
         try {
             await this.runJob(job);
             this.logger.log(`end job ${job.name} for entry`);
-            await this.entryProcessingService.onJobFinished(job.name as EntryJobName, data);
+            await this.entryProcessingWorkerService.onJobFinished(job.name as EntryJobName, data);
         } catch (error: unknown) {
             const message = this.resolveErrorMessage(error);
             this.logger.error(`Job end with error ${message}`, error instanceof Error ? error.stack : undefined);
 
-            const errorMessages = await this.entryProcessingService.appendJobError(data.jobId, message);
+            const errorMessages = await this.entryProcessingWorkerService.appendJobError(data.jobId, message);
 
-            if (errorMessages.length < this.entryProcessingService.maxJobErrorAttempts) {
-                await this.entryProcessingService.requeueJob(job.name as EntryJobName, job.data as DelayedJobPayloads[EntryJobName]);
+            if (errorMessages.length < this.entryProcessingWorkerService.maxJobErrorAttempts) {
+                await this.entryProcessingWorkerService.requeueJob(
+                    job.name as EntryJobName,
+                    job.data as DelayedJobPayloads[EntryJobName]
+                );
                 return;
             }
 
-            await this.entryProcessingService.markJobFailed(data.jobId);
+            await this.entryProcessingWorkerService.markJobFailed(data.jobId);
             throw error;
         }
     }

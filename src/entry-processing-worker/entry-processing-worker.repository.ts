@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { EntryProcessingStatus, EntryProcessingType } from '@prisma/client';
 
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../api/prisma/prisma.service';
 
 @Injectable()
-export class EntryProcessingRepository {
+export class EntryProcessingWorkerRepository {
     constructor(private readonly prisma: PrismaService) {}
 
     private readonly activeStatuses = [EntryProcessingStatus.Pending, EntryProcessingStatus.Running] as const;
@@ -49,6 +49,32 @@ export class EntryProcessingRepository {
         return this.prisma.entryProcessingJob.update({
             where: { id: jobId },
             data: { status }
+        });
+    }
+
+    async appendJobError(jobId: string, message: string) {
+        const job = await this.prisma.entryProcessingJob.update({
+            where: { id: jobId },
+            data: {
+                errorMessages: { push: message }
+            },
+            select: {
+                errorMessages: true
+            }
+        });
+
+        return job.errorMessages;
+    }
+
+    async findEntryContext(entryId: string) {
+        return this.prisma.entry.findUnique({
+            where: { id: entryId },
+            select: {
+                text: true,
+                voice: { select: { id: true } },
+                jobs: { select: { type: true } },
+                _count: { select: { images: true } }
+            }
         });
     }
 

@@ -1,14 +1,11 @@
 import { Module } from '@nestjs/common';
 
-import { AiModelModule } from '../ai-model/ai-model.module';
 import { ServiceSettingsController } from './service-settings.controller';
-import { ServiceSettingsRepository } from './service-settings.repository';
-import { ServiceSettingsService } from './service-settings.service';
+import { ServiceSettingsCoreModule } from './service-settings.core.module';
 
 @Module({
-    imports: [AiModelModule],
+    imports: [ServiceSettingsCoreModule],
     controllers: [ServiceSettingsController],
-    providers: [ServiceSettingsService, ServiceSettingsRepository],
-    exports: [ServiceSettingsService]
+    exports: [ServiceSettingsCoreModule]
 })
 export class ServiceSettingsModule {}

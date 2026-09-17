@@ -1,5 +1,5 @@
+import { EntryPipelinesEnum } from '../../common/pipelines';
 import { LangEnum } from '../../common/types/common/lang.enum';
-import { EntryPipelinesEnum } from '../entry-processing/pipelines';
 import { DelayedJob } from './delayed-worker.constants';
 
 export type DelayedJobName = (typeof DelayedJob)[keyof typeof DelayedJob];

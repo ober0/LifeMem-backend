@@ -2,17 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EntryProcessingStatus, EntryProcessingType, Prisma } from '@prisma/client';
 
 import { apiError } from '../../common/helpers/errors';
+import { EntryPipelines, EntryPipelinesEnum } from '../../common/pipelines';
+import type { PipelineContext, PipelineStep } from '../../common/pipelines/types';
 import { BullMqQueue } from '../bullmq/bullmq.constants';
 import {
-    type baseEntryJobPayload,
     type DelayedJobPayloads,
     type EntryJobName
 } from '../delayed-worker/delayed-worker.constants';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
-import { entryProcessingConstants } from './entry-processing.constants';
 import { EntryProcessingRepository } from './entry-processing.repository';
-import { EntryPipelines, EntryPipelinesEnum } from './pipelines';
-import type { PipelineContext, PipelineStep } from './pipelines/types';
 
 export type PipelineJobPayloads = {
     [K in EntryJobName]?: Omit<DelayedJobPayloads[K], 'jobId'>;
@@ -66,88 +64,8 @@ export class EntryProcessingService {
         }
     }
 
-    async markJobRunning(jobId: string) {
-        await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Running);
-    }
-
-    async markJobPending(jobId: string) {
-        await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Pending);
-    }
-
-    async markJobFailed(jobId: string) {
-        await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Failed);
-    }
-
     async markJobCancelled(jobId: string) {
         await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Cancelled);
-    }
-
-    async appendJobError(jobId: string, message: string) {
-        return this.repository.appendJobError(jobId, message);
-    }
-
-    get maxJobErrorAttempts() {
-        return entryProcessingConstants.maxJobErrorAttempts;
-    }
-
-    async requeueJob<K extends EntryJobName>(jobName: K, data: DelayedJobPayloads[K]) {
-        await this.markJobPending(data.jobId);
-
-        await this.delayedWorker.delayed(jobName, data, { queue: BullMqQueue.Entry }, { attempts: 1 });
-    }
-
-    async markJobDone(jobId: string) {
-        await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Done);
-    }
-
-    async onJobFinished(finishedKey: EntryJobName, data: baseEntryJobPayload) {
-        await this.markJobDone(data.jobId);
-
-        const pipeline = EntryPipelines[data.pipeline];
-        const jobs = await this.repository.findJobsByEntryId(data.entryId);
-        const ctx = await this.buildContextFromEntry(data.entryId);
-
-        const basePayload = {
-            pipeline: data.pipeline,
-            userId: data.userId,
-            entryId: data.entryId
-        };
-
-        for (const [key, step] of Object.entries(pipeline) as [EntryJobName, PipelineStep][]) {
-            const requires = step.requires(ctx);
-
-            if (!requires.includes(finishedKey)) {
-                continue;
-            }
-
-            if (step.when && !step.when(ctx)) {
-                continue;
-            }
-
-            if (this.hasActiveJob(jobs, step.type)) {
-                continue;
-            }
-
-            const allRequirementsDone = requires.every((requiredKey) => {
-                const requiredType = this.jobMap.get(requiredKey);
-
-                if (!requiredType) {
-                    return false;
-                }
-
-                return jobs.some((job) => job.type === requiredType && job.status === EntryProcessingStatus.Done);
-            });
-
-            if (!allRequirementsDone) {
-                continue;
-            }
-
-            await this.createJob(data.entryId, key, basePayload as Omit<DelayedJobPayloads[typeof key], 'jobId'>, {
-                ignoreDuplicate: true
-            });
-        }
-
-        await this.tryMarkEntryReady(data.entryId, data.pipeline, ctx);
     }
 
     async createJob<K extends EntryJobName>(
@@ -220,8 +138,7 @@ export class EntryProcessingService {
         jobs: Array<{ type: EntryProcessingType; status: EntryProcessingStatus }>
     ): boolean {
         const hasActive = jobs.some(
-            (job) =>
-                job.status === EntryProcessingStatus.Pending || job.status === EntryProcessingStatus.Running
+            (job) => job.status === EntryProcessingStatus.Pending || job.status === EntryProcessingStatus.Running
         );
 
         if (hasActive) {
@@ -234,32 +151,6 @@ export class EntryProcessingService {
 
         return expectedTypes.every((type) =>
             jobs.some((job) => job.type === type && job.status === EntryProcessingStatus.Done)
-        );
-    }
-
-    private async buildContextFromEntry(entryId: string): Promise<PipelineContext> {
-        const entry = await this.repository.findEntryContext(entryId);
-
-        if (!entry) {
-            throw apiError.notFound('entry.not_found');
-        }
-
-        return {
-            hasCoords: entry.jobs.some((job) => job.type === EntryProcessingType.LocationConnect),
-            hasVoice: entry.voice != null,
-            hasText: Boolean(entry.text?.trim()),
-            hasImage: entry._count.images > 0
-        };
-    }
-
-    private hasActiveJob(
-        jobs: Array<{ type: EntryProcessingType; status: EntryProcessingStatus }>,
-        type: EntryProcessingType
-    ) {
-        return jobs.some(
-            (job) =>
-                job.type === type &&
-                (job.status === EntryProcessingStatus.Pending || job.status === EntryProcessingStatus.Running)
         );
     }
 }

@@ -1,6 +1,6 @@
 import { EntryProcessingType } from '@prisma/client';
 
-import { DelayedJob } from '../../../delayed-worker/delayed-worker.constants';
+import { DelayedJob } from '../../../api/delayed-worker/delayed-worker.constants';
 import { EntryPipeline } from '../types';
 
 export const CreateEntryPipeline: EntryPipeline = {

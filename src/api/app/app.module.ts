@@ -29,14 +29,10 @@ import { BullMqModule } from '../bullmq/bullmq.module';
 import { CacheModule } from '../cache/cache.module';
 import { DelayedWorkerModule } from '../delayed-worker/delayed-worker.module';
 import { EntryModule } from '../entry/entry.module';
-import { EntryLocationModule } from '../entry-location/entry-location.module';
-import { EntrySttModule } from '../entry-stt/entry-stt.module';
-import { EntryVisionModule } from '../entry-vision/entry-vision.module';
 import { FilesModule } from '../files/files.module';
 import { HealthModule } from '../health/health.module';
 import { LogsModule } from '../logs/logs.module';
 import { MobileSmsModule } from '../mobile-sms/mobile-sms.module';
-import { OpenstreetmapModule } from '../openstreetmap/openstreetmap.module';
 import { PersonModule } from '../person/person.module';
 import { PlaceModule } from '../place/place.module';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -46,7 +42,6 @@ import { RoleModule } from '../role/role.module';
 import { S3Module } from '../s3/s3.module';
 import { ServiceSettingsModule } from '../service-settings/service-settings.module';
 import { SmtpModule } from '../smtp/smtp.module';
-import { SttModule } from '../stt/stt.module';
 import { UserModule } from '../user/user.module';
 import { UserSettingsModule } from '../user-settings/user-settings.module';
 
@@ -102,12 +97,7 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         PersonModule,
         PlaceModule,
         DelayedWorkerModule,
-        EntryLocationModule,
-        OpenstreetmapModule,
-        EntryVisionModule,
-        EntrySttModule,
-        BullMqModule,
-        SttModule
+        BullMqModule
     ],
     providers: [
         {

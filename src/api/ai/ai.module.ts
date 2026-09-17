@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { AiModelModule } from '../ai-model/ai-model.module';
-import { ServiceSettingsModule } from '../service-settings/service-settings.module';
+import { AiModelCoreModule } from '../ai-model/ai-model.core.module';
+import { ServiceSettingsCoreModule } from '../service-settings/service-settings.core.module';
 import { AiProcessor } from './ai.processor';
 import { AiService } from './ai.service';
 import { AiResponseStore } from './ai-response.store';
@@ -14,7 +14,7 @@ import { SearchPlacesFactory } from './tools/items/search-places.tool';
 import { UserEntitiesSearchRepository } from './tools/user-entities-search.repository';
 
 @Module({
-    imports: [ServiceSettingsModule, AiModelModule],
+    imports: [ServiceSettingsCoreModule, AiModelCoreModule],
     providers: [
         AiService,
         AiModelsService,

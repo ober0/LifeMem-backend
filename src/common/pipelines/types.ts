@@ -1,6 +1,6 @@
 import { EntryProcessingType } from '@prisma/client';
 
-import type { EntryJobName } from '../../delayed-worker/delayed-worker.constants';
+import type { EntryJobName } from '../../api/delayed-worker/delayed-worker.constants';
 
 export type PipelineContext = {
     hasCoords: boolean;
