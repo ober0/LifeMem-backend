@@ -169,7 +169,7 @@ export class EntryService {
             }
         );
 
-        const entryMedia = await this.mapMedia(entry.images);
+        const entryMedia = await this.mapMedia(entry.media);
         const entryVoice = await this.mapVoice(entry.voice);
 
         return entryMapper.toCreateResponse({
@@ -273,7 +273,7 @@ export class EntryService {
             );
         }
 
-        const mediaItems = await this.mapMedia(entry.images);
+        const mediaItems = await this.mapMedia(entry.media);
 
         return entryMapper.toBaseEntry(
             {
@@ -339,7 +339,7 @@ export class EntryService {
             throw apiError.badRequest('entry.attach_only_when_ready');
         }
 
-        const remaining = appConstants.entry.maxMediaPerEntry - entry._count.images;
+        const remaining = appConstants.entry.maxMediaPerEntry - entry._count.media;
         if (remaining < 1) {
             throw apiError.badRequest('entry.too_many_media', {
                 max: appConstants.entry.maxMediaPerEntry
@@ -452,7 +452,7 @@ export class EntryService {
         }
 
         const [mediaItems, voice] = await Promise.all([
-            this.mapMedia(entry.images),
+            this.mapMedia(entry.media),
             this.mapVoice(entry.voice)
         ]);
 
@@ -479,7 +479,7 @@ export class EntryService {
                             return true;
                         }
 
-                        return hasMedia ? row._count.images > 0 : row._count.images === 0;
+                        return hasMedia ? row._count.media > 0 : row._count.media === 0;
                     })
                     .map((row) => row.id);
 
@@ -504,7 +504,7 @@ export class EntryService {
         if (dto.filters?.hasMedia !== undefined) {
             const all = await this.entryRepository.searchAll(userId, dto);
             const hasMedia = dto.filters.hasMedia;
-            const filtered = all.filter((entry) => (hasMedia ? entry._count.images > 0 : entry._count.images === 0));
+            const filtered = all.filter((entry) => (hasMedia ? entry._count.media > 0 : entry._count.media === 0));
             const { take, skip } = mapPagination(dto.pagination);
             const page = filtered.slice(skip, skip + take);
 

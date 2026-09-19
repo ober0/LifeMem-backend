@@ -136,7 +136,7 @@ export class EntryRepository {
                 }
             }),
             ...(data.media.length > 0 && {
-                images: {
+                media: {
                     create: data.media.map((item) => ({
                         description: item.description ?? null,
                         file: {
@@ -249,7 +249,7 @@ export class EntryRepository {
                 id: true,
                 _count: {
                     select: {
-                        images: true
+                        media: true
                     }
                 }
             }
@@ -278,14 +278,14 @@ export class EntryRepository {
                 id: true,
                 isReady: true,
                 _count: {
-                    select: { images: true }
+                    select: { media: true }
                 }
             }
         });
     }
 
     async existsEntryMediaByFileId(entryId: string, fileId: string) {
-        const row = await this.prisma.entryImage.findFirst({
+        const row = await this.prisma.entryMedia.findFirst({
             where: { entryId, fileId },
             select: { id: true }
         });
@@ -294,7 +294,7 @@ export class EntryRepository {
     }
 
     async createEntryMedia(entryId: string, fileId: string, description: string | null) {
-        return this.prisma.entryImage.create({
+        return this.prisma.entryMedia.create({
             data: {
                 entryId,
                 fileId,
@@ -314,7 +314,7 @@ export class EntryRepository {
     }
 
     async deleteOwnedEntryMedia(entryId: string, mediaId: string, userId: string) {
-        const result = await this.prisma.entryImage.deleteMany({
+        const result = await this.prisma.entryMedia.deleteMany({
             where: {
                 id: mediaId,
                 entryId,

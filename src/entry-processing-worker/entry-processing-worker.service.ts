@@ -235,7 +235,7 @@ export class EntryProcessingWorkerService {
             hasCoords: entry.jobs.some((job) => job.type === EntryProcessingType.LocationConnect),
             hasVoice: entry.voice != null,
             hasText: Boolean(entry.text?.trim()),
-            hasMedia: entry._count.images > 0
+            hasMedia: entry._count.media > 0
         };
     }
 

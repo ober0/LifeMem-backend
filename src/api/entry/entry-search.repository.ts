@@ -185,7 +185,7 @@ export class EntrySearchRepository {
               AND e.user_id = ${params.userId}::uuid
               AND e.deleted_at IS NULL
               ${this.scopedEntryIdsSql(params.scopedEntryIds)}
-              AND ev.kind = ${EntryVectorKind.Image}::entry_vector_kind
+              AND ev.kind = ${EntryVectorKind.Media}::entry_vector_kind
               AND ev.dimensions = ${params.dimensions}
               AND ev.embedding IS NOT NULL
               AND (ev.embedding <=> ${params.vectorLiteral}::vector) <= ${params.vectorMaxCosineDistance}

@@ -94,7 +94,7 @@ export const entryMapper = {
         return {
             ...entryBaseMapper.withReady(entry),
             isHasVoice: Boolean(entry.voice),
-            mediaCount: entry._count.images,
+            mediaCount: entry._count.media,
             processingStatus: calcEntryProcessingStatus(entry.jobs),
             peopleCount: entry._count.people,
             placesCount: entry._count.places

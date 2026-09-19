@@ -89,22 +89,22 @@ export class EntryEmbeddingService {
     ) {
         assertNotAborted(options?.signal);
 
-        const images = await this.repository.getEntryImages(data.entryId, data.entryMediaIds);
+        const mediaItems = await this.repository.getEntryMedia(data.entryId, data.entryMediaIds);
 
-        if (images.length === 0) {
-            this.logger.warn(`skip embed image: no images entryId=${data.entryId}`);
+        if (mediaItems.length === 0) {
+            this.logger.warn(`skip embed image: no media entryId=${data.entryId}`);
             return true;
         }
 
-        for (const image of images) {
+        for (const media of mediaItems) {
             const text = buildEntryImageEmbedText({
-                description: image.description,
-                aiTranscription: image.aiTranscription,
-                aiMetadata: image.aiMetadata
+                description: media.description,
+                aiTranscription: media.aiTranscription,
+                aiMetadata: media.aiMetadata
             }).trim();
 
             if (!text) {
-                this.logger.warn(`skip embed image: empty text imageId=${image.id}`);
+                this.logger.warn(`skip embed image: empty text mediaId=${media.id}`);
                 continue;
             }
 
@@ -115,9 +115,9 @@ export class EntryEmbeddingService {
                     jobId: data.jobId,
                     entryId: data.entryId,
                     text,
-                    kind: EntryVectorKind.Image,
+                    kind: EntryVectorKind.Media,
                     delayedJob: DelayedJob.EntryEmbedImage,
-                    imageId: image.id
+                    mediaId: media.id
                 },
                 options
             );
@@ -133,7 +133,7 @@ export class EntryEmbeddingService {
             text: string;
             kind: EntryVectorKind;
             delayedJob: EmbedDelayedJob;
-            imageId?: string;
+            mediaId?: string;
         },
         options?: EntryJobExecutionOptions
     ) {
@@ -156,7 +156,7 @@ export class EntryEmbeddingService {
                 aiModelId: embedData.modelId,
                 embedding: embedData.result,
                 dimensions: embedData.result.length,
-                imageId: data.imageId
+                mediaId: data.mediaId
             })
         ]);
 

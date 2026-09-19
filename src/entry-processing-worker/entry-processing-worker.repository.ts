@@ -87,7 +87,7 @@ export class EntryProcessingWorkerRepository {
                 text: true,
                 voice: { select: { id: true } },
                 jobs: { select: { type: true } },
-                _count: { select: { images: true } }
+                _count: { select: { media: true } }
             }
         });
     }

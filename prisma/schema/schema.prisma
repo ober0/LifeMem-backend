@@ -6,5 +6,5 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [pgTrgm, vector]
+  extensions = [pg_trgm, vector]
 }

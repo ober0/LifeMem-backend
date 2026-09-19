@@ -30,7 +30,7 @@ model File {
 
   uploadProcess UploadFileProcess?
 
-  entryImage EntryImage[]
+  entryMedia EntryMedia[]
   entryVoice EntryVoice[]
 
   createdAt DateTime @default(now()) @map("created_at")

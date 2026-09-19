@@ -24,13 +24,13 @@ export class EntryEmbeddingRepository {
         });
     }
 
-    async getEntryImages(
+    async getEntryMedia(
         entryId: string,
         ids?: string[]
     ): Promise<
         Array<{ id: string; description: string | null; aiTranscription: string | null; aiMetadata: unknown }>
     > {
-        return this.prisma.entryImage.findMany({
+        return this.prisma.entryMedia.findMany({
             where: {
                 entryId,
                 ...(ids && {
@@ -83,7 +83,7 @@ export class EntryEmbeddingRepository {
         aiModelId: string;
         embedding: number[];
         dimensions?: number;
-        imageId?: string | null;
+        mediaId?: string | null;
         id?: string;
     }): Promise<{ id: string }> {
         if (data.embedding.length === 0 || data.embedding.some((value) => !Number.isFinite(value))) {
@@ -96,24 +96,24 @@ export class EntryEmbeddingRepository {
         }
 
         const vectorLiteral = `[${data.embedding.join(',')}]`;
-        const imageId = data.imageId ?? null;
+        const mediaId = data.mediaId ?? null;
 
         let targetId = data.id;
 
-        if (!targetId && imageId) {
+        if (!targetId && mediaId) {
             const existing = await this.prisma.entryVector.findUnique({
-                where: { imageId },
+                where: { mediaId },
                 select: { id: true }
             });
             targetId = existing?.id;
         }
 
-        if (!targetId && !imageId) {
+        if (!targetId && !mediaId) {
             const existing = await this.prisma.entryVector.findFirst({
                 where: {
                     entryId: data.entryId,
                     kind: data.kind,
-                    imageId: null
+                    mediaId: null
                 },
                 select: { id: true }
             });
@@ -128,7 +128,7 @@ export class EntryEmbeddingRepository {
                     "entry_id" = $1::uuid,
                     "kind" = $2::"entry_vector_kind",
                     "ai_model_id" = $3::uuid,
-                    "image_id" = $4::uuid,
+                    "media_id" = $4::uuid,
                     "dimensions" = $5,
                     "embedding" = $6::vector,
                     "updated_at" = NOW()
@@ -137,7 +137,7 @@ export class EntryEmbeddingRepository {
                 data.entryId,
                 data.kind,
                 data.aiModelId,
-                imageId,
+                mediaId,
                 dimensions,
                 vectorLiteral,
                 targetId
@@ -155,7 +155,7 @@ export class EntryEmbeddingRepository {
                 "entry_id",
                 "kind",
                 "ai_model_id",
-                "image_id",
+                "media_id",
                 "dimensions",
                 "embedding",
                 "created_at",
@@ -177,7 +177,7 @@ export class EntryEmbeddingRepository {
             data.entryId,
             data.kind,
             data.aiModelId,
-            imageId,
+            mediaId,
             dimensions,
             vectorLiteral
         );

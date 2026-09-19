@@ -110,7 +110,7 @@ export class FilesRepository {
                 id: { in: ids },
                 userId,
                 uploadProcess: { status: UploadStatus.READY },
-                entryImage: { none: {} },
+                entryMedia: { none: {} },
                 entryVoice: { none: {} }
             }
         });

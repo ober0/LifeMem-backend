@@ -9,8 +9,8 @@ model Entry {
   formattedText       String?                  @map("formatted_text")
   formattedTextFormat EntryFormattedTextFormat? @map("formatted_text_format")
 
-  voice  EntryVoice?
-  images EntryImage[]
+  voice EntryVoice?
+  media EntryMedia[]
 
   vectors EntryVector[]
 
@@ -41,7 +41,7 @@ enum EntryFormattedTextFormat {
   @@map("entry_formatted_text_format")
 }
 
-model EntryImage {
+model EntryMedia {
   id String @id @default(uuid()) @db.Uuid
 
   entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
@@ -59,7 +59,7 @@ model EntryImage {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@map("entry_image")
+  @@map("entry_media")
 }
 
 model EntryVoice {
@@ -80,7 +80,7 @@ model EntryVoice {
 enum EntryVectorKind {
   Text
   Title
-  Image
+  Media
 
   @@map("entry_vector_kind")
 }
@@ -96,8 +96,8 @@ model EntryVector {
   model     AiModel @relation(fields: [aiModelId], references: [id])
   aiModelId String  @map("ai_model_id") @db.Uuid
 
-  image   EntryImage? @relation(fields: [imageId], references: [id], onDelete: Cascade)
-  imageId String?     @unique @map("image_id") @db.Uuid
+  media   EntryMedia? @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  mediaId String?     @unique @map("media_id") @db.Uuid
 
   dimensions Int
   embedding  Unsupported("vector")?

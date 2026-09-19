@@ -37,10 +37,10 @@ export class EntryVisionService {
     ) {
         assertNotAborted(options?.signal);
 
-        const imageEntities = await this.repository.getImages(data.entryId, data.entryMediaIds);
+        const mediaEntities = await this.repository.getMedia(data.entryId, data.entryMediaIds);
 
-        if (imageEntities.length === 0) {
-            this.logger.warn(`skip vision: no images entryId=${data.entryId}`);
+        if (mediaEntities.length === 0) {
+            this.logger.warn(`skip vision: no media entryId=${data.entryId}`);
             return true;
         }
 
@@ -59,13 +59,13 @@ export class EntryVisionService {
 
         const userLang = data.userLang ?? appConstants.language.default;
 
-        for (const imageEntity of imageEntities) {
+        for (const mediaEntity of mediaEntities) {
             assertNotAborted(options?.signal);
 
-            const file = await this.s3.getObjectBuffer(imageEntity.file.key).catch(() => null);
+            const file = await this.s3.getObjectBuffer(mediaEntity.file.key).catch(() => null);
 
             if (!file) {
-                this.logger.warn(`skip vision image: s3 miss imageId=${imageEntity.id}`);
+                this.logger.warn(`skip vision image: s3 miss mediaId=${mediaEntity.id}`);
                 continue;
             }
 
@@ -104,7 +104,7 @@ export class EntryVisionService {
             assertNotAborted(options?.signal);
             if (tariff === 'premium') {
                 await this.processPremiumImage({
-                    imageId: imageEntity.id,
+                    mediaId: mediaEntity.id,
                     jobId: data.jobId,
                     modelId,
                     userLang,
@@ -113,7 +113,7 @@ export class EntryVisionService {
                 });
             } else {
                 await this.processLiteImage({
-                    imageId: imageEntity.id,
+                    mediaId: mediaEntity.id,
                     jobId: data.jobId,
                     modelId,
                     userLang,
@@ -127,7 +127,7 @@ export class EntryVisionService {
     }
 
     private async processLiteImage(params: {
-        imageId: string;
+        mediaId: string;
         jobId: string;
         modelId: string;
         userLang: LangEnum;
@@ -144,14 +144,14 @@ export class EntryVisionService {
         const description = result?.trim();
 
         if (!description) {
-            this.logger.warn(`skip vision image: empty LLM result imageId=${params.imageId}`);
+            this.logger.warn(`skip vision image: empty LLM result mediaId=${params.mediaId}`);
             return;
         }
 
         assertNotAborted(params.signal);
 
         await this.persistVisionResult({
-            imageId: params.imageId,
+            mediaId: params.mediaId,
             jobId: params.jobId,
             modelId: params.modelId,
             aiTranscription: description,
@@ -162,7 +162,7 @@ export class EntryVisionService {
     }
 
     private async processPremiumImage(params: {
-        imageId: string;
+        mediaId: string;
         jobId: string;
         modelId: string;
         userLang: LangEnum;
@@ -186,14 +186,14 @@ export class EntryVisionService {
         const description = result?.description?.trim();
 
         if (!description) {
-            this.logger.warn(`skip vision image: empty LLM metadata description imageId=${params.imageId}`);
+            this.logger.warn(`skip vision image: empty LLM metadata description mediaId=${params.mediaId}`);
             return;
         }
 
         assertNotAborted(params.signal);
 
         await this.persistVisionResult({
-            imageId: params.imageId,
+            mediaId: params.mediaId,
             jobId: params.jobId,
             modelId: params.modelId,
             aiTranscription: description,
@@ -204,7 +204,7 @@ export class EntryVisionService {
     }
 
     private async persistVisionResult(params: {
-        imageId: string;
+        mediaId: string;
         jobId: string;
         modelId: string;
         aiTranscription: string;
@@ -213,7 +213,7 @@ export class EntryVisionService {
         timeMs?: number;
     }) {
         await Promise.all([
-            this.repository.updateVisionResult(params.imageId, {
+            this.repository.updateVisionResult(params.mediaId, {
                 aiTranscription: params.aiTranscription,
                 aiMetadata: params.aiMetadata
             }),

@@ -9,8 +9,8 @@ import type { EntryImageVisionMetadata } from './entry-vision.types';
 export class EntryVisionRepository {
     constructor(private readonly prisma: PrismaService) {}
 
-    async getImages(entryId: string, ids?: string[]) {
-        return this.prisma.entryImage.findMany({
+    async getMedia(entryId: string, ids?: string[]) {
+        return this.prisma.entryMedia.findMany({
             where: {
                 entryId,
                 ...(ids && {
@@ -31,14 +31,14 @@ export class EntryVisionRepository {
     }
 
     async updateVisionResult(
-        imageId: string,
+        mediaId: string,
         data: {
             aiTranscription: string;
             aiMetadata: EntryImageVisionMetadata | null;
         }
     ) {
-        return this.prisma.entryImage.update({
-            where: { id: imageId },
+        return this.prisma.entryMedia.update({
+            where: { id: mediaId },
             data: {
                 aiTranscription: data.aiTranscription,
                 aiMetadata:

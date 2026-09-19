@@ -23,8 +23,8 @@ const entryRelationsSelect = {
     }
 } satisfies Prisma.EntrySelect;
 
-const entryImagesSelect = {
-    images: {
+const entryMediaSelect = {
+    media: {
         select: {
             id: true,
             description: true,
@@ -66,7 +66,7 @@ export const searchEntrySelect = {
     },
     _count: {
         select: {
-            images: true,
+            media: true,
             people: true,
             places: true
         }
@@ -84,7 +84,7 @@ export type SearchEntrySource = {
     voice: { id: string } | null;
     jobs: Array<{ status: EntryProcessingStatus }>;
     _count: {
-        images: number;
+        media: number;
         people: number;
         places: number;
     };
@@ -98,7 +98,7 @@ export const createEntrySelect = {
             status: true
         }
     },
-    ...entryImagesSelect,
+    ...entryMediaSelect,
     ...entryVoicesSelect,
     ...entryRelationsSelect
 } satisfies Prisma.EntrySelect;
@@ -113,7 +113,7 @@ export const entryDetailSelect = {
     isReady: true,
     createdAt: true,
     updatedAt: true,
-    ...entryImagesSelect,
+    ...entryMediaSelect,
     ...entryVoicesSelect,
     jobs: {
         select: {
@@ -164,6 +164,6 @@ export const baseEntrySelect = {
     voice: {
         select: { id: true }
     },
-    ...entryImagesSelect,
+    ...entryMediaSelect,
     ...entryRelationsSelect
 } satisfies Prisma.EntrySelect;
