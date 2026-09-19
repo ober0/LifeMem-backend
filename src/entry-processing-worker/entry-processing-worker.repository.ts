@@ -52,6 +52,20 @@ export class EntryProcessingWorkerRepository {
         });
     }
 
+    async tryMarkJobRunning(jobId: string): Promise<boolean> {
+        const result = await this.prisma.entryProcessingJob.updateMany({
+            where: {
+                id: jobId,
+                status: EntryProcessingStatus.Pending
+            },
+            data: {
+                status: EntryProcessingStatus.Running
+            }
+        });
+
+        return result.count > 0;
+    }
+
     async appendJobError(jobId: string, message: string) {
         const job = await this.prisma.entryProcessingJob.update({
             where: { id: jobId },

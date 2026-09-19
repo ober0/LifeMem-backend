@@ -33,8 +33,8 @@ export class EntryProcessingWorkerService {
         )
     );
 
-    async markJobRunning(jobId: string) {
-        await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Running);
+    async tryMarkJobRunning(jobId: string): Promise<boolean> {
+        return this.repository.tryMarkJobRunning(jobId);
     }
 
     async markJobPending(jobId: string) {

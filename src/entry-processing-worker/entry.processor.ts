@@ -34,7 +34,11 @@ export class EntryProcessor extends WorkerHost {
     async process(job: Job): Promise<void> {
         const data = job.data as baseEntryJobPayload;
 
-        await this.entryProcessingWorkerService.markJobRunning(data.jobId);
+        const started = await this.entryProcessingWorkerService.tryMarkJobRunning(data.jobId);
+        if (!started) {
+            this.logger.log(`skip job ${job.name} (${data.jobId}): cancelled or already handled`);
+            return;
+        }
 
         try {
             await this.runJob(job);
