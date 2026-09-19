@@ -111,9 +111,21 @@ export class FilesRepository {
                 userId,
                 uploadProcess: { status: UploadStatus.READY },
                 entryMedia: { none: {} },
+                entryMediaFirstFrames: { none: {} },
                 entryVoice: { none: {} }
             }
         });
+    }
+
+    async deleteOwnedFile(userId: string, fileId: string): Promise<boolean> {
+        const result = await this.prisma.file.deleteMany({
+            where: {
+                id: fileId,
+                userId
+            }
+        });
+
+        return result.count > 0;
     }
 
     async findExpiredProcesses(lte: Date): Promise<UploadFileProcess[]> {

@@ -6,7 +6,7 @@ model Entry {
 
   title               String
   text                String?
-  formattedText       String?                  @map("formatted_text")
+  formattedText       String?                   @map("formatted_text")
   formattedTextFormat EntryFormattedTextFormat? @map("formatted_text_format")
 
   voice EntryVoice?
@@ -47,8 +47,13 @@ model EntryMedia {
   entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
   entryId String @map("entry_id") @db.Uuid
 
-  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  type FileType
+
+  file   File   @relation("EntryMediaFile", fields: [fileId], references: [id], onDelete: Cascade)
   fileId String @map("file_id") @db.Uuid
+
+  firstFrame   File?   @relation("EntryMediaFirstFrame", fields: [firstFrameId], references: [id], onDelete: SetNull)
+  firstFrameId String? @map("first_frame_id") @db.Uuid
 
   aiTranscription String? @map("ai_transcription")
   aiMetadata      Json?   @map("ai_metadata")

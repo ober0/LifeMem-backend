@@ -1,9 +1,10 @@
-import { EntryProcessingStatus, EntryProcessingType } from '@prisma/client';
+import { EntryProcessingStatus, EntryProcessingType, FileType } from '@prisma/client';
 
 import type { EntryLocationDto } from '../dto/create-entry.dto';
 
 export type CreateEntryMediaInput = {
     fileId: string;
+    type: FileType;
     description?: string | null;
 };
 

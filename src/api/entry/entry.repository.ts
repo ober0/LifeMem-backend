@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { type Prisma } from '@prisma/client';
+import { FileType, type Prisma } from '@prisma/client';
 
 import { mapPagination } from '../../common/helpers/map.pagination';
 import { mapSearch } from '../../common/helpers/map.search';
@@ -16,6 +16,11 @@ export type UpdateBaseEntryInput = {
     location?: ParsedLocation;
     personIds?: string[];
     placeIds?: string[];
+};
+
+export type DetachedEntryMedia = {
+    type: FileType;
+    firstFrame: { id: string; key: string } | null;
 };
 
 @Injectable()
@@ -138,6 +143,7 @@ export class EntryRepository {
             ...(data.media.length > 0 && {
                 media: {
                     create: data.media.map((item) => ({
+                        type: item.type,
                         description: item.description ?? null,
                         file: {
                             connect: { id: item.fileId }
@@ -293,11 +299,12 @@ export class EntryRepository {
         return row != null;
     }
 
-    async createEntryMedia(entryId: string, fileId: string, description: string | null) {
+    async createEntryMedia(entryId: string, fileId: string, type: FileType, description: string | null) {
         return this.prisma.entryMedia.create({
             data: {
                 entryId,
                 fileId,
+                type,
                 description
             },
             select: {
@@ -313,16 +320,48 @@ export class EntryRepository {
         });
     }
 
-    async deleteOwnedEntryMedia(entryId: string, mediaId: string, userId: string) {
-        const result = await this.prisma.entryMedia.deleteMany({
-            where: {
-                id: mediaId,
-                entryId,
-                entry: {
-                    userId,
-                    ...this.notDeleted
+    private ownedEntryMediaWhere(entryId: string, mediaId: string, userId: string): Prisma.EntryMediaWhereInput {
+        return {
+            id: mediaId,
+            entryId,
+            entry: {
+                userId,
+                ...this.notDeleted
+            }
+        };
+    }
+
+    async findOwnedEntryMediaForDetach(
+        entryId: string,
+        mediaId: string,
+        userId: string
+    ): Promise<DetachedEntryMedia | null> {
+        const media = await this.prisma.entryMedia.findFirst({
+            where: this.ownedEntryMediaWhere(entryId, mediaId, userId),
+            select: {
+                type: true,
+                firstFrame: {
+                    select: {
+                        id: true,
+                        key: true
+                    }
                 }
             }
+        });
+
+        if (!media) {
+            return null;
+        }
+
+        return {
+            type: media.type,
+            firstFrame: media.firstFrame
+        };
+    }
+
+    async deleteOwnedEntryMedia(entryId: string, mediaId: string, userId: string): Promise<boolean> {
+        const result = await this.prisma.entryMedia.deleteMany({
+            where: this.ownedEntryMediaWhere(entryId, mediaId, userId)
         });
 
         return result.count > 0;

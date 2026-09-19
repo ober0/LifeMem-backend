@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { EntryProcessingType } from '@prisma/client';
+import { EntryProcessingType, FileType } from '@prisma/client';
 
 import type { Actor } from '../../common/classes/actor';
 import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
 import { mapPagination } from '../../common/helpers/map.pagination';
 import { EntryPipelinesEnum } from '../../common/pipelines';
+import { DelayedWorkerService } from '../delayed-worker';
 import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
 import { EmbeddingService } from '../embedding/embedding.service';
 import { EntryProcessingService } from '../entry-processing/entry-processing.service';
@@ -46,7 +47,8 @@ export class EntryService {
         private readonly s3Service: S3Service,
         private readonly entryProcessingService: EntryProcessingService,
         private readonly embeddingService: EmbeddingService,
-        private readonly entrySearchRepository: EntrySearchRepository
+        private readonly entrySearchRepository: EntrySearchRepository,
+        private readonly delayedWorker: DelayedWorkerService
     ) {}
 
     private validateCreateInput(dto: CreateEntryDto): void {
@@ -98,6 +100,7 @@ export class EntryService {
         return {
             media: media.map((item) => ({
                 fileId: item.id,
+                type: fileById.get(item.id)!.type,
                 description: normalizeMediaDescription(item.description)
             })),
             voice: dto.audioId ? { fileId: dto.audioId } : undefined
@@ -293,9 +296,7 @@ export class EntryService {
         );
     }
 
-    private async mapMedia(
-        rows: Array<EntryMediaSource & { file: { key: string } }>
-    ): Promise<EntryMediaDto[]> {
+    private async mapMedia(rows: Array<EntryMediaSource & { file: { key: string } }>): Promise<EntryMediaDto[]> {
         return Promise.all(
             rows.map(async (row) => {
                 const url = await this.s3Service.getSignedUrl({
@@ -356,6 +357,7 @@ export class EntryService {
         const mediaRow = await this.entryRepository.createEntryMedia(
             entryId,
             file.id,
+            file.type,
             normalizeMediaDescription(dto.description)
         );
 
@@ -393,10 +395,23 @@ export class EntryService {
             throw apiError.unauthorized('auth.unauthorized');
         }
 
+        const media = await this.entryRepository.findOwnedEntryMediaForDetach(entryId, mediaId, actor.user.id);
+
+        if (!media) {
+            throw apiError.notFound('entry.media_not_found');
+        }
+
         const deleted = await this.entryRepository.deleteOwnedEntryMedia(entryId, mediaId, actor.user.id);
 
         if (!deleted) {
             throw apiError.notFound('entry.media_not_found');
+        }
+
+        if (media.type === FileType.VIDEO && media.firstFrame) {
+            this.delayedWorker.setImmediate(() => {
+                this.s3Service.deleteObject(media.firstFrame!.key).catch(() => undefined);
+                this.filesRepository.deleteOwnedFile(actor.user.id, media.firstFrame!.id);
+            });
         }
     }
 
@@ -451,10 +466,7 @@ export class EntryService {
             throw apiError.notFound('entry.not_found');
         }
 
-        const [mediaItems, voice] = await Promise.all([
-            this.mapMedia(entry.media),
-            this.mapVoice(entry.voice)
-        ]);
+        const [mediaItems, voice] = await Promise.all([this.mapMedia(entry.media), this.mapVoice(entry.voice)]);
 
         return entryMapper.toDetail(entry, mediaItems, voice);
     }
