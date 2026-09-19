@@ -4,6 +4,7 @@ import { EntryProcessingStatus, EntryProcessingType, Prisma } from '@prisma/clie
 import { BullMqQueue } from '../api/bullmq/bullmq.constants';
 import {
     type baseEntryJobPayload,
+    DelayedJob,
     type DelayedJobPayloads,
     type EntryJobName
 } from '../api/delayed-worker/delayed-worker.constants';
@@ -105,12 +106,36 @@ export class EntryProcessingWorkerService {
                 continue;
             }
 
-            await this.createJob(data.entryId, key, basePayload as Omit<DelayedJobPayloads[typeof key], 'jobId'>, {
+            const nextPayload = this.buildNextJobPayload(finishedKey, key, data, basePayload);
+
+            await this.createJob(data.entryId, key, nextPayload as Omit<DelayedJobPayloads[typeof key], 'jobId'>, {
                 ignoreDuplicate: true
             });
         }
 
         await this.tryMarkEntryReady(data.entryId, data.pipeline, ctx);
+    }
+
+    private buildNextJobPayload(
+        finishedKey: EntryJobName,
+        nextKey: EntryJobName,
+        finishedData: baseEntryJobPayload,
+        basePayload: Omit<baseEntryJobPayload, 'jobId'>
+    ): Omit<DelayedJobPayloads[EntryJobName], 'jobId'> {
+        if (
+            finishedKey === DelayedJob.EntryVision &&
+            nextKey === DelayedJob.EntryEmbedImage &&
+            'entryVideoIds' in finishedData &&
+            Array.isArray(finishedData.entryVideoIds) &&
+            finishedData.entryVideoIds.length > 0
+        ) {
+            return {
+                ...basePayload,
+                entryVideoIds: finishedData.entryVideoIds
+            } as Omit<DelayedJobPayloads[typeof DelayedJob.EntryEmbedImage], 'jobId'>;
+        }
+
+        return basePayload as Omit<DelayedJobPayloads[EntryJobName], 'jobId'>;
     }
 
     private async createJob<K extends EntryJobName>(

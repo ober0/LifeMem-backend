@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntryProcessingType, FileType } from '@prisma/client';
+import { EntryProcessingType } from '@prisma/client';
 
 import type { Actor } from '../../common/classes/actor';
 import { appConstants } from '../../common/config/app.constants';
@@ -11,6 +11,7 @@ import { EmbeddingService } from '../embedding/embedding.service';
 import { EntryProcessingService } from '../entry-processing/entry-processing.service';
 import { FilesRepository } from '../files/files.repository';
 import { S3Service } from '../s3/s3.service';
+import type { AttachEntryImageDto } from './dto/attach-entry-image.dto';
 import type { BaseEntryDto, BaseEntryUpdateDto } from './dto/base';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
@@ -24,6 +25,9 @@ import { entryMapper } from './entry.mapper';
 import { EntryRepository } from './entry.repository';
 import { EntrySearchRepository } from './entry-search.repository';
 import {
+    assertEntryAudioFileType,
+    assertEntryMediaFileType,
+    assertEntryMediaFiles,
     checkEntryInput,
     checkGeo,
     checkMediaLimit,
@@ -85,18 +89,10 @@ export class EntryService {
 
         const fileById = new Map(files.map((file) => [file.id, file]));
 
-        for (const id of mediaIds) {
-            const file = fileById.get(id)!;
-            if (file.type !== FileType.IMAGE && file.type !== FileType.VIDEO) {
-                throw apiError.badRequest('entry.invalid_media_file_type');
-            }
-        }
+        assertEntryMediaFiles(fileById, mediaIds);
 
         if (dto.audioId) {
-            const audioFile = fileById.get(dto.audioId)!;
-            if (audioFile.type !== FileType.AUDIO) {
-                throw apiError.badRequest('entry.invalid_audio_file_type');
-            }
+            assertEntryAudioFileType(fileById.get(dto.audioId)!.type);
         }
 
         return {
@@ -323,6 +319,92 @@ export class EntryService {
         });
 
         return entryMapper.toVoice(voice, url);
+    }
+
+    async attachImage(actor: Actor, entryId: string, dto: AttachEntryImageDto): Promise<EntryImageDto> {
+        const userId = actor.user.id;
+        const entry = await this.entryRepository.findOwnedForImageAttach(entryId, userId);
+
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        if (!entry.isReady) {
+            throw apiError.badRequest('entry.attach_only_when_ready');
+        }
+
+        const remaining = appConstants.entry.maxPhotosPerEntry - entry._count.images;
+        if (remaining < 1) {
+            throw apiError.badRequest('entry.too_many_photos', {
+                max: appConstants.entry.maxPhotosPerEntry
+            });
+        }
+
+        const fileExist = await this.entryRepository.existsEntryImageByFileId(entryId, dto.fileId);
+        if (fileExist) {
+            throw apiError.badRequest('entry.file_already_attached');
+        }
+
+        const file = await this.resolveAttachableMediaFile(userId, dto.fileId);
+
+        const image = await this.entryRepository.createEntryImage(
+            entryId,
+            file.id,
+            normalizeMediaDescription(dto.description)
+        );
+
+        const basePayload = {
+            pipeline: EntryPipelinesEnum.UpdateImage,
+            userId,
+            entryId
+        };
+
+        const imageIds = [image.id];
+
+        await this.entryProcessingService.activatePipeline(
+            EntryPipelinesEnum.UpdateImage,
+            {
+                hasCoords: false,
+                hasVoice: false,
+                hasText: false,
+                hasImage: true
+            },
+            {
+                [DelayedJob.EntryVision]: {
+                    ...basePayload,
+                    entryVideoIds: imageIds,
+                    userLang: actor.settings?.lang
+                }
+            }
+        );
+
+        const [mapped] = await this.mapImages([image]);
+        return mapped;
+    }
+
+    async detachImage(actor: Actor, entryId: string, imageId: string): Promise<void> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        const deleted = await this.entryRepository.deleteOwnedEntryImage(entryId, imageId, actor.user.id);
+
+        if (!deleted) {
+            throw apiError.notFound('entry.image_not_found');
+        }
+    }
+
+    private async resolveAttachableMediaFile(userId: string, fileId: string) {
+        const files = await this.filesRepository.findAttachableFilesByIds(userId, [fileId]);
+
+        if (files.length !== 1) {
+            throw apiError.notFound('entry.file_not_found');
+        }
+
+        const file = files[0]!;
+        assertEntryMediaFileType(file.type);
+
+        return file;
     }
 
     private async checkLinkedEntities(userId: string, personIds: string[], placeIds: string[]) {

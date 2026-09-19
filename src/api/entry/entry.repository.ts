@@ -266,4 +266,65 @@ export class EntryRepository {
             orderBy: orderBy.length > 0 ? orderBy : defaultOrder
         });
     }
+
+    async findOwnedForImageAttach(id: string, userId: string) {
+        return this.prisma.entry.findFirst({
+            where: {
+                id,
+                userId,
+                ...this.notDeleted
+            },
+            select: {
+                id: true,
+                isReady: true,
+                _count: {
+                    select: { images: true }
+                }
+            }
+        });
+    }
+
+    async existsEntryImageByFileId(entryId: string, fileId: string) {
+        const image = await this.prisma.entryImage.findFirst({
+            where: { entryId, fileId },
+            select: { id: true }
+        });
+
+        return image != null;
+    }
+
+    async createEntryImage(entryId: string, fileId: string, description: string | null) {
+        return this.prisma.entryImage.create({
+            data: {
+                entryId,
+                fileId,
+                description
+            },
+            select: {
+                id: true,
+                description: true,
+                fileId: true,
+                createdAt: true,
+                updatedAt: true,
+                file: {
+                    select: { key: true }
+                }
+            }
+        });
+    }
+
+    async deleteOwnedEntryImage(entryId: string, imageId: string, userId: string) {
+        const result = await this.prisma.entryImage.deleteMany({
+            where: {
+                id: imageId,
+                entryId,
+                entry: {
+                    userId,
+                    ...this.notDeleted
+                }
+            }
+        });
+
+        return result.count > 0;
+    }
 }

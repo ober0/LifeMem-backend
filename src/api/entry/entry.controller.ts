@@ -5,7 +5,9 @@ import type { Actor } from '../../common/classes/actor';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
+import { AttachEntryImageDto } from './dto/attach-entry-image.dto';
 import { BaseEntryDto, BaseEntryUpdateDto } from './dto/base';
+import { EntryImageDto } from './dto/entry-images';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import { EntryDetailResponseDto } from './dto/get-entry-response.dto';
@@ -45,6 +47,33 @@ export class EntryController {
     @ApiErrorResponses(401, 404)
     async delete(@CurrentActor() actor: Actor, @Param('id') id: string): Promise<void> {
         await this.entryService.softDelete(actor, id);
+    }
+
+    @Post(':id/images')
+    @HttpCode(HttpStatus.CREATED)
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiOperation({ summary: 'Прикрепить фото или видео к готовой заметке' })
+    @ApiCreatedResponse({ type: EntryImageDto })
+    @ApiErrorResponses(400, 401, 404)
+    async attachImage(
+        @CurrentActor() actor: Actor,
+        @Param('id') id: string,
+        @Body() dto: AttachEntryImageDto
+    ): Promise<EntryImageDto> {
+        return this.entryService.attachImage(actor, id, dto);
+    }
+
+    @Delete(':id/images/:imageId')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiOperation({ summary: 'Открепить фото или видео от заметки' })
+    @ApiErrorResponses(401, 404)
+    async detachImage(
+        @CurrentActor() actor: Actor,
+        @Param('id') id: string,
+        @Param('imageId') imageId: string
+    ): Promise<void> {
+        await this.entryService.detachImage(actor, id, imageId);
     }
 
     @Patch(':id/base')

@@ -1,4 +1,4 @@
-import { EntryProcessingStatus } from '@prisma/client';
+import { EntryProcessingStatus, FileType } from '@prisma/client';
 
 import { appConstants } from '../../../common/config/app.constants';
 import { apiError } from '../../../common/helpers/errors';
@@ -26,6 +26,40 @@ export function checkEntryInput(text: string | undefined, audioId: string | unde
 
     if (hasText && hasVoice) {
         throw apiError.badRequest('entry.text_or_voice_only');
+    }
+}
+
+export function isEntryMediaFileType(type: FileType): boolean {
+    return (appConstants.entry.allowedMediaFileTypes as readonly FileType[]).includes(type);
+}
+
+export function assertEntryMediaFileType(type: FileType): void {
+    if (!isEntryMediaFileType(type)) {
+        throw apiError.badRequest('entry.invalid_media_file_type');
+    }
+}
+
+export function isEntryAudioFileType(type: FileType): boolean {
+    return (appConstants.entry.allowedAudioFileTypes as readonly FileType[]).includes(type);
+}
+
+export function assertEntryAudioFileType(type: FileType): void {
+    if (!isEntryAudioFileType(type)) {
+        throw apiError.badRequest('entry.invalid_audio_file_type');
+    }
+}
+
+export function assertEntryMediaFiles(
+    filesById: ReadonlyMap<string, { type: FileType }>,
+    mediaFileIds: string[]
+): void {
+    for (const id of mediaFileIds) {
+        const file = filesById.get(id);
+        if (!file) {
+            throw apiError.notFound('entry.file_not_found');
+        }
+
+        assertEntryMediaFileType(file.type);
     }
 }
 

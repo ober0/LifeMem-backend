@@ -1,7 +1,11 @@
+import { FileType } from '@prisma/client';
+
 export const entryConstants = {
     maxPhotosPerEntry: 5,
     maxPlacesPerEntry: 3,
     imageLifeTime: 60 * 60, // в секундах (1 час)
+    allowedMediaFileTypes: [FileType.IMAGE, FileType.VIDEO] as const,
+    allowedAudioFileTypes: [FileType.AUDIO] as const,
     search: {
         // насколько далеко по смыслу (косинус) ещё ок - чем больше, тем больше заметок вылезет, в т.ч. лишних
         vectorMaxCosineDistance: 0.52,

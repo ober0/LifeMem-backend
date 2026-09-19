@@ -7,6 +7,18 @@
         "ru": "Редактировать можно только заметку в обработке",
         "en": "Only entries that are still processing can be edited"
     },
+    "attach_only_when_ready": {
+        "ru": "Прикрепить файл можно только к готовой заметке",
+        "en": "You can attach a file only to a ready entry"
+    },
+    "image_not_found": {
+        "ru": "Фото не найдено в этой заметке",
+        "en": "Image not found in this entry"
+    },
+    "file_already_attached": {
+        "ru": "Этот файл уже прикреплён к заметке",
+        "en": "This file is already attached to the entry"
+    },
     "text_or_voice_required": {
         "ru": "Укажите текст или голосовое сообщение",
         "en": "Provide text or a voice message"
