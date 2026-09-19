@@ -44,10 +44,10 @@ export class EntryProcessor extends WorkerHost {
             return;
         }
 
-        const signal = this.entryJobCancelListener.register(data.jobId);
+        const abortController = this.entryJobCancelListener.register(data.jobId);
 
         try {
-            await this.runJob(job, { signal });
+            await this.runJob(job, { signal: abortController.signal });
             this.logger.log(`end job ${job.name} for entry`);
             await this.entryProcessingWorkerService.onJobFinished(job.name as EntryJobName, data);
         } catch (error) {

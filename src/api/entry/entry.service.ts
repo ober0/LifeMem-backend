@@ -249,13 +249,13 @@ export class EntryService {
             }
 
             const basePayload = {
-                pipeline: EntryPipelinesEnum.Update,
+                pipeline: EntryPipelinesEnum.UpdateBase,
                 userId,
                 entryId: id
             };
 
             await this.entryProcessingService.activatePipeline(
-                EntryPipelinesEnum.Update,
+                EntryPipelinesEnum.UpdateBase,
                 {
                     hasCoords: hasLocationCoords,
                     hasVoice: false,

@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import Redis from 'ioredis';
 
 import { entryJobCancelConstants } from '../common/config/constants/entry-processing.constants';
@@ -6,7 +6,6 @@ import { type RedisConfig, redisConfig } from '../common/config/env';
 
 @Injectable()
 export class EntryJobCancelListener implements OnModuleInit, OnModuleDestroy {
-    private readonly logger = new Logger(EntryJobCancelListener.name);
     private readonly abortByJobId = new Map<string, AbortController>();
     private subscriber: Redis | null = null;
 
@@ -40,10 +39,10 @@ export class EntryJobCancelListener implements OnModuleInit, OnModuleDestroy {
         return jobId.length > 0 ? jobId : null;
     }
 
-    register(jobId: string): AbortSignal {
+    register(jobId: string): AbortController {
         const controller = new AbortController();
         this.abortByJobId.set(jobId, controller);
-        return controller.signal;
+        return controller;
     }
 
     unregister(jobId: string) {
