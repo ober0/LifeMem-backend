@@ -11,9 +11,9 @@
         "ru": "Прикрепить файл можно только к готовой заметке",
         "en": "You can attach a file only to a ready entry"
     },
-    "image_not_found": {
-        "ru": "Фото не найдено в этой заметке",
-        "en": "Image not found in this entry"
+    "media_not_found": {
+        "ru": "Медиа не найдено в этой заметке",
+        "en": "Media not found in this entry"
     },
     "file_already_attached": {
         "ru": "Этот файл уже прикреплён к заметке",
@@ -27,25 +27,25 @@
         "ru": "Укажите только текст или только голосовое сообщение",
         "en": "Provide either text or a voice message, not both"
     },
-    "too_many_photos": {
-        "ru": "Можно прикрепить не более {{max}} фото или видео",
-        "en": "You can attach at most {{max}} photos or videos"
+    "too_many_media": {
+        "ru": "Можно прикрепить не более {{max}} медиафайлов (фото или видео)",
+        "en": "You can attach at most {{max}} media files (photos or videos)"
     },
-    "photo_descriptions_mismatch": {
-        "ru": "Число описаний должно совпадать с числом фото",
-        "en": "Number of descriptions must match the number of photos"
+    "media_descriptions_mismatch": {
+        "ru": "Число описаний должно совпадать с числом медиафайлов",
+        "en": "Number of descriptions must match the number of media files"
     },
-    "invalid_photo_descriptions": {
-        "ru": "photoDescriptions должен быть JSON-массивом строк или null",
-        "en": "photoDescriptions must be a JSON array of strings or null"
+    "invalid_media_descriptions": {
+        "ru": "mediaDescriptions должен быть JSON-массивом строк или null",
+        "en": "mediaDescriptions must be a JSON array of strings or null"
     },
     "invalid_voice_type": {
         "ru": "Недопустимый формат голосового сообщения",
         "en": "Invalid voice message format"
     },
-    "invalid_photo_type": {
-        "ru": "Недопустимый формат фото",
-        "en": "Invalid photo format"
+    "invalid_media_type": {
+        "ru": "Недопустимый формат медиафайла",
+        "en": "Invalid media file format"
     },
     "person_not_found": {
         "ru": "Связанный человек не найден",

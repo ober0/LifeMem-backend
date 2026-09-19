@@ -6,7 +6,7 @@ export type PipelineContext = {
     hasCoords: boolean;
     hasVoice: boolean;
     hasText: boolean;
-    hasImage: boolean;
+    hasMedia: boolean;
 };
 
 export type PipelineStep = {

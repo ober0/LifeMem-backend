@@ -4,9 +4,6 @@ import { DelayedJob } from './delayed-worker.constants';
 
 export type DelayedJobName = (typeof DelayedJob)[keyof typeof DelayedJob];
 
-export type AiJobName = typeof DelayedJob.AiRefreshModels | typeof DelayedJob.AiAddModels;
-export type LocalEmbeddingJobName = typeof DelayedJob.LocalEmbed | typeof DelayedJob.LocalLoadModel;
-
 export type EntryJobName =
     | typeof DelayedJob.EntryLocation
     | typeof DelayedJob.EntryStt
@@ -54,13 +51,13 @@ export type DelayedJobPayloads = {
         userLang?: LangEnum;
     };
     [DelayedJob.EntryVision]: baseEntryJobPayload & {
-        entryVideoIds?: string[];
+        entryMediaIds?: string[];
         userLang?: LangEnum;
     };
     [DelayedJob.EntryLocationAndPeopleDetect]: baseEntryJobPayload;
     [DelayedJob.EntryEmbedText]: baseEntryJobPayload;
     [DelayedJob.EntryEmbedTitle]: baseEntryJobPayload;
-    [DelayedJob.EntryEmbedImage]: baseEntryJobPayload & { entryVideoIds?: string[] };
+    [DelayedJob.EntryEmbedImage]: baseEntryJobPayload & { entryMediaIds?: string[] };
 
     //ai
     [DelayedJob.AiRefreshModels]: Record<string, never>;

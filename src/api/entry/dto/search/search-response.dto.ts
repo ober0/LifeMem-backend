@@ -36,7 +36,7 @@ export class EntrySearchItemDto {
     isHasVoice: boolean;
 
     @ApiProperty()
-    photoCount: number;
+    mediaCount: number;
 
     @ApiProperty()
     isReady: boolean;

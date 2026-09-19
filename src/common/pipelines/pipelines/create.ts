@@ -22,12 +22,12 @@ export const CreateEntryPipeline: EntryPipeline = {
     [DelayedJob.EntryVision]: {
         type: EntryProcessingType.Vision,
         requires: () => [],
-        when: (ctx) => ctx.hasImage
+        when: (ctx) => ctx.hasMedia
     },
     [DelayedJob.EntryEmbedImage]: {
         type: EntryProcessingType.EmbedImage,
         requires: () => [DelayedJob.EntryVision],
-        when: (ctx) => ctx.hasImage
+        when: (ctx) => ctx.hasMedia
     },
     [DelayedJob.EntryEmbedTitle]: {
         type: EntryProcessingType.EmbedTitle,

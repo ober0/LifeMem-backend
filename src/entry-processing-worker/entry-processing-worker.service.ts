@@ -125,13 +125,13 @@ export class EntryProcessingWorkerService {
         if (
             finishedKey === DelayedJob.EntryVision &&
             nextKey === DelayedJob.EntryEmbedImage &&
-            'entryVideoIds' in finishedData &&
-            Array.isArray(finishedData.entryVideoIds) &&
-            finishedData.entryVideoIds.length > 0
+            'entryMediaIds' in finishedData &&
+            Array.isArray(finishedData.entryMediaIds) &&
+            finishedData.entryMediaIds.length > 0
         ) {
             return {
                 ...basePayload,
-                entryVideoIds: finishedData.entryVideoIds
+                entryMediaIds: finishedData.entryMediaIds
             } as Omit<DelayedJobPayloads[typeof DelayedJob.EntryEmbedImage], 'jobId'>;
         }
 
@@ -235,7 +235,7 @@ export class EntryProcessingWorkerService {
             hasCoords: entry.jobs.some((job) => job.type === EntryProcessingType.LocationConnect),
             hasVoice: entry.voice != null,
             hasText: Boolean(entry.text?.trim()),
-            hasImage: entry._count.images > 0
+            hasMedia: entry._count.images > 0
         };
     }
 

@@ -50,13 +50,13 @@ export function parseFormDataUuidArray(value: unknown): string[] | undefined {
     return [value];
 }
 
-function normalizePhotoDescription(value: unknown): string | null {
+function normalizeMediaDescription(value: unknown): string | null {
     if (value === null) {
         return null;
     }
 
     if (typeof value !== 'string') {
-        throw apiError.badRequest('entry.invalid_photo_descriptions');
+        throw apiError.badRequest('entry.invalid_media_descriptions');
     }
 
     const trimmed = value.trim();
@@ -64,21 +64,21 @@ function normalizePhotoDescription(value: unknown): string | null {
     return trimmed === '' ? null : trimmed;
 }
 
-function parsePhotoDescriptionsArray(items: unknown[]): (string | null)[] {
-    return items.map(normalizePhotoDescription);
+function parseMediaDescriptionsArray(items: unknown[]): (string | null)[] {
+    return items.map(normalizeMediaDescription);
 }
 
-export function parseFormDataPhotoDescriptions(value: unknown): (string | null)[] | undefined {
+export function parseFormDataMediaDescriptions(value: unknown): (string | null)[] | undefined {
     if (isEmptyFormValue(value)) {
         return undefined;
     }
 
     if (Array.isArray(value)) {
-        return parsePhotoDescriptionsArray(value);
+        return parseMediaDescriptionsArray(value);
     }
 
     if (typeof value !== 'string') {
-        throw apiError.badRequest('entry.invalid_photo_descriptions');
+        throw apiError.badRequest('entry.invalid_media_descriptions');
     }
 
     let parsed: unknown;
@@ -86,14 +86,14 @@ export function parseFormDataPhotoDescriptions(value: unknown): (string | null)[
     try {
         parsed = JSON.parse(value);
     } catch {
-        throw apiError.badRequest('entry.invalid_photo_descriptions');
+        throw apiError.badRequest('entry.invalid_media_descriptions');
     }
 
     if (!Array.isArray(parsed)) {
-        throw apiError.badRequest('entry.invalid_photo_descriptions');
+        throw apiError.badRequest('entry.invalid_media_descriptions');
     }
 
-    return parsePhotoDescriptionsArray(parsed);
+    return parseMediaDescriptionsArray(parsed);
 }
 
 type LocationFormPayload = {

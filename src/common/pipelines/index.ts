@@ -1,14 +1,14 @@
-import { CreateEntryPipeline, UpdateBaseEntryPipeline, UpdateImageEntryPipeline } from './pipelines';
+import { CreateEntryPipeline, UpdateBaseEntryPipeline, UpdateMediaEntryPipeline } from './pipelines';
 import { EntryPipeline } from './types';
 
 export enum EntryPipelinesEnum {
     Create = 'create',
     UpdateBase = 'update-base',
-    UpdateImage = 'update-image'
+    UpdateMedia = 'update-media'
 }
 
 export const EntryPipelines: Record<EntryPipelinesEnum, EntryPipeline> = {
     [EntryPipelinesEnum.Create]: CreateEntryPipeline,
     [EntryPipelinesEnum.UpdateBase]: UpdateBaseEntryPipeline,
-    [EntryPipelinesEnum.UpdateImage]: UpdateImageEntryPipeline
+    [EntryPipelinesEnum.UpdateMedia]: UpdateMediaEntryPipeline
 } as const;

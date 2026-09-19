@@ -1,9 +1,9 @@
 import { FileType } from '@prisma/client';
 
 export const entryConstants = {
-    maxPhotosPerEntry: 5,
+    maxMediaPerEntry: 5,
     maxPlacesPerEntry: 3,
-    imageLifeTime: 60 * 60, // в секундах (1 час)
+    mediaUrlLifeTime: 60 * 60, // в секундах (1 час)
     allowedMediaFileTypes: [FileType.IMAGE, FileType.VIDEO] as const,
     allowedAudioFileTypes: [FileType.AUDIO] as const,
     search: {
@@ -21,6 +21,6 @@ export const entryConstants = {
         // нашли в тексте заметки - чуть ниже title
         scoreTextLike: 0.75,
         // нашли в описании фото или в ai-расшифровке - ниже, чем body
-        scoreImageLike: 0.7
+        scoreMediaLike: 0.7
     }
 } as const;

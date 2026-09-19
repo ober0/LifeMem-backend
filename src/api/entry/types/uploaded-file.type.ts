@@ -2,7 +2,7 @@ import { EntryProcessingStatus, EntryProcessingType } from '@prisma/client';
 
 import type { EntryLocationDto } from '../dto/create-entry.dto';
 
-export type CreateEntryImageInput = {
+export type CreateEntryMediaInput = {
     fileId: string;
     description?: string | null;
 };
@@ -24,6 +24,6 @@ export type CreateEntryInput = {
     personIds: string[];
     placeIds: string[];
     voice?: CreateEntryVoiceInput;
-    images: CreateEntryImageInput[];
+    media: CreateEntryMediaInput[];
     jobs?: CreateEntryJobInput[];
 };

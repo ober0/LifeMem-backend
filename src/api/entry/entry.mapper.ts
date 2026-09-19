@@ -1,14 +1,14 @@
 import type { EntryDetailSource, SearchEntrySource } from './consts/entry.constants';
 import type { BaseEntryDto, EntryRelations } from './dto/base';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
-import type { EntryImageDto } from './dto/entry-images';
+import type { EntryMediaDto } from './dto/entry-media.dto';
 import { EntryVoiceDto } from './dto/entry-voices';
 import type { EntryDetailResponseDto } from './dto/get-entry-response.dto';
 import type { EntrySearchItemDto } from './dto/search/search-response.dto';
 import {
     BaseEntrySource,
     CreateEntrySource,
-    EntryImageSource,
+    EntryMediaSource,
     EntryRelationSource,
     EntryVoiceSource
 } from './dto/types';
@@ -20,31 +20,31 @@ function toRelations(items: EntryRelationSource[]): EntryRelations[] {
 }
 
 export const entryMapper = {
-    toImage(image: EntryImageSource, url: string): EntryImageDto {
+    toMedia(media: EntryMediaSource, url: string): EntryMediaDto {
         return {
-            id: image.id,
-            fileId: image.fileId,
-            description: image.description,
+            id: media.id,
+            fileId: media.fileId,
+            description: media.description,
             url,
-            createdAt: image.createdAt,
-            updatedAt: image.updatedAt
+            createdAt: media.createdAt,
+            updatedAt: media.updatedAt
         };
     },
 
-    toVoice(image: EntryVoiceSource, url: string): EntryVoiceDto {
+    toVoice(voice: EntryVoiceSource, url: string): EntryVoiceDto {
         return {
-            id: image.id,
-            fileId: image.fileId,
+            id: voice.id,
+            fileId: voice.fileId,
             url,
-            createdAt: image.createdAt,
-            updatedAt: image.updatedAt
+            createdAt: voice.createdAt,
+            updatedAt: voice.updatedAt
         };
     },
 
     toCreateResponse(entry: CreateEntrySource): CreateEntryResponseDto {
         return {
             id: entry.id,
-            images: entry.images,
+            media: entry.media,
             voice: entry.voice ?? null,
             places: {
                 ready: entry.places.ready,
@@ -53,22 +53,22 @@ export const entryMapper = {
         };
     },
 
-    toBaseEntry(entry: BaseEntrySource, images: EntryImageDto[]): BaseEntryDto {
+    toBaseEntry(entry: BaseEntrySource, media: EntryMediaDto[]): BaseEntryDto {
         return {
             ...entryBaseMapper.withTimestamps(entry),
             isHasVoice: entry.isHasVoice,
-            images,
+            media,
             peoples: toRelations(entry.peoples),
             places: toRelations(entry.places)
         };
     },
 
-    toDetail(entry: EntryDetailSource, photos: EntryImageDto[], voice: EntryVoiceDto | null): EntryDetailResponseDto {
+    toDetail(entry: EntryDetailSource, media: EntryMediaDto[], voice: EntryVoiceDto | null): EntryDetailResponseDto {
         return {
             ...entryBaseMapper.withTimestamps(entry),
             userId: entry.userId,
             voice,
-            photos,
+            media,
             jobs: entry.jobs.map((job) => ({
                 id: job.id,
                 type: job.type,
@@ -94,7 +94,7 @@ export const entryMapper = {
         return {
             ...entryBaseMapper.withReady(entry),
             isHasVoice: Boolean(entry.voice),
-            photoCount: entry._count.images,
+            mediaCount: entry._count.images,
             processingStatus: calcEntryProcessingStatus(entry.jobs),
             peopleCount: entry._count.people,
             placesCount: entry._count.places

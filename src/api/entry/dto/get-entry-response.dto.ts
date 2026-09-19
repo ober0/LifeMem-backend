@@ -4,7 +4,7 @@ import { EntryProcessingStatus, EntryProcessingType } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 import { BaseEntity } from '../../../common/types/common/common-entity.dto';
-import { EntryImageDto } from './entry-images';
+import { EntryMediaDto } from './entry-media.dto';
 import { EntryVoiceDto } from './entry-voices';
 
 export class EntryDetailPersonDto {
@@ -63,9 +63,9 @@ export class EntryDetailResponseDto extends BaseEntity {
     @Type(() => EntryVoiceDto)
     voice: EntryVoiceDto | null;
 
-    @ApiProperty({ type: EntryImageDto, isArray: true })
-    @Type(() => EntryImageDto)
-    photos: EntryImageDto[];
+    @ApiProperty({ type: EntryMediaDto, isArray: true })
+    @Type(() => EntryMediaDto)
+    media: EntryMediaDto[];
 
     @ApiProperty({ type: EntryProcessingJobDto, isArray: true })
     @Type(() => EntryProcessingJobDto)

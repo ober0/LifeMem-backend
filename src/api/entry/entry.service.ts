@@ -11,23 +11,23 @@ import { EmbeddingService } from '../embedding/embedding.service';
 import { EntryProcessingService } from '../entry-processing/entry-processing.service';
 import { FilesRepository } from '../files/files.repository';
 import { S3Service } from '../s3/s3.service';
-import type { AttachEntryImageDto } from './dto/attach-entry-image.dto';
+import type { AttachEntryMediaDto } from './dto/attach-entry-media.dto';
 import type { BaseEntryDto, BaseEntryUpdateDto } from './dto/base';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
-import type { EntryImageDto } from './dto/entry-images';
+import type { EntryMediaDto } from './dto/entry-media.dto';
 import { EntryVoiceDto } from './dto/entry-voices';
 import type { EntryDetailResponseDto } from './dto/get-entry-response.dto';
 import type { EntrySearchDto } from './dto/search/search-request.dto';
 import type { EntrySearchResponseDto } from './dto/search/search-response.dto';
-import { EntryImageSource, EntryVoiceSource } from './dto/types';
+import { EntryMediaSource, EntryVoiceSource } from './dto/types';
 import { entryMapper } from './entry.mapper';
 import { EntryRepository } from './entry.repository';
 import { EntrySearchRepository } from './entry-search.repository';
 import {
     assertEntryAudioFileType,
-    assertEntryMediaFileType,
     assertEntryMediaFiles,
+    assertEntryMediaFileType,
     checkEntryInput,
     checkGeo,
     checkMediaLimit,
@@ -36,7 +36,7 @@ import {
     normalizeMediaDescription,
     toLocationCoords
 } from './helpers/entry.helper';
-import type { CreateEntryImageInput, CreateEntryVoiceInput } from './types/uploaded-file.type';
+import type { CreateEntryMediaInput, CreateEntryVoiceInput } from './types/uploaded-file.type';
 
 @Injectable()
 export class EntryService {
@@ -68,7 +68,7 @@ export class EntryService {
     private async resolveEntryFiles(
         userId: string,
         dto: CreateEntryDto
-    ): Promise<{ images: CreateEntryImageInput[]; voice?: CreateEntryVoiceInput }> {
+    ): Promise<{ media: CreateEntryMediaInput[]; voice?: CreateEntryVoiceInput }> {
         const media = dto.media ?? [];
         const mediaIds = media.map((item) => item.id);
 
@@ -96,7 +96,7 @@ export class EntryService {
         }
 
         return {
-            images: media.map((item) => ({
+            media: media.map((item) => ({
                 fileId: item.id,
                 description: normalizeMediaDescription(item.description)
             })),
@@ -119,11 +119,11 @@ export class EntryService {
 
         await this.checkLinkedEntities(userId, personIds, placeIds);
 
-        const { images, voice } = await this.resolveEntryFiles(userId, dto);
+        const { media, voice } = await this.resolveEntryFiles(userId, dto);
 
         const text = dto.text?.trim() || null;
         const hasLocationCoords = locationCoords.length > 0;
-        const hasMedia = images.length > 0;
+        const hasMedia = media.length > 0;
 
         const entry = await this.entryRepository.create({
             userId,
@@ -132,7 +132,7 @@ export class EntryService {
             personIds,
             placeIds,
             voice,
-            images
+            media
         });
 
         const basePayload = {
@@ -147,7 +147,7 @@ export class EntryService {
                 hasCoords: hasLocationCoords,
                 hasVoice: Boolean(voice),
                 hasText: Boolean(text),
-                hasImage: hasMedia
+                hasMedia
             },
             {
                 ...(hasLocationCoords && {
@@ -169,7 +169,7 @@ export class EntryService {
             }
         );
 
-        const entryImages = await this.mapImages(entry.images);
+        const entryMedia = await this.mapMedia(entry.images);
         const entryVoice = await this.mapVoice(entry.voice);
 
         return entryMapper.toCreateResponse({
@@ -178,7 +178,7 @@ export class EntryService {
                 ready: dto.placeIds?.length ?? 0,
                 processing: locations.length ?? 0
             },
-            images: entryImages,
+            media: entryMedia,
             voice: entryVoice
         });
     }
@@ -256,7 +256,7 @@ export class EntryService {
                     hasCoords: hasLocationCoords,
                     hasVoice: false,
                     hasText: false,
-                    hasImage: false
+                    hasMedia: false
                 },
                 {
                     ...(titleChanged && {
@@ -273,7 +273,7 @@ export class EntryService {
             );
         }
 
-        const images = await this.mapImages(entry.images);
+        const mediaItems = await this.mapMedia(entry.images);
 
         return entryMapper.toBaseEntry(
             {
@@ -289,19 +289,21 @@ export class EntryService {
                 createdAt: entry.createdAt,
                 updatedAt: entry.updatedAt
             },
-            images
+            mediaItems
         );
     }
 
-    private async mapImages(images: Array<EntryImageSource & { file: { key: string } }>): Promise<EntryImageDto[]> {
+    private async mapMedia(
+        rows: Array<EntryMediaSource & { file: { key: string } }>
+    ): Promise<EntryMediaDto[]> {
         return Promise.all(
-            images.map(async (image) => {
+            rows.map(async (row) => {
                 const url = await this.s3Service.getSignedUrl({
-                    key: image.file.key,
-                    expiresIn: appConstants.entry.imageLifeTime
+                    key: row.file.key,
+                    expiresIn: appConstants.entry.mediaUrlLifeTime
                 });
 
-                return entryMapper.toImage(image, url);
+                return entryMapper.toMedia(row, url);
             })
         );
     }
@@ -315,15 +317,19 @@ export class EntryService {
 
         const url = await this.s3Service.getSignedUrl({
             key: voice.file.key,
-            expiresIn: appConstants.entry.imageLifeTime
+            expiresIn: appConstants.entry.mediaUrlLifeTime
         });
 
         return entryMapper.toVoice(voice, url);
     }
 
-    async attachImage(actor: Actor, entryId: string, dto: AttachEntryImageDto): Promise<EntryImageDto> {
+    async attachMedia(actor: Actor, entryId: string, dto: AttachEntryMediaDto): Promise<EntryMediaDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
         const userId = actor.user.id;
-        const entry = await this.entryRepository.findOwnedForImageAttach(entryId, userId);
+        const entry = await this.entryRepository.findOwnedForMediaAttach(entryId, userId);
 
         if (!entry) {
             throw apiError.notFound('entry.not_found');
@@ -333,64 +339,64 @@ export class EntryService {
             throw apiError.badRequest('entry.attach_only_when_ready');
         }
 
-        const remaining = appConstants.entry.maxPhotosPerEntry - entry._count.images;
+        const remaining = appConstants.entry.maxMediaPerEntry - entry._count.images;
         if (remaining < 1) {
-            throw apiError.badRequest('entry.too_many_photos', {
-                max: appConstants.entry.maxPhotosPerEntry
+            throw apiError.badRequest('entry.too_many_media', {
+                max: appConstants.entry.maxMediaPerEntry
             });
         }
 
-        const fileExist = await this.entryRepository.existsEntryImageByFileId(entryId, dto.fileId);
+        const fileExist = await this.entryRepository.existsEntryMediaByFileId(entryId, dto.fileId);
         if (fileExist) {
             throw apiError.badRequest('entry.file_already_attached');
         }
 
         const file = await this.resolveAttachableMediaFile(userId, dto.fileId);
 
-        const image = await this.entryRepository.createEntryImage(
+        const mediaRow = await this.entryRepository.createEntryMedia(
             entryId,
             file.id,
             normalizeMediaDescription(dto.description)
         );
 
         const basePayload = {
-            pipeline: EntryPipelinesEnum.UpdateImage,
+            pipeline: EntryPipelinesEnum.UpdateMedia,
             userId,
             entryId
         };
 
-        const imageIds = [image.id];
+        const entryMediaIds = [mediaRow.id];
 
         await this.entryProcessingService.activatePipeline(
-            EntryPipelinesEnum.UpdateImage,
+            EntryPipelinesEnum.UpdateMedia,
             {
                 hasCoords: false,
                 hasVoice: false,
                 hasText: false,
-                hasImage: true
+                hasMedia: true
             },
             {
                 [DelayedJob.EntryVision]: {
                     ...basePayload,
-                    entryVideoIds: imageIds,
+                    entryMediaIds,
                     userLang: actor.settings?.lang
                 }
             }
         );
 
-        const [mapped] = await this.mapImages([image]);
+        const [mapped] = await this.mapMedia([mediaRow]);
         return mapped;
     }
 
-    async detachImage(actor: Actor, entryId: string, imageId: string): Promise<void> {
+    async detachMedia(actor: Actor, entryId: string, mediaId: string): Promise<void> {
         if (!actor.user) {
             throw apiError.unauthorized('auth.unauthorized');
         }
 
-        const deleted = await this.entryRepository.deleteOwnedEntryImage(entryId, imageId, actor.user.id);
+        const deleted = await this.entryRepository.deleteOwnedEntryMedia(entryId, mediaId, actor.user.id);
 
         if (!deleted) {
-            throw apiError.notFound('entry.image_not_found');
+            throw apiError.notFound('entry.media_not_found');
         }
     }
 
@@ -445,9 +451,12 @@ export class EntryService {
             throw apiError.notFound('entry.not_found');
         }
 
-        const [photos, voice] = await Promise.all([this.mapImages(entry.images), this.mapVoice(entry.voice)]);
+        const [mediaItems, voice] = await Promise.all([
+            this.mapMedia(entry.images),
+            this.mapVoice(entry.voice)
+        ]);
 
-        return entryMapper.toDetail(entry, photos, voice);
+        return entryMapper.toDetail(entry, mediaItems, voice);
     }
 
     async search(actor: Actor, dto: EntrySearchDto): Promise<EntrySearchResponseDto> {
@@ -463,14 +472,14 @@ export class EntryService {
 
             if (this.entryRepository.hasActiveSearchFilters(dto.filters)) {
                 const candidates = await this.entryRepository.findSearchFilterCandidates(userId, dto);
-                const hasImage = dto.filters?.hasImage;
+                const hasMedia = dto.filters?.hasMedia;
                 scopedEntryIds = candidates
                     .filter((row) => {
-                        if (hasImage === undefined) {
+                        if (hasMedia === undefined) {
                             return true;
                         }
 
-                        return hasImage ? row._count.images > 0 : row._count.images === 0;
+                        return hasMedia ? row._count.images > 0 : row._count.images === 0;
                     })
                     .map((row) => row.id);
 
@@ -492,10 +501,10 @@ export class EntryService {
             };
         }
 
-        if (dto.filters?.hasImage !== undefined) {
+        if (dto.filters?.hasMedia !== undefined) {
             const all = await this.entryRepository.searchAll(userId, dto);
-            const hasImage = dto.filters.hasImage;
-            const filtered = all.filter((entry) => (hasImage ? entry._count.images > 0 : entry._count.images === 0));
+            const hasMedia = dto.filters.hasMedia;
+            const filtered = all.filter((entry) => (hasMedia ? entry._count.images > 0 : entry._count.images === 0));
             const { take, skip } = mapPagination(dto.pagination);
             const page = filtered.slice(skip, skip + take);
 

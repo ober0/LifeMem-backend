@@ -135,12 +135,12 @@ export class EntryRepository {
                     }
                 }
             }),
-            ...(data.images.length > 0 && {
+            ...(data.media.length > 0 && {
                 images: {
-                    create: data.images.map((image) => ({
-                        description: image.description ?? null,
+                    create: data.media.map((item) => ({
+                        description: item.description ?? null,
                         file: {
-                            connect: { id: image.fileId }
+                            connect: { id: item.fileId }
                         }
                     }))
                 }
@@ -170,7 +170,7 @@ export class EntryRepository {
     }
 
     hasActiveSearchFilters(filters?: EntrySearchFilterDto): boolean {
-        return filters?.hasImage !== undefined || Object.keys(this.buildSearchFilters(filters)).length > 0;
+        return filters?.hasMedia !== undefined || Object.keys(this.buildSearchFilters(filters)).length > 0;
     }
 
     private buildSearchFilters(filters?: EntrySearchFilterDto): Prisma.EntryWhereInput {
@@ -180,7 +180,7 @@ export class EntryRepository {
                 { key: 'peopleIds', path: 'people.some.personId' },
                 { key: 'placeIds', path: 'places.some.placeId' }
             ],
-            ['type', 'hasImage'],
+            ['type', 'hasMedia'],
             undefined,
             [],
             EntrySearchFilterDto
@@ -267,7 +267,7 @@ export class EntryRepository {
         });
     }
 
-    async findOwnedForImageAttach(id: string, userId: string) {
+    async findOwnedForMediaAttach(id: string, userId: string) {
         return this.prisma.entry.findFirst({
             where: {
                 id,
@@ -284,16 +284,16 @@ export class EntryRepository {
         });
     }
 
-    async existsEntryImageByFileId(entryId: string, fileId: string) {
-        const image = await this.prisma.entryImage.findFirst({
+    async existsEntryMediaByFileId(entryId: string, fileId: string) {
+        const row = await this.prisma.entryImage.findFirst({
             where: { entryId, fileId },
             select: { id: true }
         });
 
-        return image != null;
+        return row != null;
     }
 
-    async createEntryImage(entryId: string, fileId: string, description: string | null) {
+    async createEntryMedia(entryId: string, fileId: string, description: string | null) {
         return this.prisma.entryImage.create({
             data: {
                 entryId,
@@ -313,10 +313,10 @@ export class EntryRepository {
         });
     }
 
-    async deleteOwnedEntryImage(entryId: string, imageId: string, userId: string) {
+    async deleteOwnedEntryMedia(entryId: string, mediaId: string, userId: string) {
         const result = await this.prisma.entryImage.deleteMany({
             where: {
-                id: imageId,
+                id: mediaId,
                 entryId,
                 entry: {
                     userId,

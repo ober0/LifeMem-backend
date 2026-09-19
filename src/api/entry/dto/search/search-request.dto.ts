@@ -60,7 +60,7 @@ export class EntrySearchFilterDto {
     @IsOptional()
     @IsBoolean()
     @Contains()
-    hasImage?: boolean;
+    hasMedia?: boolean;
 
     @ApiPropertyOptional({ type: DateMinMaxFilterDto })
     @IsOptional()

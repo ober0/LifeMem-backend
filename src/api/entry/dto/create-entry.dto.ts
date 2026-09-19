@@ -64,7 +64,7 @@ export class CreateEntryDto {
     })
     @IsOptional()
     @IsArray()
-    @ArrayMaxSize(appConstants.entry.maxPhotosPerEntry)
+    @ArrayMaxSize(appConstants.entry.maxMediaPerEntry)
     @ValidateNested({ each: true })
     @Type(() => CreateEntryMediaItemDto)
     media?: CreateEntryMediaItemDto[];

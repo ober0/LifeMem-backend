@@ -5,11 +5,11 @@ import type { Actor } from '../../common/classes/actor';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
 import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
-import { AttachEntryImageDto } from './dto/attach-entry-image.dto';
+import { AttachEntryMediaDto } from './dto/attach-entry-media.dto';
 import { BaseEntryDto, BaseEntryUpdateDto } from './dto/base';
-import { EntryImageDto } from './dto/entry-images';
 import { CreateEntryDto } from './dto/create-entry.dto';
 import { CreateEntryResponseDto } from './dto/create-entry-response.dto';
+import { EntryMediaDto } from './dto/entry-media.dto';
 import { EntryDetailResponseDto } from './dto/get-entry-response.dto';
 import { EntrySearchDto } from './dto/search/search-request.dto';
 import { EntrySearchResponseDto } from './dto/search/search-response.dto';
@@ -49,31 +49,31 @@ export class EntryController {
         await this.entryService.softDelete(actor, id);
     }
 
-    @Post(':id/images')
+    @Post(':id/media')
     @HttpCode(HttpStatus.CREATED)
     @UseGuards(JwtAuthGuardHttp({}))
     @ApiOperation({ summary: 'Прикрепить фото или видео к готовой заметке' })
-    @ApiCreatedResponse({ type: EntryImageDto })
+    @ApiCreatedResponse({ type: EntryMediaDto })
     @ApiErrorResponses(400, 401, 404)
-    async attachImage(
+    async attachMedia(
         @CurrentActor() actor: Actor,
         @Param('id') id: string,
-        @Body() dto: AttachEntryImageDto
-    ): Promise<EntryImageDto> {
-        return this.entryService.attachImage(actor, id, dto);
+        @Body() dto: AttachEntryMediaDto
+    ): Promise<EntryMediaDto> {
+        return this.entryService.attachMedia(actor, id, dto);
     }
 
-    @Delete(':id/images/:imageId')
+    @Delete(':id/media/:mediaId')
     @HttpCode(HttpStatus.NO_CONTENT)
     @UseGuards(JwtAuthGuardHttp({}))
-    @ApiOperation({ summary: 'Открепить фото или видео от заметки' })
+    @ApiOperation({ summary: 'Открепить медиа от заметки' })
     @ApiErrorResponses(401, 404)
-    async detachImage(
+    async detachMedia(
         @CurrentActor() actor: Actor,
         @Param('id') id: string,
-        @Param('imageId') imageId: string
+        @Param('mediaId') mediaId: string
     ): Promise<void> {
-        await this.entryService.detachImage(actor, id, imageId);
+        await this.entryService.detachMedia(actor, id, mediaId);
     }
 
     @Patch(':id/base')

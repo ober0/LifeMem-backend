@@ -64,9 +64,9 @@ export function assertEntryMediaFiles(
 }
 
 export function checkMediaLimit(mediaCount: number): void {
-    if (mediaCount > appConstants.entry.maxPhotosPerEntry) {
-        throw apiError.badRequest('entry.too_many_photos', {
-            max: appConstants.entry.maxPhotosPerEntry
+    if (mediaCount > appConstants.entry.maxMediaPerEntry) {
+        throw apiError.badRequest('entry.too_many_media', {
+            max: appConstants.entry.maxMediaPerEntry
         });
     }
 }

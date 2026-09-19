@@ -89,7 +89,7 @@ export class EntryEmbeddingService {
     ) {
         assertNotAborted(options?.signal);
 
-        const images = await this.repository.getEntryImages(data.entryId, data.entryVideoIds);
+        const images = await this.repository.getEntryImages(data.entryId, data.entryMediaIds);
 
         if (images.length === 0) {
             this.logger.warn(`skip embed image: no images entryId=${data.entryId}`);

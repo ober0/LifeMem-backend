@@ -37,7 +37,7 @@ export class EntryVisionService {
     ) {
         assertNotAborted(options?.signal);
 
-        const imageEntities = await this.repository.getImages(data.entryId, data.entryVideoIds);
+        const imageEntities = await this.repository.getImages(data.entryId, data.entryMediaIds);
 
         if (imageEntities.length === 0) {
             this.logger.warn(`skip vision: no images entryId=${data.entryId}`);

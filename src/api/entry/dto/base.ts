@@ -6,7 +6,7 @@ import { ArrayMaxSize, IsArray, IsOptional, IsString, IsUUID, MaxLength, Validat
 import { appConstants } from '../../../common/config/app.constants';
 import { BaseEntity } from '../../../common/types/common/common-entity.dto';
 import { EntryLocationDto } from './create-entry.dto';
-import { EntryImageDto } from './entry-images';
+import { EntryMediaDto } from './entry-media.dto';
 
 export class EntryRelations {
     @ApiProperty()
@@ -71,8 +71,8 @@ export class BaseEntryDto extends BaseEntity {
     @ApiProperty()
     isHasVoice: boolean;
 
-    @ApiProperty({ type: [EntryImageDto] })
-    images: EntryImageDto[];
+    @ApiProperty({ type: [EntryMediaDto], description: 'Прикреплённые фото и видео' })
+    media: EntryMediaDto[];
 
     @ApiProperty()
     isReady: boolean;

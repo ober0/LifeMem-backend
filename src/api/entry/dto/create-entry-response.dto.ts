@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsOptional } from 'class-validator';
 
-import { EntryImageDto } from './entry-images';
+import { EntryMediaDto } from './entry-media.dto';
 import { EntryVoiceDto } from './entry-voices';
 
 export class EntryPlacesResponse {
@@ -17,9 +17,9 @@ export class CreateEntryResponseDto {
     @ApiProperty({ format: 'uuid' })
     id: string;
 
-    @ApiProperty({ type: EntryImageDto, isArray: true })
-    @Type(() => EntryImageDto)
-    images: EntryImageDto[];
+    @ApiProperty({ type: EntryMediaDto, isArray: true })
+    @Type(() => EntryMediaDto)
+    media: EntryMediaDto[];
 
     @ApiProperty({ type: EntryVoiceDto, nullable: true })
     @Type(() => EntryVoiceDto)

@@ -1,7 +1,7 @@
 import type { EntryFormattedTextFormat } from '@prisma/client';
 
 import { EntryPlacesResponse } from './create-entry-response.dto';
-import type { EntryImageDto } from './entry-images';
+import type { EntryMediaDto } from './entry-media.dto';
 import { EntryVoiceDto } from './entry-voices';
 
 export type EntryRelationSource = {
@@ -9,7 +9,7 @@ export type EntryRelationSource = {
     name: string;
 };
 
-export type EntryImageSource = {
+export type EntryMediaSource = {
     id: string;
     fileId: string;
     description: string | null;
@@ -27,7 +27,7 @@ export type EntryVoiceSource = {
 export type CreateEntrySource = {
     id: string;
     places: EntryPlacesResponse;
-    images: EntryImageDto[];
+    media: EntryMediaDto[];
     voice: EntryVoiceDto | null;
 };
 
