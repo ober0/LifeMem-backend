@@ -199,9 +199,9 @@ export class EntryService {
             throw apiError.notFound('entry.not_found');
         }
 
-        if (exist.isReady) {
-            throw apiError.badRequest('entry.edit_only_while_processing');
-        }
+        // if (exist.isReady) {
+        //     throw apiError.badRequest('entry.edit_only_while_processing');
+        // }
 
         if (dto.peoples || dto.places) {
             await this.checkLinkedEntities(userId, dto.peoples ?? [], dto.places ?? []);
