@@ -4,9 +4,10 @@ import { type Prisma } from '@prisma/client';
 import { mapPagination } from '../../common/helpers/map.pagination';
 import { mapSearch } from '../../common/helpers/map.search';
 import { mapSort } from '../../common/helpers/map.sort';
+import { SortTypes } from '../../common/types/search/sort-types.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { baseEntrySelect, createEntrySelect, entryDetailSelect, searchEntrySelect } from './consts/entry.constants';
-import { EntrySearchDto, EntrySearchFilterDto } from './dto/search/search-request.dto';
+import { EntrySearchContentType, EntrySearchDto, EntrySearchFilterDto } from './dto/search/search-request.dto';
 import type { ParsedLocation } from './helpers/parse-form-data.helper';
 import { CreateEntryInput } from './types/uploaded-file.type';
 
@@ -163,17 +164,64 @@ export class EntryRepository {
         });
     }
 
+    hasActiveSearchFilters(filters?: EntrySearchFilterDto): boolean {
+        return filters?.hasImage !== undefined || Object.keys(this.buildSearchFilters(filters)).length > 0;
+    }
+
+    private buildSearchFilters(filters?: EntrySearchFilterDto): Prisma.EntryWhereInput {
+        const mapped = mapSearch(
+            filters,
+            [
+                { key: 'peopleIds', path: 'people.some.personId' },
+                { key: 'placeIds', path: 'places.some.placeId' }
+            ],
+            ['type', 'hasImage'],
+            undefined,
+            [],
+            EntrySearchFilterDto
+        );
+
+        const extra: Prisma.EntryWhereInput[] = [];
+
+        if (filters?.type === EntrySearchContentType.Voice) {
+            extra.push({ voice: { isNot: null } });
+        }
+
+        if (filters?.type === EntrySearchContentType.Text) {
+            extra.push({
+                voice: null,
+                AND: [{ text: { not: null } }, { NOT: { text: '' } }]
+            });
+        }
+
+        const andParts: Prisma.EntryWhereInput[] = [];
+
+        if (mapped.AND && Array.isArray(mapped.AND)) {
+            andParts.push(...mapped.AND);
+        } else if (Object.keys(mapped).length > 0) {
+            andParts.push(mapped);
+        }
+
+        andParts.push(...extra);
+
+        if (andParts.length === 0) {
+            return {};
+        }
+
+        return { AND: andParts };
+    }
+
     private buildSearchWhere(userId: string, dto: EntrySearchDto): Prisma.EntryWhereInput {
         return {
             userId,
             ...this.notDeleted,
-            ...mapSearch(dto.filters, [], [], undefined, [], EntrySearchFilterDto)
+            ...this.buildSearchFilters(dto.filters)
         };
     }
 
     async search(userId: string, dto: EntrySearchDto) {
         const orderBy = mapSort(dto.sorts);
-        const defaultOrder: Prisma.EntryOrderByWithRelationInput[] = [{ createdAt: 'desc' }];
+        const defaultOrder = [{ createdAt: (dto.sorts?.createdAt ?? SortTypes.DESC).toLowerCase() as 'asc' | 'desc' }];
 
         return this.prisma.entry.findMany({
             where: this.buildSearchWhere(userId, dto),
@@ -186,6 +234,31 @@ export class EntryRepository {
     async count(userId: string, dto: EntrySearchDto) {
         return this.prisma.entry.count({
             where: this.buildSearchWhere(userId, dto)
+        });
+    }
+
+    async findSearchFilterCandidates(userId: string, dto: EntrySearchDto) {
+        return this.prisma.entry.findMany({
+            where: this.buildSearchWhere(userId, dto),
+            select: {
+                id: true,
+                _count: {
+                    select: {
+                        images: true
+                    }
+                }
+            }
+        });
+    }
+
+    async searchAll(userId: string, dto: EntrySearchDto) {
+        const orderBy = mapSort(dto.sorts);
+        const defaultOrder = [{ createdAt: (dto.sorts?.createdAt ?? SortTypes.DESC).toLowerCase() as 'asc' | 'desc' }];
+
+        return this.prisma.entry.findMany({
+            where: this.buildSearchWhere(userId, dto),
+            select: searchEntrySelect,
+            orderBy: orderBy.length > 0 ? orderBy : defaultOrder
         });
     }
 }

@@ -22,6 +22,7 @@ import { EntryImageSource, EntryVoiceSource } from './dto/types';
 import { entryMapper } from './entry.mapper';
 import { EntryRepository } from './entry.repository';
 import { EntrySearchRepository } from './entry-search.repository';
+import { mapPagination } from '../../common/helpers/map.pagination';
 import {
     checkEntryInput,
     checkGeo,
@@ -318,16 +319,51 @@ export class EntryService {
         const queryText = dto.query?.trim();
 
         if (queryText) {
+            let scopedEntryIds: string[] = [];
+
+            if (this.entryRepository.hasActiveSearchFilters(dto.filters)) {
+                const candidates = await this.entryRepository.findSearchFilterCandidates(userId, dto);
+                const hasImage = dto.filters?.hasImage;
+                scopedEntryIds = candidates
+                    .filter((row) => {
+                        if (hasImage === undefined) {
+                            return true;
+                        }
+
+                        return hasImage ? row._count.images > 0 : row._count.images === 0;
+                    })
+                    .map((row) => row.id);
+
+                if (scopedEntryIds.length === 0) {
+                    return { data: [], count: 0 };
+                }
+            }
+
             const embedded = await this.embeddingService.embedText(queryText, 'query');
 
             const [entries, count] = await Promise.all([
-                this.entrySearchRepository.searchByQuery(userId, dto, queryText, embedded.result),
-                this.entrySearchRepository.countByQuery(userId, dto, queryText, embedded.result)
+                this.entrySearchRepository.searchByQuery(userId, dto, queryText, embedded.result, scopedEntryIds),
+                this.entrySearchRepository.countByQuery(userId, dto, queryText, embedded.result, scopedEntryIds)
             ]);
 
             return {
                 data: entries.map((entry) => entryMapper.toSearchItem(entry)),
                 count
+            };
+        }
+
+        if (dto.filters?.hasImage !== undefined) {
+            const all = await this.entryRepository.searchAll(userId, dto);
+            const hasImage = dto.filters.hasImage;
+            const filtered = all.filter((entry) =>
+                hasImage ? entry._count.images > 0 : entry._count.images === 0
+            );
+            const { take, skip } = mapPagination(dto.pagination);
+            const page = filtered.slice(skip, skip + take);
+
+            return {
+                data: page.map((entry) => entryMapper.toSearchItem(entry)),
+                count: filtered.length
             };
         }
 

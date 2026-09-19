@@ -3,10 +3,11 @@ import { EntryVectorKind, Prisma } from '@prisma/client';
 
 import { appConstants } from '../../common/config/app.constants';
 import { mapPagination } from '../../common/helpers/map.pagination';
+import { SortTypes } from '../../common/types/search/sort-types.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { searchEntrySelect, type SearchEntrySource } from './consts/entry.constants';
 import type { EntrySearchDto } from './dto/search/search-request.dto';
-import { escapeLikePattern, toVectorLiteral } from './helpers/entry-search-query.helper';
+import { toVectorLiteral } from './helpers/entry-search-query.helper';
 
 export type RankedEntryHit = {
     id: string;
@@ -32,9 +33,10 @@ export class EntrySearchRepository {
         userId: string,
         dto: EntrySearchDto,
         queryText: string,
-        queryEmbedding: number[]
+        queryEmbedding: number[],
+        scopedEntryIds: string[]
     ): Promise<SearchEntrySource[]> {
-        const ranked = await this.findRankedEntryIds(userId, dto, queryText, queryEmbedding);
+        const ranked = await this.findRankedEntryIds(userId, dto, queryText, queryEmbedding, scopedEntryIds);
 
         if (ranked.length === 0) {
             return [];
@@ -60,9 +62,10 @@ export class EntrySearchRepository {
         userId: string,
         dto: EntrySearchDto,
         queryText: string,
-        queryEmbedding: number[]
+        queryEmbedding: number[],
+        scopedEntryIds: string[]
     ): Promise<number> {
-        const params = this.buildQueryParams(userId, dto, queryText, queryEmbedding);
+        const params = this.buildQueryParams(userId, dto, queryText, queryEmbedding, scopedEntryIds);
 
         const rows = await this.prisma.$queryRaw<CountRow[]>(Prisma.sql`
             WITH candidates AS (
@@ -79,9 +82,10 @@ export class EntrySearchRepository {
         userId: string,
         dto: EntrySearchDto,
         queryText: string,
-        queryEmbedding: number[]
+        queryEmbedding: number[],
+        scopedEntryIds: string[]
     ): Promise<RankedEntryHit[]> {
-        const params = this.buildQueryParams(userId, dto, queryText, queryEmbedding);
+        const params = this.buildQueryParams(userId, dto, queryText, queryEmbedding, scopedEntryIds);
         const { take, skip } = mapPagination(dto.pagination);
 
         const rows = await this.prisma.$queryRaw<RankedEntryRow[]>(Prisma.sql`
@@ -99,7 +103,7 @@ export class EntrySearchRepository {
                 (1 - r.score)::float8 AS distance
             FROM ranked r
             INNER JOIN entry e ON e.id = r.entry_id
-            ORDER BY r.score DESC, e.created_at DESC
+            ORDER BY r.score DESC, e.created_at ${Prisma.raw(params.createdAtSortDirection)}
             LIMIT ${take}
             OFFSET ${skip}
         `);
@@ -111,56 +115,38 @@ export class EntrySearchRepository {
         }));
     }
 
-    private buildQueryParams(userId: string, dto: EntrySearchDto, queryText: string, queryEmbedding: number[]) {
-        const likePattern = `%${escapeLikePattern(queryText)}%`;
+    private buildQueryParams(
+        userId: string,
+        dto: EntrySearchDto,
+        queryText: string,
+        queryEmbedding: number[],
+        scopedEntryIds: string[]
+    ) {
         const dimensions = queryEmbedding.length;
         const vectorLiteral = toVectorLiteral(queryEmbedding);
         const search = appConstants.entry.search;
+        const createdAtSort = dto.sorts?.createdAt ?? SortTypes.DESC;
 
         return {
             userId,
-            likePattern,
             dimensions,
             vectorLiteral,
-            isReady: dto.filters?.isReady ?? null,
             useVector: queryText.length >= search.minQueryLengthForVector && queryEmbedding.length > 0,
+            createdAtSortDirection: createdAtSort === SortTypes.ASC ? 'ASC' : 'DESC',
+            scopedEntryIds,
             ...search
         };
     }
 
-    private candidatesSql(params: ReturnType<EntrySearchRepository['buildQueryParams']>) {
-        //     SELECT e.id AS entry_id, ${params.scoreTitleLike}::float8 AS score
-        //     FROM entry e
-        //     WHERE e.user_id = ${params.userId}::uuid
-        //       AND e.deleted_at IS NULL
-        //       AND (${params.isReady}::boolean IS NULL OR e.is_ready = ${params.isReady})
-        //       AND e.title ILIKE ${params.likePattern} ESCAPE '\\'
-        //
-        //     UNION ALL
-        //
-        //     SELECT e.id AS entry_id, ${params.scoreTextLike}::float8 AS score
-        //     FROM entry e
-        //     WHERE e.user_id = ${params.userId}::uuid
-        //       AND e.deleted_at IS NULL
-        //       AND (${params.isReady}::boolean IS NULL OR e.is_ready = ${params.isReady})
-        //       AND e.text IS NOT NULL
-        //       AND e.text ILIKE ${params.likePattern} ESCAPE '\\'
-        //
-        //     UNION ALL
-        //
-        //     SELECT e.id AS entry_id, ${params.scoreImageLike}::float8 AS score
-        //     FROM entry e
-        //     INNER JOIN entry_image ei ON ei.entry_id = e.id
-        //     WHERE e.user_id = ${params.userId}::uuid
-        //       AND e.deleted_at IS NULL
-        //       AND (${params.isReady}::boolean IS NULL OR e.is_ready = ${params.isReady})
-        //       AND (
-        //           (ei.description IS NOT NULL AND ei.description ILIKE ${params.likePattern} ESCAPE '\\')
-        //           OR (ei.ai_transcription IS NOT NULL AND ei.ai_transcription ILIKE ${params.likePattern} ESCAPE '\\')
-        //       )
-        //
-        //     UNION ALL
+    private scopedEntryIdsSql(scopedEntryIds: string[]) {
+        if (scopedEntryIds.length === 0) {
+            return Prisma.sql``;
+        }
 
+        return Prisma.sql`AND e.id IN (${Prisma.join(scopedEntryIds.map((id) => Prisma.sql`${id}::uuid`))})`;
+    }
+
+    private candidatesSql(params: ReturnType<EntrySearchRepository['buildQueryParams']>) {
         return Prisma.sql`
             SELECT e.id AS entry_id, (1 - (ev.embedding <=> ${params.vectorLiteral}::vector))::float8 AS score
             FROM entry_vector ev
@@ -168,7 +154,7 @@ export class EntrySearchRepository {
             WHERE ${params.useVector}
               AND e.user_id = ${params.userId}::uuid
               AND e.deleted_at IS NULL
-              AND (${params.isReady}::boolean IS NULL OR e.is_ready = ${params.isReady})
+              ${this.scopedEntryIdsSql(params.scopedEntryIds)}
               AND ev.kind = ${EntryVectorKind.Text}::entry_vector_kind
               AND ev.dimensions = ${params.dimensions}
               AND ev.embedding IS NOT NULL
@@ -183,7 +169,7 @@ export class EntrySearchRepository {
             WHERE ${params.useVector}
               AND e.user_id = ${params.userId}::uuid
               AND e.deleted_at IS NULL
-              AND (${params.isReady}::boolean IS NULL OR e.is_ready = ${params.isReady})
+              ${this.scopedEntryIdsSql(params.scopedEntryIds)}
               AND ev.kind = ${EntryVectorKind.Title}::entry_vector_kind
               AND ev.dimensions = ${params.dimensions}
               AND ev.embedding IS NOT NULL
@@ -198,7 +184,7 @@ export class EntrySearchRepository {
             WHERE ${params.useVector}
               AND e.user_id = ${params.userId}::uuid
               AND e.deleted_at IS NULL
-              AND (${params.isReady}::boolean IS NULL OR e.is_ready = ${params.isReady})
+              ${this.scopedEntryIdsSql(params.scopedEntryIds)}
               AND ev.kind = ${EntryVectorKind.Image}::entry_vector_kind
               AND ev.dimensions = ${params.dimensions}
               AND ev.embedding IS NOT NULL
