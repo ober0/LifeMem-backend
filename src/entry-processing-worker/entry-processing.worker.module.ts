@@ -11,8 +11,8 @@ import { EntryVisionModule } from '../api/entry-vision/entry-vision.module';
 import { PrismaModule } from '../api/prisma/prisma.module';
 import { S3Module } from '../api/s3/s3.module';
 import { envConfigs, validateEnv } from '../common/config/env';
-import { EntryJobCancelListener } from './entry-job-cancel.listener';
 import { EntryProcessor } from './entry.processor';
+import { EntryJobCancelListener } from './entry-job-cancel.listener';
 import { EntryProcessingWorkerRepository } from './entry-processing-worker.repository';
 import { EntryProcessingWorkerService } from './entry-processing-worker.service';
 

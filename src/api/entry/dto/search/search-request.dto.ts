@@ -13,7 +13,6 @@ import {
     ValidateNested
 } from 'class-validator';
 
-import { appConstants } from '../../../../common/config/app.constants';
 import { Contains } from '../../../../common/helpers/contains.decorator';
 import { GenerateSearchDto } from '../../../../common/types/search/base-search.dto';
 import { DateMinMaxFilterDto } from '../../../../common/types/search/min-max.filter.dto';

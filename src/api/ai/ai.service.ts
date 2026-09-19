@@ -2,9 +2,9 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
 import { appConstants } from '../../common/config/app.constants';
-import { JobAbortedError, assertNotAborted } from '../../common/helpers/job-abort';
 import { apiError } from '../../common/helpers/errors';
 import { getExecuteTime } from '../../common/helpers/get-execute-time';
+import { assertNotAborted,JobAbortedError } from '../../common/helpers/job-abort';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
 import type {
     AiEmbedParams,
