@@ -68,6 +68,14 @@ export class EntryProcessingService {
         await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Cancelled);
     }
 
+    async cancelActiveJob(entryId: string, type: EntryProcessingType) {
+        const job = await this.repository.findActiveJob(entryId, type);
+
+        if (job) {
+            await this.markJobCancelled(job.id);
+        }
+    }
+
     async createJob<K extends EntryJobName>(
         entryId: string,
         key: K,

@@ -1,15 +1,4 @@
-import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    HttpCode,
-    HttpStatus,
-    Param,
-    Patch,
-    Post,
-    UseGuards
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import type { Actor } from '../../common/classes/actor';
@@ -61,7 +50,7 @@ export class EntryController {
     @Patch(':id/base')
     @HttpCode(HttpStatus.OK)
     @UseGuards(JwtAuthGuardHttp({}))
-    @ApiOperation({ summary: 'Обновления базовой информации (после загрузки)' })
+    @ApiOperation({ summary: 'Обновление базовой информации (после загрузки)' })
     @ApiOkResponse({ type: BaseEntryDto })
     @ApiErrorResponses(400, 401, 404)
     async updateBase(

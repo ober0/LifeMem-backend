@@ -52,7 +52,12 @@ export class EntryRepository {
 
     async findOwnedById(id: string, userId: string) {
         return this.prisma.entry.findFirst({
-            where: { id, userId, ...this.notDeleted }
+            where: { id, userId, ...this.notDeleted },
+            include: {
+                _count: {
+                    select: { places: true }
+                }
+            }
         });
     }
 

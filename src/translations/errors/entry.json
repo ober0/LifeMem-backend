@@ -3,6 +3,10 @@
         "ru": "Заметка не найдена",
         "en": "Entry not found"
     },
+    "edit_only_while_processing": {
+        "ru": "Редактировать можно только заметку в обработке",
+        "en": "Only entries that are still processing can be edited"
+    },
     "text_or_voice_required": {
         "ru": "Укажите текст или голосовое сообщение",
         "en": "Provide text or a voice message"

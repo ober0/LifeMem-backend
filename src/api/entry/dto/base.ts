@@ -1,10 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EntryFormattedTextFormat } from '@prisma/client';
 import { Type } from 'class-transformer';
-import { ArrayMaxSize, IsArray, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsOptional, IsString, IsUUID, MaxLength, ValidateNested } from 'class-validator';
 
 import { appConstants } from '../../../common/config/app.constants';
 import { BaseEntity } from '../../../common/types/common/common-entity.dto';
+import { EntryLocationDto } from './create-entry.dto';
 import { EntryImageDto } from './entry-images';
 
 export class EntryRelations {
@@ -42,6 +43,16 @@ export class BaseEntryUpdateDto {
     @ArrayMaxSize(appConstants.entry.maxPlacesPerEntry)
     @IsUUID('4', { each: true })
     places?: string[];
+
+    @ApiPropertyOptional({
+        type: [EntryLocationDto]
+    })
+    @IsOptional()
+    @IsArray()
+    @ArrayMaxSize(appConstants.entry.maxPlacesPerEntry)
+    @ValidateNested({ each: true })
+    @Type(() => EntryLocationDto)
+    location?: EntryLocationDto[];
 }
 
 export class BaseEntryDto extends BaseEntity {

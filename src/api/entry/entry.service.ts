@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { FileType } from '@prisma/client';
+import { EntryProcessingType, FileType } from '@prisma/client';
 
 import type { Actor } from '../../common/classes/actor';
 import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
+import { mapPagination } from '../../common/helpers/map.pagination';
 import { EntryPipelinesEnum } from '../../common/pipelines';
 import { DelayedJob } from '../delayed-worker/delayed-worker.constants';
 import { EmbeddingService } from '../embedding/embedding.service';
@@ -22,7 +23,6 @@ import { EntryImageSource, EntryVoiceSource } from './dto/types';
 import { entryMapper } from './entry.mapper';
 import { EntryRepository } from './entry.repository';
 import { EntrySearchRepository } from './entry-search.repository';
-import { mapPagination } from '../../common/helpers/map.pagination';
 import {
     checkEntryInput,
     checkGeo,
@@ -199,24 +199,82 @@ export class EntryService {
             throw apiError.notFound('entry.not_found');
         }
 
+        if (exist.isReady) {
+            throw apiError.badRequest('entry.edit_only_while_processing');
+        }
+
         if (dto.peoples || dto.places) {
             await this.checkLinkedEntities(userId, dto.peoples ?? [], dto.places ?? []);
         }
 
-        if (dto.places && dto.places.length > appConstants.entry.maxPlacesPerEntry) {
-            throw apiError.badRequest('entry.too_many_places', {
-                max: appConstants.entry.maxPlacesPerEntry
-            });
+        const locations = dto.location ?? [];
+
+        for (const location of locations) {
+            checkGeo(location);
+
+            if (!location.latitude || !location.longitude) {
+                throw apiError.badRequest('entry.geo_incomplete');
+            }
         }
 
+        if (dto.places || locations.length > 0) {
+            const placeIdsCount = dto.places ? dto.places.length : exist._count.places;
+            checkPlacesLimit(placeIdsCount, locations.length);
+        }
+
+        const locationCoords = toLocationCoords(locations);
+
+        const nextTitle = dto.title ? dto.title.trim() : undefined;
+        const titleChanged = nextTitle && nextTitle !== exist.title && nextTitle.length > 0;
+
         const entry = await this.entryRepository.updateBase(id, {
-            title: dto.title?.trim() || undefined,
+            title: titleChanged ? nextTitle : undefined,
             personIds: dto.peoples || undefined,
             placeIds: dto.places || undefined
         });
 
         if (!entry) {
             throw apiError.notFound('entry.not_found');
+        }
+
+        const hasLocationCoords = locationCoords.length > 0;
+
+        if (titleChanged || hasLocationCoords) {
+            if (titleChanged) {
+                await this.entryProcessingService.cancelActiveJob(id, EntryProcessingType.EmbedTitle);
+            }
+
+            if (hasLocationCoords) {
+                await this.entryProcessingService.cancelActiveJob(id, EntryProcessingType.LocationConnect);
+            }
+
+            const basePayload = {
+                pipeline: EntryPipelinesEnum.Update,
+                userId,
+                entryId: id
+            };
+
+            await this.entryProcessingService.activatePipeline(
+                EntryPipelinesEnum.Update,
+                {
+                    hasCoords: hasLocationCoords,
+                    hasVoice: false,
+                    hasText: false,
+                    hasImage: false
+                },
+                {
+                    ...(titleChanged && {
+                        [DelayedJob.EntryEmbedTitle]: basePayload
+                    }),
+                    ...(hasLocationCoords && {
+                        [DelayedJob.EntryLocation]: {
+                            ...basePayload,
+                            locations: locationCoords,
+                            userLang: actor.settings?.lang
+                        }
+                    })
+                }
+            );
         }
 
         const images = await this.mapImages(entry.images);
@@ -355,9 +413,7 @@ export class EntryService {
         if (dto.filters?.hasImage !== undefined) {
             const all = await this.entryRepository.searchAll(userId, dto);
             const hasImage = dto.filters.hasImage;
-            const filtered = all.filter((entry) =>
-                hasImage ? entry._count.images > 0 : entry._count.images === 0
-            );
+            const filtered = all.filter((entry) => (hasImage ? entry._count.images > 0 : entry._count.images === 0));
             const { take, skip } = mapPagination(dto.pagination);
             const page = filtered.slice(skip, skip + take);
 

@@ -53,6 +53,7 @@ export type ErrorsTranslationKey =
   | 'entry.audio_media_conflict'
   | 'entry.duplicate_job'
   | 'entry.duplicate_media_ids'
+  | 'entry.edit_only_while_processing'
   | 'entry.file_not_found'
   | 'entry.geo_incomplete'
   | 'entry.invalid_audio_file_type'
