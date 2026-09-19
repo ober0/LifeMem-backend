@@ -47,4 +47,12 @@ export class PlaceRepository {
             where: this.buildWhere(userId, dto)
         });
     }
+
+    async deleteOwned(userId: string, id: string): Promise<boolean> {
+        const result = await this.prisma.place.deleteMany({
+            where: { id, userId }
+        });
+
+        return result.count > 0;
+    }
 }

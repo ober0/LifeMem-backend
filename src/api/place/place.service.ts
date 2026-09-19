@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import type { Actor } from '../../common/classes/actor';
+import { apiError } from '../../common/helpers/errors';
 import type { PlaceListResponseDto } from './dto/place.dto';
 import type { PlaceListQueryDto } from './dto/place-list-query.dto';
 import { placeMapper } from './place.mapper';
@@ -22,5 +23,14 @@ export class PlaceService {
             data: rows.map((place) => placeMapper.toDto(place)),
             count
         };
+    }
+
+    async delete(actor: Actor, id: string): Promise<void> {
+        const userId = actor.user.id;
+        const deleted = await this.repository.deleteOwned(userId, id);
+
+        if (!deleted) {
+            throw apiError.notFound('place.not_found');
+        }
     }
 }

@@ -1,0 +1,14 @@
+{
+    "not_found": {
+        "ru": "Человек не найден",
+        "en": "Person not found"
+    },
+    "duplicate_name": {
+        "ru": "Человек с таким именем уже существует",
+        "en": "A person with this name already exists"
+    },
+    "name_empty": {
+        "ru": "Укажите имя",
+        "en": "Name is required"
+    }
+}

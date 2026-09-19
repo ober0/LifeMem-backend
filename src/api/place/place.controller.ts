@@ -1,5 +1,15 @@
-import { Controller, Get, HttpCode, HttpStatus, Query, UseGuards } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Param,
+    ParseUUIDPipe,
+    Query,
+    UseGuards
+} from '@nestjs/common';
+import { ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import type { Actor } from '../../common/classes/actor';
 import { CurrentActor } from '../../common/decorators/current-actor.decorator';
@@ -22,5 +32,15 @@ export class PlaceController {
     @ApiErrorResponses(401)
     async list(@CurrentActor() actor: Actor, @Query() query: PlaceListQueryDto): Promise<PlaceListResponseDto> {
         return this.placeService.list(actor, query);
+    }
+
+    @Delete(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiOperation({ summary: 'Удаление места (отвязка от всех заметок)' })
+    @ApiNoContentResponse()
+    @ApiErrorResponses(401, 404)
+    async delete(@CurrentActor() actor: Actor, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+        await this.placeService.delete(actor, id);
     }
 }

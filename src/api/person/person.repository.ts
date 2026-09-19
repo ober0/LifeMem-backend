@@ -44,4 +44,32 @@ export class PersonRepository {
             where: this.buildWhere(userId, dto)
         });
     }
+
+    async findByUserAndName(userId: string, name: string) {
+        return this.prisma.person.findUnique({
+            where: {
+                userId_name: { userId, name }
+            },
+            select: { id: true }
+        });
+    }
+
+    async create(userId: string, name: string) {
+        return this.prisma.person.create({
+            data: {
+                userId,
+                name,
+                autodetected: false
+            },
+            select: personSelect
+        });
+    }
+
+    async deleteOwned(userId: string, id: string): Promise<boolean> {
+        const result = await this.prisma.person.deleteMany({
+            where: { id, userId }
+        });
+
+        return result.count > 0;
+    }
 }
