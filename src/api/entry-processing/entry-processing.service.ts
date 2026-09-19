@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EntryProcessingStatus, EntryProcessingType, Prisma } from '@prisma/client';
 import type Redis from 'ioredis';
 
-import { entryJobCancelConstants } from '../../common/config/constants/entry-processing.constants';
+import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
 import { EntryPipelines, EntryPipelinesEnum } from '../../common/pipelines';
 import type { PipelineContext, PipelineStep } from '../../common/pipelines/types';
@@ -67,7 +67,7 @@ export class EntryProcessingService {
 
     async markJobCancelled(jobId: string) {
         await this.repository.updateJobStatus(jobId, EntryProcessingStatus.Cancelled);
-        await this.redis.publish(entryJobCancelConstants.channel(jobId), '1');
+        await this.redis.publish(appConstants.entryProcessing.jobCancel.channel(jobId), '1');
     }
 
     async cancelActiveJob(entryId: string, type: EntryProcessingType) {

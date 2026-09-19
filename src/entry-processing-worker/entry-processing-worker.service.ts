@@ -8,7 +8,7 @@ import {
     type EntryJobName
 } from '../api/delayed-worker/delayed-worker.constants';
 import { DelayedWorkerService } from '../api/delayed-worker/delayed-worker.service';
-import { entryProcessingConstants } from '../common/config/constants/entry-processing.constants';
+import { appConstants } from '../common/config/app.constants';
 import { apiError } from '../common/helpers/errors';
 import { EntryPipelines, EntryPipelinesEnum } from '../common/pipelines';
 import type { PipelineContext, PipelineStep } from '../common/pipelines/types';
@@ -50,7 +50,7 @@ export class EntryProcessingWorkerService {
     }
 
     get maxJobErrorAttempts() {
-        return entryProcessingConstants.maxJobErrorAttempts;
+        return appConstants.entryProcessing.maxJobErrorAttempts;
     }
 
     async requeueJob<K extends EntryJobName>(jobName: K, data: DelayedJobPayloads[K]) {
