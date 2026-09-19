@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 
 import { appConstants } from '../../common/config/app.constants';
+import { JobAbortedError, assertNotAborted } from '../../common/helpers/job-abort';
 import { apiError } from '../../common/helpers/errors';
 import { getExecuteTime } from '../../common/helpers/get-execute-time';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
@@ -53,15 +54,42 @@ export class AiService implements OnModuleInit {
         return this.responseStore.take<T>(requestId);
     }
 
-    waitResult<T = unknown>(requestId: string): Promise<AiInvokeResult<T>> {
+    waitResult<T = unknown>(requestId: string, options?: { signal?: AbortSignal }): Promise<AiInvokeResult<T>> {
+        const signal = options?.signal;
+        assertNotAborted(signal);
+
         const timeoutMs = appConstants.ai.resultWaitTimeoutSec * 1000;
         const startedAt = Date.now();
 
         return new Promise<AiInvokeResult<T>>((resolve, reject) => {
-            const timer = setInterval(() => {
+            let timer: ReturnType<typeof setInterval> | undefined;
+
+            const cleanup = () => {
+                if (timer) {
+                    clearInterval(timer);
+                    timer = undefined;
+                }
+
+                signal?.removeEventListener('abort', onAbort);
+            };
+
+            const onAbort = () => {
+                cleanup();
+                reject(new JobAbortedError());
+            };
+
+            signal?.addEventListener('abort', onAbort, { once: true });
+
+            timer = setInterval(() => {
                 try {
+                    if (signal?.aborted) {
+                        cleanup();
+                        reject(new JobAbortedError());
+                        return;
+                    }
+
                     if (Date.now() - startedAt >= timeoutMs) {
-                        clearInterval(timer);
+                        cleanup();
                         reject(apiError.internal('ai.request_timeout'));
                         return;
                     }
@@ -72,7 +100,7 @@ export class AiService implements OnModuleInit {
                         return;
                     }
 
-                    clearInterval(timer);
+                    cleanup();
 
                     if (lookup.status === 'failed') {
                         reject(apiError.internal('ai.request_failed', { error: lookup.error }));
@@ -85,7 +113,7 @@ export class AiService implements OnModuleInit {
                         timeMs: lookup.timeMs
                     });
                 } catch (error) {
-                    clearInterval(timer);
+                    cleanup();
                     reject(error);
                 }
             }, appConstants.ai.resultPollIntervalMs);

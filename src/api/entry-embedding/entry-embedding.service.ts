@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EntryVectorKind } from '@prisma/client';
 
 import { apiError } from '../../common/helpers/errors';
+import { assertNotAborted } from '../../common/helpers/job-abort';
+import type { EntryJobExecutionOptions } from '../../common/types/entry-job-execution';
 import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker/delayed-worker.constants';
 import { EmbeddingService } from '../embedding/embedding.service';
 import { buildEntryImageEmbedText } from '../entry-vision/entry-vision.types';
@@ -19,7 +21,12 @@ export class EntryEmbeddingService {
         private readonly embeddingService: EmbeddingService
     ) {}
 
-    async processEntryEmbedTitle(data: DelayedJobPayloads[typeof DelayedJob.EntryEmbedTitle]) {
+    async processEntryEmbedTitle(
+        data: DelayedJobPayloads[typeof DelayedJob.EntryEmbedTitle],
+        options?: EntryJobExecutionOptions
+    ) {
+        assertNotAborted(options?.signal);
+
         const entry = await this.repository.getEntryTitle(data.entryId);
         if (!entry) {
             throw apiError.notFound('entry.not_found');
@@ -31,16 +38,26 @@ export class EntryEmbeddingService {
             return true;
         }
 
-        return this.embedAndStore({
-            jobId: data.jobId,
-            entryId: entry.id,
-            text: title,
-            kind: EntryVectorKind.Title,
-            delayedJob: DelayedJob.EntryEmbedTitle
-        });
+        assertNotAborted(options?.signal);
+
+        return this.embedAndStore(
+            {
+                jobId: data.jobId,
+                entryId: entry.id,
+                text: title,
+                kind: EntryVectorKind.Title,
+                delayedJob: DelayedJob.EntryEmbedTitle
+            },
+            options
+        );
     }
 
-    async processEntryEmbedText(data: DelayedJobPayloads[typeof DelayedJob.EntryEmbedText]) {
+    async processEntryEmbedText(
+        data: DelayedJobPayloads[typeof DelayedJob.EntryEmbedText],
+        options?: EntryJobExecutionOptions
+    ) {
+        assertNotAborted(options?.signal);
+
         const entry = await this.repository.getEntryText(data.entryId);
         if (!entry) {
             throw apiError.notFound('entry.not_found');
@@ -52,16 +69,26 @@ export class EntryEmbeddingService {
             return true;
         }
 
-        return this.embedAndStore({
-            jobId: data.jobId,
-            entryId: entry.id,
-            text,
-            kind: EntryVectorKind.Text,
-            delayedJob: DelayedJob.EntryEmbedText
-        });
+        assertNotAborted(options?.signal);
+
+        return this.embedAndStore(
+            {
+                jobId: data.jobId,
+                entryId: entry.id,
+                text,
+                kind: EntryVectorKind.Text,
+                delayedJob: DelayedJob.EntryEmbedText
+            },
+            options
+        );
     }
 
-    async processEntryEmbedImage(data: DelayedJobPayloads[typeof DelayedJob.EntryEmbedImage]) {
+    async processEntryEmbedImage(
+        data: DelayedJobPayloads[typeof DelayedJob.EntryEmbedImage],
+        options?: EntryJobExecutionOptions
+    ) {
+        assertNotAborted(options?.signal);
+
         const images = await this.repository.getEntryImages(data.entryId, data.entryVideoIds);
 
         if (images.length === 0) {
@@ -81,28 +108,42 @@ export class EntryEmbeddingService {
                 continue;
             }
 
-            await this.embedAndStore({
-                jobId: data.jobId,
-                entryId: data.entryId,
-                text,
-                kind: EntryVectorKind.Image,
-                delayedJob: DelayedJob.EntryEmbedImage,
-                imageId: image.id
-            });
+            assertNotAborted(options?.signal);
+
+            await this.embedAndStore(
+                {
+                    jobId: data.jobId,
+                    entryId: data.entryId,
+                    text,
+                    kind: EntryVectorKind.Image,
+                    delayedJob: DelayedJob.EntryEmbedImage,
+                    imageId: image.id
+                },
+                options
+            );
         }
 
         return true;
     }
 
-    private async embedAndStore(data: {
-        jobId: string;
-        entryId: string;
-        text: string;
-        kind: EntryVectorKind;
-        delayedJob: EmbedDelayedJob;
-        imageId?: string;
-    }) {
-        const embedData = await this.embeddingService.embedText(data.text, 'passage');
+    private async embedAndStore(
+        data: {
+            jobId: string;
+            entryId: string;
+            text: string;
+            kind: EntryVectorKind;
+            delayedJob: EmbedDelayedJob;
+            imageId?: string;
+        },
+        options?: EntryJobExecutionOptions
+    ) {
+        assertNotAborted(options?.signal);
+
+        const embedData = await this.embeddingService.embedText(data.text, 'passage', {
+            signal: options?.signal
+        });
+
+        assertNotAborted(options?.signal);
 
         await Promise.all([
             this.repository.updateUsage(data.jobId, {

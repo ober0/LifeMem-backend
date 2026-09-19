@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { appConstants } from '../../common/config/app.constants';
 import { isLocalEmbeddingModelName } from '../../common/config/constants/local-embedding.constants';
 import { apiError } from '../../common/helpers/errors';
+import { assertNotAborted } from '../../common/helpers/job-abort';
 import { AiService } from '../ai/ai.service';
 import { AiModelService } from '../ai-model/ai-model.service';
 import { LocalEmbeddingClient } from '../local-embedding/local-embedding.client';
@@ -15,7 +16,9 @@ export class EmbeddingService {
         private readonly localEmbedding: LocalEmbeddingClient
     ) {}
 
-    async embedText(text: string, kind: 'query' | 'passage' = 'passage') {
+    async embedText(text: string, kind: 'query' | 'passage' = 'passage', options?: { signal?: AbortSignal }) {
+        assertNotAborted(options?.signal);
+
         const useProvider = appConstants.embedding.use;
 
         let modelName: string;
@@ -36,7 +39,7 @@ export class EmbeddingService {
         if (dbModel.type !== 'Embedding') {
             throw apiError.notFound('ai_model.not_found');
         }
-
+        assertNotAborted(options?.signal);
         if (isLocalEmbeddingModelName(dbModel.name)) {
             const embedded = await this.localEmbedding.embed({
                 modelName: dbModel.name,
@@ -60,7 +63,7 @@ export class EmbeddingService {
             text
         });
 
-        const reqResponse = await this.ai.waitResult<number[]>(requestId);
+        const reqResponse = await this.ai.waitResult<number[]>(requestId, { signal: options?.signal });
 
         return {
             ...reqResponse,

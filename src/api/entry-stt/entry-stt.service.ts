@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { assertNotAborted } from '../../common/helpers/job-abort';
+import type { EntryJobExecutionOptions } from '../../common/types/entry-job-execution';
 import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker';
 import { S3Service } from '../s3/s3.service';
 import { SttService } from '../stt/stt.service';
@@ -15,7 +17,9 @@ export class EntrySttService {
         private readonly stt: SttService
     ) {}
 
-    async processEntryStt(data: DelayedJobPayloads[typeof DelayedJob.EntryStt]) {
+    async processEntryStt(data: DelayedJobPayloads[typeof DelayedJob.EntryStt], options?: EntryJobExecutionOptions) {
+        assertNotAborted(options?.signal);
+
         const voice = await this.repository.getVoice(data.entryId);
 
         if (!voice) {
@@ -30,18 +34,22 @@ export class EntrySttService {
             return true;
         }
 
-        //TODO доставать тарифф из юзера и передвать в stt.transcribe
+        assertNotAborted(options?.signal);
 
+        //TODO доставать тарифф из юзера и передвать в stt.transcribe
         const sttResult = await this.stt.transcribe({
             audio,
             filename: voice.file.filename ?? 'voice.webm',
-            mimeType: voice.file.mimeType ?? 'audio/webm'
+            mimeType: voice.file.mimeType ?? 'audio/webm',
+            signal: options?.signal
         });
 
         if (!sttResult.result) {
             this.logger.warn(`skip stt: empty transcript entryId=${data.entryId}`);
             return true;
         }
+
+        assertNotAborted(options?.signal);
 
         await Promise.all([
             this.repository.updateEntryText(data.entryId, sttResult.result),

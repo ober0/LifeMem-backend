@@ -4,7 +4,9 @@ import sharp from 'sharp';
 
 import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
+import { assertNotAborted } from '../../common/helpers/job-abort';
 import { LangEnum } from '../../common/types/common/lang.enum';
+import type { EntryJobExecutionOptions } from '../../common/types/entry-job-execution';
 import { AiService } from '../ai/ai.service';
 import type { AiTokenUsage } from '../ai/ai.types';
 import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker/delayed-worker.constants';
@@ -29,13 +31,20 @@ export class EntryVisionService {
         private readonly ai: AiService
     ) {}
 
-    async processEntryVision(data: DelayedJobPayloads[typeof DelayedJob.EntryVision]) {
+    async processEntryVision(
+        data: DelayedJobPayloads[typeof DelayedJob.EntryVision],
+        options?: EntryJobExecutionOptions
+    ) {
+        assertNotAborted(options?.signal);
+
         const imageEntities = await this.repository.getImages(data.entryId, data.entryVideoIds);
 
         if (imageEntities.length === 0) {
             this.logger.warn(`skip vision: no images entryId=${data.entryId}`);
             return true;
         }
+
+        assertNotAborted(options?.signal);
 
         const serviceSettings = await this.serviceSettings.getJsonForRequest();
 
@@ -51,12 +60,16 @@ export class EntryVisionService {
         const userLang = data.userLang ?? appConstants.language.default;
 
         for (const imageEntity of imageEntities) {
+            assertNotAborted(options?.signal);
+
             const file = await this.s3.getObjectBuffer(imageEntity.file.key).catch(() => null);
 
             if (!file) {
                 this.logger.warn(`skip vision image: s3 miss imageId=${imageEntity.id}`);
                 continue;
             }
+
+            assertNotAborted(options?.signal);
 
             const resized = await sharp(file)
                 .resize({
@@ -88,13 +101,15 @@ export class EntryVisionService {
                 ]
             });
 
+            assertNotAborted(options?.signal);
             if (tariff === 'premium') {
                 await this.processPremiumImage({
                     imageId: imageEntity.id,
                     jobId: data.jobId,
                     modelId,
                     userLang,
-                    imageHumanMessage
+                    imageHumanMessage,
+                    signal: options?.signal
                 });
             } else {
                 await this.processLiteImage({
@@ -102,7 +117,8 @@ export class EntryVisionService {
                     jobId: data.jobId,
                     modelId,
                     userLang,
-                    imageHumanMessage
+                    imageHumanMessage,
+                    signal: options?.signal
                 });
             }
         }
@@ -116,6 +132,7 @@ export class EntryVisionService {
         modelId: string;
         userLang: LangEnum;
         imageHumanMessage: HumanMessage;
+        signal?: AbortSignal;
     }) {
         const { requestId } = await this.ai.invoke({
             modelId: params.modelId,
@@ -123,13 +140,15 @@ export class EntryVisionService {
             input: [new SystemMessage(entryVisionPrompts.describeImage(params.userLang)), params.imageHumanMessage]
         });
 
-        const { result, usage, timeMs } = await this.ai.waitResult<string>(requestId);
+        const { result, usage, timeMs } = await this.ai.waitResult<string>(requestId, { signal: params.signal });
         const description = result?.trim();
 
         if (!description) {
             this.logger.warn(`skip vision image: empty LLM result imageId=${params.imageId}`);
             return;
         }
+
+        assertNotAborted(params.signal);
 
         await this.persistVisionResult({
             imageId: params.imageId,
@@ -148,6 +167,7 @@ export class EntryVisionService {
         modelId: string;
         userLang: LangEnum;
         imageHumanMessage: HumanMessage;
+        signal?: AbortSignal;
     }) {
         const { requestId } = await this.ai.invoke({
             modelId: params.modelId,
@@ -160,13 +180,17 @@ export class EntryVisionService {
             ]
         });
 
-        const { result, usage, timeMs } = await this.ai.waitResult<EntryImageVisionMetadata>(requestId);
+        const { result, usage, timeMs } = await this.ai.waitResult<EntryImageVisionMetadata>(requestId, {
+            signal: params.signal
+        });
         const description = result?.description?.trim();
 
         if (!description) {
             this.logger.warn(`skip vision image: empty LLM metadata description imageId=${params.imageId}`);
             return;
         }
+
+        assertNotAborted(params.signal);
 
         await this.persistVisionResult({
             imageId: params.imageId,

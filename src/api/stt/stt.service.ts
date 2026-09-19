@@ -15,6 +15,7 @@ export type SttTranscribeParams = {
     language?: string;
     modelId?: string;
     tariff?: 'lite' | 'premium';
+    signal?: AbortSignal;
 };
 
 export type SttTranscribeResult = {
@@ -43,7 +44,7 @@ export class SttService {
             language: params.language
         });
 
-        const response = await this.ai.waitResult<string>(requestId);
+        const response = await this.ai.waitResult<string>(requestId, { signal: params.signal });
 
         return {
             modelId,

@@ -3,7 +3,9 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { appConstants } from '../../common/config/app.constants';
 import { apiError } from '../../common/helpers/errors';
+import { assertNotAborted } from '../../common/helpers/job-abort';
 import { LangEnum } from '../../common/types/common/lang.enum';
+import type { EntryJobExecutionOptions } from '../../common/types/entry-job-execution';
 import { AiService } from '../ai/ai.service';
 import { AiToolKey } from '../ai/tools/ai-tool-key.enum';
 import {
@@ -36,9 +38,12 @@ export class EntryLocationService {
         private readonly ai: AiService
     ) {}
 
-    async processEntryLocation(data: DelayedJobPayloads[typeof DelayedJob.EntryLocation]) {
+    async processEntryLocation(
+        data: DelayedJobPayloads[typeof DelayedJob.EntryLocation],
+        options?: EntryJobExecutionOptions
+    ) {
         for (const item of data.locations) {
-            await this.processOneLocation(item, data.userId, data.entryId, data.userLang);
+            await this.processOneLocation(item, data.userId, data.entryId, data.userLang, options?.signal);
         }
 
         return true;
@@ -48,8 +53,11 @@ export class EntryLocationService {
         item: EntryLocationCoordPayload,
         userId: string,
         entryId: string,
-        userLang?: LangEnum
+        userLang?: LangEnum,
+        abortSignal?: AbortSignal
     ) {
+        assertNotAborted(abortSignal);
+
         const location: OpenstreetReverseResponse | null = await this.getLocation({
             latitude: item.latitude,
             longitude: item.longitude,
@@ -69,6 +77,8 @@ export class EntryLocationService {
         };
 
         this.logger.log(`creating place for entryId=${entryId} lat=${item.latitude} lng=${item.longitude}`);
+
+        assertNotAborted(abortSignal);
         await this.repository.createLocation(createData, userId, entryId);
     }
 
@@ -93,8 +103,11 @@ export class EntryLocationService {
     }
 
     async processEntryLocationAndPeopleDetect(
-        data: DelayedJobPayloads[typeof DelayedJob.EntryLocationAndPeopleDetect]
+        data: DelayedJobPayloads[typeof DelayedJob.EntryLocationAndPeopleDetect],
+        options?: EntryJobExecutionOptions
     ) {
+        assertNotAborted(options?.signal);
+
         const entry = await this.repository.getEntryText(data.entryId);
         if (!entry) {
             throw apiError.notFound('entry.not_found');
@@ -106,6 +119,8 @@ export class EntryLocationService {
             return true;
         }
 
+        assertNotAborted(options?.signal);
+
         const serviceSettings = await this.serviceSettings.getJsonForRequest();
 
         // TODO это надо вытаскивать из тарифа
@@ -116,6 +131,8 @@ export class EntryLocationService {
         if (!modelId) {
             throw apiError.internal('service_settings.model_not_found');
         }
+
+        assertNotAborted(options?.signal);
 
         const { requestId } = await this.ai.invokeWithTools({
             modelId,
@@ -132,7 +149,11 @@ export class EntryLocationService {
             ]
         });
 
-        const { result, usage, timeMs } = await this.ai.waitResult<DetectPeoplePlacesResult>(requestId);
+        const { result, usage, timeMs } = await this.ai.waitResult<DetectPeoplePlacesResult>(requestId, {
+            signal: options?.signal
+        });
+
+        assertNotAborted(options?.signal);
 
         await Promise.all([
             this.applyDetectedPeople(data.userId, data.entryId, result.people ?? []),

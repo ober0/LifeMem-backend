@@ -1,3 +1,10 @@
 export const entryProcessingConstants = {
     maxJobErrorAttempts: 3
-} as const;
+};
+
+export const entryJobCancelConstants = {
+    channelPrefix: 'entry-job-cancel',
+    channel(jobId: string) {
+        return `${this.channelPrefix}:${jobId}`;
+    }
+};

@@ -14,7 +14,10 @@ import { EntryLocationService } from '../api/entry-location/entry-location.servi
 import { EntrySttService } from '../api/entry-stt/entry-stt.service';
 import { EntryVisionService } from '../api/entry-vision/entry-vision.service';
 import type { ErrorVariables } from '../common/helpers/errors';
+import { isJobAbortedError } from '../common/helpers/job-abort';
 import { errorTranslations } from '../common/translation/error-translations';
+import type { EntryJobExecutionOptions } from '../common/types/entry-job-execution';
+import { EntryJobCancelListener } from './entry-job-cancel.listener';
 import { EntryProcessingWorkerService } from './entry-processing-worker.service';
 
 @Processor(BullMqQueue.Entry)
@@ -26,7 +29,8 @@ export class EntryProcessor extends WorkerHost {
         private readonly entryEmbeddingService: EntryEmbeddingService,
         private readonly entryProcessingWorkerService: EntryProcessingWorkerService,
         private readonly entryVisionService: EntryVisionService,
-        private readonly entrySttService: EntrySttService
+        private readonly entrySttService: EntrySttService,
+        private readonly entryJobCancelListener: EntryJobCancelListener
     ) {
         super();
     }
@@ -40,11 +44,18 @@ export class EntryProcessor extends WorkerHost {
             return;
         }
 
+        const signal = this.entryJobCancelListener.register(data.jobId);
+
         try {
-            await this.runJob(job);
+            await this.runJob(job, { signal });
             this.logger.log(`end job ${job.name} for entry`);
             await this.entryProcessingWorkerService.onJobFinished(job.name as EntryJobName, data);
-        } catch (error: unknown) {
+        } catch (error) {
+            if (isJobAbortedError(error)) {
+                this.logger.warn(`job aborted ${job.name} jobId=${data.jobId}`);
+                return;
+            }
+
             const message = this.resolveErrorMessage(error);
             this.logger.error(`Job end with error ${message}`, error instanceof Error ? error.stack : undefined);
 
@@ -60,43 +71,54 @@ export class EntryProcessor extends WorkerHost {
 
             await this.entryProcessingWorkerService.markJobFailed(data.jobId);
             throw error;
+        } finally {
+            this.entryJobCancelListener.unregister(data.jobId);
         }
     }
 
-    private async runJob(job: Job): Promise<void> {
+    private async runJob(job: Job, options: EntryJobExecutionOptions): Promise<void> {
         switch (job.name) {
             case DelayedJob.EntryLocation:
                 await this.entryLocationService.processEntryLocation(
-                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocation]
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocation],
+                    options
                 );
                 return;
             case DelayedJob.EntryLocationAndPeopleDetect:
                 await this.entryLocationService.processEntryLocationAndPeopleDetect(
-                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocationAndPeopleDetect]
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryLocationAndPeopleDetect],
+                    options
                 );
                 return;
             case DelayedJob.EntryEmbedTitle:
                 await this.entryEmbeddingService.processEntryEmbedTitle(
-                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedTitle]
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedTitle],
+                    options
                 );
                 return;
             case DelayedJob.EntryEmbedText:
                 await this.entryEmbeddingService.processEntryEmbedText(
-                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedText]
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedText],
+                    options
                 );
                 return;
             case DelayedJob.EntryEmbedImage:
                 await this.entryEmbeddingService.processEntryEmbedImage(
-                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedImage]
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryEmbedImage],
+                    options
                 );
                 return;
             case DelayedJob.EntryVision:
                 await this.entryVisionService.processEntryVision(
-                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryVision]
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryVision],
+                    options
                 );
                 return;
             case DelayedJob.EntryStt:
-                await this.entrySttService.processEntryStt(job.data as DelayedJobPayloads[typeof DelayedJob.EntryStt]);
+                await this.entrySttService.processEntryStt(
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntryStt],
+                    options
+                );
                 return;
             default:
                 throw new Error(`Unknown job: ${job.name}`);
