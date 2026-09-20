@@ -144,13 +144,22 @@ export class EntryService {
             entryId: entry.id
         };
 
+        const hasVideoInMedia = media.some((el) => el.type === FileType.VIDEO);
+        const videoFileIds = new Set(
+            media.filter((el) => el.type === FileType.VIDEO).map((el) => el.fileId)
+        );
+        const entryVideoIds = entry.media
+            .filter((el) => videoFileIds.has(el.fileId))
+            .map((el) => el.id);
+
         await this.entryProcessingService.activatePipeline(
             EntryPipelinesEnum.Create,
             {
                 hasCoords: hasLocationCoords,
                 hasVoice: Boolean(voice),
                 hasText: Boolean(text),
-                hasMedia
+                hasMedia,
+                hasVideoInMedia
             },
             {
                 ...(hasLocationCoords && {
@@ -168,7 +177,11 @@ export class EntryService {
                 [DelayedJob.EntryEmbedText]: basePayload,
                 [DelayedJob.EntryEmbedTitle]: basePayload,
                 [DelayedJob.EntryLocationAndPeopleDetect]: basePayload,
-                [DelayedJob.EntryEmbedImage]: basePayload
+                [DelayedJob.EntryEmbedImage]: basePayload,
+                [DelayedJob.EntrySlicePreview]: {
+                    ...basePayload,
+                    entryVideoIds
+                }
             }
         );
 
@@ -259,7 +272,8 @@ export class EntryService {
                     hasCoords: hasLocationCoords,
                     hasVoice: false,
                     hasText: false,
-                    hasMedia: false
+                    hasMedia: false,
+                    hasVideoInMedia: false
                 },
                 {
                     ...(titleChanged && {
@@ -375,13 +389,18 @@ export class EntryService {
                 hasCoords: false,
                 hasVoice: false,
                 hasText: false,
-                hasMedia: true
+                hasMedia: true,
+                hasVideoInMedia: file.type === FileType.VIDEO
             },
             {
                 [DelayedJob.EntryVision]: {
                     ...basePayload,
                     entryMediaIds,
                     userLang: actor.settings?.lang
+                },
+                [DelayedJob.EntrySlicePreview]: {
+                    ...basePayload,
+                    entryVideoIds: file.type === FileType.VIDEO ? entryMediaIds : []
                 }
             }
         );

@@ -6,6 +6,7 @@ import { CacheModule } from '../api/cache/cache.module';
 import { DelayedWorkerModule } from '../api/delayed-worker/delayed-worker.module';
 import { EntryEmbeddingModule } from '../api/entry-embedding/entry-embedding.module';
 import { EntryLocationModule } from '../api/entry-location/entry-location.module';
+import { EntrySlicePreviewModule } from '../api/entry-slice-preview/entry-slice-preview.module';
 import { EntrySttModule } from '../api/entry-stt/entry-stt.module';
 import { EntryVisionModule } from '../api/entry-vision/entry-vision.module';
 import { PrismaModule } from '../api/prisma/prisma.module';
@@ -31,7 +32,8 @@ import { EntryProcessingWorkerService } from './entry-processing-worker.service'
         EntryLocationModule,
         EntryEmbeddingModule,
         EntryVisionModule,
-        EntrySttModule
+        EntrySttModule,
+        EntrySlicePreviewModule
     ],
     providers: [
         EntryProcessingWorkerRepository,

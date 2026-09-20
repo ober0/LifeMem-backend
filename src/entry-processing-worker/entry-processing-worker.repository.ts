@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EntryProcessingStatus, EntryProcessingType } from '@prisma/client';
+import { EntryProcessingStatus, EntryProcessingType, FileType } from '@prisma/client';
 
 import { PrismaService } from '../api/prisma/prisma.service';
 
@@ -81,15 +81,30 @@ export class EntryProcessingWorkerRepository {
     }
 
     async findEntryContext(entryId: string) {
-        return this.prisma.entry.findUnique({
+        const data = await this.prisma.entry.findUnique({
             where: { id: entryId },
             select: {
                 text: true,
                 voice: { select: { id: true } },
                 jobs: { select: { type: true } },
+                media: {
+                    where: { type: FileType.VIDEO },
+                    select: { id: true },
+                    take: 1
+                },
                 _count: { select: { media: true } }
             }
         });
+
+        if (!data) {
+            return null;
+        }
+
+        return {
+            ...data,
+            media: undefined,
+            hasVideo: data.media.length > 0
+        };
     }
 
     async markEntryReady(entryId: string) {

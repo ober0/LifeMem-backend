@@ -11,6 +11,7 @@ import {
 } from '../api/delayed-worker/delayed-worker.constants';
 import { EntryEmbeddingService } from '../api/entry-embedding/entry-embedding.service';
 import { EntryLocationService } from '../api/entry-location/entry-location.service';
+import { EntrySlicePreviewService } from '../api/entry-slice-preview/entry-slice-preview.service';
 import { EntrySttService } from '../api/entry-stt/entry-stt.service';
 import { EntryVisionService } from '../api/entry-vision/entry-vision.service';
 import type { ErrorVariables } from '../common/helpers/errors';
@@ -30,6 +31,7 @@ export class EntryProcessor extends WorkerHost {
         private readonly entryProcessingWorkerService: EntryProcessingWorkerService,
         private readonly entryVisionService: EntryVisionService,
         private readonly entrySttService: EntrySttService,
+        private readonly entrySlicePreviewService: EntrySlicePreviewService,
         private readonly entryJobCancelListener: EntryJobCancelListener
     ) {
         super();
@@ -121,11 +123,10 @@ export class EntryProcessor extends WorkerHost {
                 );
                 return;
             case DelayedJob.EntrySlicePreview:
-                // TODO
-                // await this.entryVisionService.processEntrySlicePrevire(
-                //   job.data as DelayedJobPayloads[typeof DelayedJob.EntrySlicePreview],
-                //   options
-                // );
+                await this.entrySlicePreviewService.processEntrySlicePreview(
+                    job.data as DelayedJobPayloads[typeof DelayedJob.EntrySlicePreview],
+                    options
+                );
                 return;
             default:
                 throw new Error(`Unknown job: ${job.name}`);
