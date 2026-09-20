@@ -25,7 +25,8 @@ export class EntryVisionRepository {
                     select: {
                         key: true
                     }
-                }
+                },
+                type: true
             }
         });
     }
@@ -41,8 +42,7 @@ export class EntryVisionRepository {
             where: { id: mediaId },
             data: {
                 aiTranscription: data.aiTranscription,
-                aiMetadata:
-                    data.aiMetadata === null ? Prisma.DbNull : (data.aiMetadata as Prisma.InputJsonValue)
+                aiMetadata: data.aiMetadata === null ? Prisma.DbNull : (data.aiMetadata as Prisma.InputJsonValue)
             },
             select: { id: true }
         });

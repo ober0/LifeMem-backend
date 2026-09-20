@@ -1,5 +1,6 @@
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { Injectable, Logger } from '@nestjs/common';
+import { FileType } from '@prisma/client';
 import sharp from 'sharp';
 
 import { appConstants } from '../../common/config/app.constants';
@@ -10,6 +11,7 @@ import type { EntryJobExecutionOptions } from '../../common/types/entry-job-exec
 import { AiService } from '../ai/ai.service';
 import type { AiTokenUsage } from '../ai/ai.types';
 import { DelayedJob, type DelayedJobPayloads } from '../delayed-worker/delayed-worker.constants';
+import { FfmpegService } from '../ffmpeg/ffmpeg.service';
 import { S3Service } from '../s3/s3.service';
 import { ServiceSettingsService } from '../service-settings/service-settings.service';
 import { entryVisionPrompts } from './consts/prompts.const';
@@ -28,7 +30,8 @@ export class EntryVisionService {
         private readonly s3: S3Service,
         private readonly repository: EntryVisionRepository,
         private readonly serviceSettings: ServiceSettingsService,
-        private readonly ai: AiService
+        private readonly ai: AiService,
+        private readonly ffmpeg: FfmpegService
     ) {}
 
     async processEntryVision(
@@ -69,19 +72,56 @@ export class EntryVisionService {
                 continue;
             }
 
+            const files: Buffer[] = [];
+
             assertNotAborted(options?.signal);
 
-            const resized = await sharp(file)
-                .resize({
-                    width: 1600,
-                    height: 1600,
-                    fit: 'inside',
-                    withoutEnlargement: true
+            if (mediaEntity.type === FileType.IMAGE) {
+                files.push(file);
+            } else if (mediaEntity.type === FileType.VIDEO) {
+                // FIXME сделать норм получение из настроек тарифа
+                let framesCount: number = 3;
+                if (tariff === 'premium') {
+                    framesCount = 7;
+                }
+
+                try {
+                    const frames = await this.ffmpeg.extractFrames(file, framesCount);
+                    files.push(...frames);
+                } catch (error) {
+                    this.logger.warn(
+                        `skip vision video: extract frames failed mediaId=${mediaEntity.id} error=${
+                            error instanceof Error ? error.message : String(error)
+                        }`
+                    );
+                    continue;
+                }
+
+                if (files.length === 0) {
+                    this.logger.warn(`skip vision video: no frames mediaId=${mediaEntity.id}`);
+                    continue;
+                }
+            } else {
+                continue;
+            }
+
+            const resizedFiles = await Promise.all(
+                files.map(async (el) => {
+                    return sharp(el)
+                        .resize({
+                            width: 920,
+                            height: 920,
+                            fit: 'inside',
+                            withoutEnlargement: true
+                        })
+                        .jpeg({
+                            quality: 80
+                        })
+                        .toBuffer();
                 })
-                .jpeg({
-                    quality: 80
-                })
-                .toBuffer();
+            );
+
+            const isImage = mediaEntity.type === FileType.IMAGE;
 
             const imageHumanMessage = new HumanMessage({
                 content: [
@@ -89,15 +129,17 @@ export class EntryVisionService {
                         type: 'text',
                         text:
                             userLang === LangEnum.Ru
-                                ? 'Опиши это фото на русском языке.'
-                                : 'Describe this photo in english language.'
+                                ? `Опиши это ${isImage ? 'фото' : 'видео, разбитое на фреймы'} на русском языке.`
+                                : `Describe this ${isImage ? 'photo' : 'video, sliced on frames'} in english language.`
                     },
-                    {
-                        type: 'image_url',
-                        image_url: {
-                            url: `data:image/jpeg;base64,${resized.toString('base64')}`
-                        }
-                    }
+                    ...resizedFiles.map((frame) => {
+                        return {
+                            type: 'image_url',
+                            image_url: {
+                                url: `data:image/jpeg;base64,${frame.toString('base64')}`
+                            }
+                        };
+                    })
                 ]
             });
 
