@@ -20,12 +20,13 @@ function toRelations(items: EntryRelationSource[]): EntryRelations[] {
 }
 
 export const entryMapper = {
-    toMedia(media: EntryMediaSource, url: string): EntryMediaDto {
+    toMedia(media: EntryMediaSource, url: string, firstFrameUrl: string | null = null): EntryMediaDto {
         return {
             id: media.id,
             fileId: media.fileId,
             description: media.description,
             url,
+            firstFrameUrl,
             createdAt: media.createdAt,
             updatedAt: media.updatedAt
         };

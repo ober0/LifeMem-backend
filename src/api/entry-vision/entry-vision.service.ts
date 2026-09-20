@@ -82,7 +82,7 @@ export class EntryVisionService {
                 // FIXME сделать норм получение из настроек тарифа
                 let framesCount: number = 3;
                 if (tariff === 'premium') {
-                    framesCount = 7;
+                    framesCount = 5;
                 }
 
                 try {

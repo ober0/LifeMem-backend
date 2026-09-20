@@ -11,4 +11,7 @@ export class EntryMediaDto extends BaseEntity {
 
     @ApiProperty()
     url: string;
+
+    @ApiProperty({ nullable: true, description: 'Превью первого кадра для VIDEO' })
+    firstFrameUrl: string | null;
 }

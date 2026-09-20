@@ -30,6 +30,11 @@ const entryMediaSelect = {
             description: true,
             file: true,
             fileId: true,
+            firstFrame: {
+                select: {
+                    key: true
+                }
+            },
             createdAt: true,
             updatedAt: true
         }

@@ -310,15 +310,25 @@ export class EntryService {
         );
     }
 
-    private async mapMedia(rows: Array<EntryMediaSource & { file: { key: string } }>): Promise<EntryMediaDto[]> {
+    private async mapMedia(
+        rows: Array<EntryMediaSource & { file: { key: string }; firstFrame?: { key: string } | null }>
+    ): Promise<EntryMediaDto[]> {
         return Promise.all(
             rows.map(async (row) => {
-                const url = await this.s3Service.getSignedUrl({
-                    key: row.file.key,
-                    expiresIn: appConstants.entry.mediaUrlLifeTime
-                });
+                const [url, firstFrameUrl] = await Promise.all([
+                    this.s3Service.getSignedUrl({
+                        key: row.file.key,
+                        expiresIn: appConstants.entry.mediaUrlLifeTime
+                    }),
+                    row.firstFrame
+                        ? this.s3Service.getSignedUrl({
+                              key: row.firstFrame.key,
+                              expiresIn: appConstants.entry.mediaUrlLifeTime
+                          })
+                        : Promise.resolve(null)
+                ]);
 
-                return entryMapper.toMedia(row, url);
+                return entryMapper.toMedia(row, url, firstFrameUrl);
             })
         );
     }
