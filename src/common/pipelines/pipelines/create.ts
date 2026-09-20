@@ -25,7 +25,7 @@ export const CreateEntryPipeline: EntryPipeline = {
         when: (ctx) => ctx.hasMedia
     },
     [DelayedJob.EntryEmbedImage]: {
-        type: EntryProcessingType.EmbedImage,
+        type: EntryProcessingType.EmbedMedia,
         requires: () => [DelayedJob.EntryVision],
         when: (ctx) => ctx.hasMedia
     },
@@ -42,5 +42,10 @@ export const CreateEntryPipeline: EntryPipeline = {
             return [];
         },
         when: (ctx) => ctx.hasVoice || ctx.hasText
+    },
+    [DelayedJob.EntrySlicePreview]: {
+        type: EntryProcessingType.SlicePreview,
+        requires: () => [],
+        when: (ctx) => ctx.hasVideoInMedia
     }
 };

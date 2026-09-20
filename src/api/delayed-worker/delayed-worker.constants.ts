@@ -7,6 +7,7 @@ export const DelayedJob = {
     EntryEmbedText: 'entry-embed-text',
     EntryEmbedTitle: 'entry-embed-title',
     EntryEmbedImage: 'entry-embed-image',
+    EntrySlicePreview: 'entry-slice-preview',
 
     // ai
     AiRefreshModels: 'ai-refresh-models',

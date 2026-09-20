@@ -120,6 +120,13 @@ export class EntryProcessor extends WorkerHost {
                     options
                 );
                 return;
+            case DelayedJob.EntrySlicePreview:
+                // TODO
+                // await this.entryVisionService.processEntrySlicePrevire(
+                //   job.data as DelayedJobPayloads[typeof DelayedJob.EntrySlicePreview],
+                //   options
+                // );
+                return;
             default:
                 throw new Error(`Unknown job: ${job.name}`);
         }

@@ -15,7 +15,8 @@ enum EntryProcessingType {
   LocationAndPeopleDetect
   EmbedText
   EmbedTitle
-  EmbedImage
+  EmbedMedia
+  SlicePreview
 
   @@map("entry_processing_type")
 }

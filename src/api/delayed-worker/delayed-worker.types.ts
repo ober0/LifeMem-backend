@@ -11,7 +11,8 @@ export type EntryJobName =
     | typeof DelayedJob.EntryLocationAndPeopleDetect
     | typeof DelayedJob.EntryEmbedText
     | typeof DelayedJob.EntryEmbedTitle
-    | typeof DelayedJob.EntryEmbedImage;
+    | typeof DelayedJob.EntryEmbedImage
+    | typeof DelayedJob.EntrySlicePreview;
 
 export interface baseEntryJobPayload {
     pipeline: EntryPipelinesEnum;
@@ -58,6 +59,7 @@ export type DelayedJobPayloads = {
     [DelayedJob.EntryEmbedText]: baseEntryJobPayload;
     [DelayedJob.EntryEmbedTitle]: baseEntryJobPayload;
     [DelayedJob.EntryEmbedImage]: baseEntryJobPayload & { entryMediaIds?: string[] };
+    [DelayedJob.EntrySlicePreview]: baseEntryJobPayload & { entryVideoIds?: string[] };
 
     //ai
     [DelayedJob.AiRefreshModels]: Record<string, never>;

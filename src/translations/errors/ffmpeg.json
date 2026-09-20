@@ -1,0 +1,18 @@
+{
+    "binary_not_found": {
+        "ru": "FFmpeg недоступен",
+        "en": "FFmpeg is not available"
+    },
+    "invalid_frame_count": {
+        "ru": "Некорректное число кадров",
+        "en": "Invalid frame count"
+    },
+    "duration_unavailable": {
+        "ru": "Не удалось определить длительность видео",
+        "en": "Unable to determine video duration"
+    },
+    "extract_failed": {
+        "ru": "Не удалось извлечь кадр из видео",
+        "en": "Failed to extract frame from video"
+    }
+}

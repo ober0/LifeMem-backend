@@ -10,8 +10,13 @@ export const UpdateMediaEntryPipeline: EntryPipeline = {
         when: (ctx) => ctx.hasMedia
     },
     [DelayedJob.EntryEmbedImage]: {
-        type: EntryProcessingType.EmbedImage,
+        type: EntryProcessingType.EmbedMedia,
         requires: () => [DelayedJob.EntryVision],
         when: (ctx) => ctx.hasMedia
+    },
+    [DelayedJob.EntrySlicePreview]: {
+        type: EntryProcessingType.SlicePreview,
+        requires: () => [],
+        when: (ctx) => ctx.hasVideoInMedia
     }
 };
