@@ -42,5 +42,6 @@ export const filesConstants = {
     uploadPresignExpiresInSec: 3 * 60,
     uploadMultipartPresignExpiresInSec: 30 * 60,
     presignUrlParallelBatchSize: 10,
-    testFilePath: 'test/public/test-image.jpg'
+    testFilePath: 'test/public/test-image.jpg',
+    testVideoPath: 'test/public/test-video.mp4'
 } as const;

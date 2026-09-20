@@ -5,6 +5,7 @@ import Redis from 'ioredis';
 import { seedAiModels } from './seed-ai-models';
 import { seedRolesPermissions } from './seed-roles-permissions';
 import { seedS3TestImage } from './seed-s3-test-image';
+import { seedS3TestVideo } from './seed-s3-test-video';
 import { seedServiceSettings } from './seed-service-settings';
 import { seedUser } from './seed-user';
 
@@ -30,8 +31,9 @@ async function main() {
     await seedAiModels(prisma, redis);
     if (s3 && process.env.NODE_ENV === 'development') {
         await seedS3TestImage(s3);
+        await seedS3TestVideo(s3);
     } else {
-        console.log('[seed:s3-test-image] пропущен');
+        console.log('[seed:s3-test-media] пропущен');
     }
 
     console.log('[+] Выполнено.');

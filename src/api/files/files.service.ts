@@ -34,16 +34,26 @@ export class FilesService {
         return upload;
     }
 
-    private async ensureStorageObjectOrSubstituteTestImage(upload: { key: string; type: FileType }): Promise<void> {
+    private async ensureStorageObjectOrSubstituteTestFile(upload: { key: string; type: FileType }): Promise<void> {
         if (await this.s3.objectExists(upload.key)) {
             return;
         }
 
-        if (this.app.nodeEnv !== 'development' || upload.type !== FileType.IMAGE) {
+        if (this.app.nodeEnv !== 'development') {
             throw apiError.badRequest('files.storage_object_not_found');
         }
 
-        const testKey = appConstants.files.testFilePath;
+        const testKey =
+            upload.type === FileType.IMAGE
+                ? appConstants.files.testFilePath
+                : upload.type === FileType.VIDEO
+                  ? appConstants.files.testVideoPath
+                  : null;
+
+        if (!testKey) {
+            throw apiError.badRequest('files.storage_object_not_found');
+        }
+
         if (!(await this.s3.objectExists(testKey))) {
             throw apiError.badRequest('files.storage_object_not_found');
         }
@@ -210,7 +220,7 @@ export class FilesService {
             });
         } else {
             // тут логика для дебага, для дев окружения если файла нет - подставится тестовый
-            await this.ensureStorageObjectOrSubstituteTestImage(upload);
+            await this.ensureStorageObjectOrSubstituteTestFile(upload);
         }
 
         await this.filesRepository.updateStatus(upload.id, UploadStatus.PROCESSING);
