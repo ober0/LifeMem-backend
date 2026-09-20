@@ -25,8 +25,11 @@ model EntryProcessingJob {
   id String @id @default(uuid()) @db.Uuid
 
   // TODO убрать cascade, добавить isEntryDeleted
-  entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  entryId String @map("entry_id") @db.Uuid
+  entry   Entry?  @relation(fields: [entryId], references: [id], onDelete: SetNull)
+  entryId String? @map("entry_id") @db.Uuid
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String? @map("user_id") @db.Uuid
 
   type   EntryProcessingType
   status EntryProcessingStatus @default(Pending)
@@ -40,6 +43,7 @@ model EntryProcessingJob {
 
   @@index([entryId, status])
   @@index([entryId, type, status])
+  @@index([userId])
   @@map("entry_processing_job")
 }
 

@@ -38,6 +38,7 @@ model User {
   logs         Logs[]
 
   entries Entry[]
+  entryProcessingJobs EntryProcessingJob[]
 
   files           File[]
   uploadProcesses UploadFileProcess[]

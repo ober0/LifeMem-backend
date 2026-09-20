@@ -8,9 +8,9 @@ export const entryConstants = {
     allowedAudioFileTypes: [FileType.AUDIO] as const,
     search: {
         // насколько далеко по смыслу (косинус) ещё ок - чем больше, тем больше заметок вылезет, в т.ч. лишних
-        vectorMaxCosineDistance: 0.52,
+        vectorMaxCosineDistance: 0.7,
         // минимальная «похожесть» 0..1 для векторов title/text/image - ниже порога в выдачу не попадает
-        vectorMinSimilarity: 0.48,
+        vectorMinSimilarity: 0.7,
         // короче этого query - только like по текстам, embed и векторы не трогаем (1 символ = шум)
         minQueryLengthForVector: 2,
 

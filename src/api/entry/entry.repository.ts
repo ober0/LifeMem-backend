@@ -156,7 +156,8 @@ export class EntryRepository {
                     jobs: {
                         create: data.jobs.map((job) => ({
                             type: job.type,
-                            status: job.status
+                            status: job.status,
+                            userId: data.userId
                         }))
                     }
                 })

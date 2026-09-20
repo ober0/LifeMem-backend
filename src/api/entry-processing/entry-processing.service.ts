@@ -101,7 +101,7 @@ export class EntryProcessingService {
             throw apiError.internal('entry.duplicate_job');
         }
 
-        const job = await this.repository.createJob(entryId, type).catch((e) => {
+        const job = await this.repository.createJob(entryId, type, data.userId).catch((e) => {
             if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
                 if (options?.ignoreDuplicate) {
                     return null;

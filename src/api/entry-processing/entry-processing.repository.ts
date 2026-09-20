@@ -24,11 +24,12 @@ export class EntryProcessingRepository {
         });
     }
 
-    async createJob(entryId: string, type: EntryProcessingType) {
+    async createJob(entryId: string, type: EntryProcessingType, userId?: string | null) {
         return this.prisma.entryProcessingJob.create({
             data: {
                 entryId,
-                type
+                type,
+                ...(userId && { userId })
             }
         });
     }
