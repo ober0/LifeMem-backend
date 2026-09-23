@@ -7,6 +7,7 @@ type ModelsSettingsLike = Partial<{
     vision: Partial<{ premium: string | null; lite: string | null }>;
     stt: Partial<{ premium: string | null; lite: string | null }>;
     sttRefine: Partial<{ premium: string | null; lite: string | null }>;
+    rag: Partial<{ premium: string | null; lite: string | null }>;
 }>;
 
 export type ModelsSettingsSlot = {
@@ -24,7 +25,9 @@ export function getModelsSettingsSlots(models: ModelsSettingsDto): ModelsSetting
         { id: models.stt.premium, expectedType: ModelType.SpeechToText, slot: 'models.stt.premium' },
         { id: models.stt.lite, expectedType: ModelType.SpeechToText, slot: 'models.stt.lite' },
         { id: models.sttRefine.premium, expectedType: ModelType.TextToText, slot: 'models.sttRefine.premium' },
-        { id: models.sttRefine.lite, expectedType: ModelType.TextToText, slot: 'models.sttRefine.lite' }
+        { id: models.sttRefine.lite, expectedType: ModelType.TextToText, slot: 'models.sttRefine.lite' },
+        { id: models.rag.premium, expectedType: ModelType.TextToText, slot: 'models.rag.premium' },
+        { id: models.rag.lite, expectedType: ModelType.TextToText, slot: 'models.rag.lite' }
     ];
 }
 
@@ -41,7 +44,9 @@ function collectModelsSettingsIds(models?: ModelsSettingsLike | null): string[] 
         models.stt?.premium,
         models.stt?.lite,
         models.sttRefine?.premium,
-        models.sttRefine?.lite
+        models.sttRefine?.lite,
+        models.rag?.premium,
+        models.rag?.lite
     ].filter((id): id is string => typeof id === 'string' && id.length > 0);
 }
 

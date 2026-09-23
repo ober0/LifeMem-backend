@@ -19,6 +19,10 @@ export class AiToolsRegistry {
         ]);
     }
 
+    register(factory: AiToolFactory): void {
+        this.factories.set(factory.key, factory);
+    }
+
     resolve(keys: AiToolKey[], context?: AiToolContext): StructuredToolInterface[] {
         const uniqueKeys = [...new Set(keys)];
 

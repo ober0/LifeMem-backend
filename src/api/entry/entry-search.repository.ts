@@ -38,6 +38,10 @@ export class EntrySearchRepository {
     ): Promise<SearchEntrySource[]> {
         const ranked = await this.findRankedEntryIds(userId, dto, queryText, queryEmbedding, scopedEntryIds);
 
+        return this.hydrateRankedHits(userId, ranked);
+    }
+
+    async hydrateRankedHits(userId: string, ranked: RankedEntryHit[]): Promise<SearchEntrySource[]> {
         if (ranked.length === 0) {
             return [];
         }

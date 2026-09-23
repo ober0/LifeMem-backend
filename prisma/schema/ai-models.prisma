@@ -18,6 +18,8 @@ model AiModel {
   entryProcessingUsage EntryProcessingUsage[]
   entryVectors         EntryVector[]
 
+  ascUsages AscUsage[]
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

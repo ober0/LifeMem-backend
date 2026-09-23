@@ -27,6 +27,6 @@ import { UserEntitiesSearchRepository } from './tools/user-entities-search.repos
         SearchPeopleFactory,
         SearchPlacesFactory
     ],
-    exports: [AiService]
+    exports: [AiService, AiToolsRegistry]
 })
 export class AiModule {}

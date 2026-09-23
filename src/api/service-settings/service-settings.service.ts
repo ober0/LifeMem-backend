@@ -87,7 +87,13 @@ export class ServiceSettingsService {
 
             if (dto.models?.provider) {
                 await this.delayedWorker.delayed(DelayedJob.AiRefreshModels, {}, { queue: BullMqQueue.Ai });
-            } else if (dto.models?.analyze || dto.models?.vision || dto.models?.stt || dto.models?.sttRefine) {
+            } else if (
+                dto.models?.analyze ||
+                dto.models?.vision ||
+                dto.models?.stt ||
+                dto.models?.sttRefine ||
+                dto.models?.rag
+            ) {
                 await this.delayedWorker.delayed(DelayedJob.AiAddModels, {}, { queue: BullMqQueue.Ai });
             }
         });

@@ -42,6 +42,19 @@ export class AiService implements OnModuleInit {
         return this.enqueueRequest(() => this.invokeService.executeWithTools(params));
     }
 
+    async runWithTools<T = unknown>(params: AiInvokeWithToolsParams): Promise<AiInvokeResult<T>> {
+        const { result, timeMs } = await getExecuteTime(() => this.invokeService.executeWithTools(params));
+
+        return {
+            result: result.result as T,
+            usage: {
+                ...result.usage,
+                timeMs
+            },
+            timeMs
+        };
+    }
+
     async embed(params: AiEmbedParams): Promise<AiRequestAccepted> {
         return this.enqueueRequest(() => this.invokeService.executeEmbed(params));
     }

@@ -29,6 +29,7 @@ import { BullMqModule } from '../bullmq/bullmq.module';
 import { CacheModule } from '../cache/cache.module';
 import { DelayedWorkerModule } from '../delayed-worker/delayed-worker.module';
 import { EntryModule } from '../entry/entry.module';
+import { EntryRagModule } from '../entry-rag/entry-rag.module';
 import { FilesModule } from '../files/files.module';
 import { HealthModule } from '../health/health.module';
 import { LogsModule } from '../logs/logs.module';
@@ -93,6 +94,7 @@ import { UserSettingsModule } from '../user-settings/user-settings.module';
         MobileSmsModule,
         CacheModule,
         EntryModule,
+        EntryRagModule,
         FilesModule,
         PersonModule,
         PlaceModule,

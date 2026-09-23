@@ -74,6 +74,7 @@ export type ErrorsTranslationKey =
   | 'entry.not_found'
   | 'entry.person_not_found'
   | 'entry.place_not_found'
+  | 'entry.rag_query_required'
   | 'entry.text_or_voice_only'
   | 'entry.text_or_voice_required'
   | 'entry.too_many_media'

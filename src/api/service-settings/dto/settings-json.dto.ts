@@ -105,6 +105,11 @@ export class ModelsSettingsDto {
     @Type(() => ModelTierSettingsDto)
     sttRefine: ModelTierSettingsDto;
 
+    @ApiProperty({ type: ModelTierSettingsDto })
+    @ValidateNested()
+    @Type(() => ModelTierSettingsDto)
+    rag: ModelTierSettingsDto;
+
     @ApiProperty({ enum: AiProvider })
     @IsEnum(AiProvider)
     provider: AiProvider;

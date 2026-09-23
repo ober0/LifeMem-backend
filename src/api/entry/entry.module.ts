@@ -12,6 +12,7 @@ import { EntrySearchRepository } from './entry-search.repository';
 @Module({
     imports: [FilesModule, S3Module, EntryProcessingModule, EmbeddingModule],
     controllers: [EntryController],
-    providers: [EntryService, EntryRepository, EntrySearchRepository]
+    providers: [EntryService, EntryRepository, EntrySearchRepository],
+    exports: [EntryRepository, EntrySearchRepository]
 })
 export class EntryModule {}

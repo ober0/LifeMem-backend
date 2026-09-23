@@ -37,7 +37,7 @@ model User {
   userSettings UserSettings?
   logs         Logs[]
 
-  entries Entry[]
+  entries             Entry[]
   entryProcessingJobs EntryProcessingJob[]
 
   files           File[]
@@ -45,6 +45,8 @@ model User {
 
   people Person[]
   places Place[]
+
+  ascs Asc[]
 
   deletedAt DateTime? @map("deletedAt")
 

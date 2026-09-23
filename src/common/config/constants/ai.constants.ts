@@ -11,6 +11,10 @@ export const aiConstants = {
     },
     defaultEmbeddingModel: 'openai/text-embedding-3-small',
     defaultMaxToolSteps: 10,
+    rag: {
+        maxToolSteps: 5,
+        limitPerQuery: 3
+    },
     responseTtlMs: 3 * 60 * 1000,
     responseCleanupIntervalMs: 60 * 1000,
     resultPollIntervalMs: 5000,

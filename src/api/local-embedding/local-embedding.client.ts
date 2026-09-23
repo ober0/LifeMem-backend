@@ -25,7 +25,7 @@ export class LocalEmbeddingClient {
                 payload,
                 timeoutMs,
                 {
-                    // TODO: kind === 'query' priority 1, 'passage' 10 (BullMQ JobsOptions.priority)
+                    priority: payload.kind === 'query' ? 1 : 10,
                     removeOnComplete: 100,
                     removeOnFail: 50
                 }

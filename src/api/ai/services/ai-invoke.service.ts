@@ -1,5 +1,5 @@
 import { AIMessage, type BaseMessage, HumanMessage, SystemMessage, ToolMessage } from '@langchain/core/messages';
-import type { StructuredOutputParser } from '@langchain/core/output_parsers';
+import { parseJsonMarkdown, type StructuredOutputParser } from '@langchain/core/output_parsers';
 import { RunnableLambda } from '@langchain/core/runnables';
 import type { ChatOpenAI } from '@langchain/openai';
 import { Injectable } from '@nestjs/common';
@@ -17,6 +17,7 @@ import type {
     AiTokenUsage,
     AiTranscribeParams
 } from '../ai.types';
+import { attachAiUsage } from '../ai.types';
 import { AiToolsRegistry } from '../tools/ai-tools.registry';
 import { AiModelsService } from './ai-models.service';
 import { AiUsageService } from './ai-usage.service';
@@ -121,7 +122,16 @@ export class AiInvokeService {
     async executeWithTools(params: AiInvokeWithToolsParams): Promise<AiInvokeResult<unknown>> {
         const chat = this.withReasoning(await this.models.ensureChatModel(params.modelId), params.reasoning);
 
-        const tools = this.toolsRegistry.resolve(params.tools, params.toolContext);
+        const registryTools =
+            params.tools && params.tools.length > 0
+                ? this.toolsRegistry.resolve(params.tools, params.toolContext)
+                : [];
+        const tools = [...registryTools, ...(params.additionalTools ?? [])];
+
+        if (tools.length === 0) {
+            throw apiError.badRequest('ai.unknown_tool', { tool: 'none' });
+        }
+
         const toolsByName = new Map(tools.map((item) => [item.name, item]));
 
         const parser = 'parser' in params ? params.parser : null;
@@ -144,51 +154,55 @@ export class AiInvokeService {
             totalTokens: 0
         };
 
-        for (let step = 0; step < maxSteps; step++) {
-            const [response, settings] = await Promise.all([
-                model.invoke(messages),
-                this.serviceSettingsService.getJsonForRequest()
-            ]);
+        try {
+            for (let step = 0; step < maxSteps; step++) {
+                const [response, settings] = await Promise.all([
+                    model.invoke(messages),
+                    this.serviceSettingsService.getJsonForRequest()
+                ]);
 
-            usage = this.usage.mergeUsage(usage, this.usage.extractUsage(response, settings.models.provider));
-            messages.push(response);
+                usage = this.usage.mergeUsage(usage, this.usage.extractUsage(response, settings.models.provider));
+                messages.push(response);
 
-            const toolCalls = response.tool_calls ?? [];
-            if (toolCalls.length > 0) {
-                for (const call of toolCalls) {
-                    const selected = toolsByName.get(call.name);
-                    if (!selected) {
-                        throw apiError.badRequest('ai.unknown_tool', { tool: call.name });
+                const toolCalls = response.tool_calls ?? [];
+                if (toolCalls.length > 0) {
+                    for (const call of toolCalls) {
+                        const selected = toolsByName.get(call.name);
+                        if (!selected) {
+                            throw apiError.badRequest('ai.unknown_tool', { tool: call.name });
+                        }
+
+                        const toolResult = await selected.invoke(call.args);
+                        messages.push(
+                            new ToolMessage({
+                                content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
+                                tool_call_id: call.id ?? call.name
+                            })
+                        );
                     }
 
-                    const toolResult = await selected.invoke(call.args);
-                    messages.push(
-                        new ToolMessage({
-                            content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
-                            tool_call_id: call.id ?? call.name
-                        })
-                    );
+                    continue;
                 }
 
-                continue;
-            }
+                if (parser) {
+                    const parsed = await this.parseNode(parser).invoke(response);
 
-            if (parser) {
-                const parsed = await this.parseNode(parser).invoke(response);
+                    return {
+                        result: parsed.data,
+                        usage
+                    };
+                }
 
                 return {
-                    result: parsed.data,
+                    result: this.extractTextContent(response),
                     usage
                 };
             }
 
-            return {
-                result: this.extractTextContent(response),
-                usage
-            };
+            throw apiError.badRequest('ai.tool_loop_limit');
+        } catch (error) {
+            attachAiUsage(error, usage);
         }
-
-        throw apiError.badRequest('ai.tool_loop_limit');
     }
 
     private withReasoning(chat: ChatOpenAI, reasoning?: boolean): ChatOpenAI {
@@ -215,7 +229,10 @@ export class AiInvokeService {
                     throw new Error('empty content');
                 }
 
-                const parsed = (await parser.parse(message.text)) as z.infer<T>;
+                const json = parseJsonMarkdown(message.text);
+                const parsed = (await parser.parse(
+                    typeof json === 'string' ? json : JSON.stringify(json)
+                )) as z.infer<T>;
 
                 return {
                     data: parsed,

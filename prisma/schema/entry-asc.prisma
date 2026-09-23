@@ -1,0 +1,47 @@
+enum AscStatus {
+  SUCCESS
+  ERROR
+}
+
+model Asc {
+  id String @id @default(uuid()) @db.Uuid
+
+  status AscStatus
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String? @db.Uuid
+
+  asc         String?
+  result      String?
+  sourceCount Int?
+
+  timeMs Int? @map("time_ms")
+
+  usage AscUsage?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("asc")
+}
+
+model AscUsage {
+  id String @id @default(uuid()) @db.Uuid
+
+  asc   Asc?    @relation(fields: [ascId], references: [id], onDelete: SetNull)
+  ascId String? @unique @map("asc_id") @db.Uuid
+
+  model   AiModel? @relation(fields: [modelid], references: [id], onDelete: SetNull)
+  modelid String?  @db.Uuid
+
+  inputTokens  Int?     @map("input_tokens")
+  outputTokens Int?     @map("output_tokens")
+  price        Decimal? @db.Decimal(12, 6)
+
+  provider String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("asc_usage")
+}

@@ -53,6 +53,10 @@ export const serviceSettingsConstants = {
                 premium: null,
                 lite: null
             },
+            rag: {
+                premium: null,
+                lite: null
+            },
             provider: AiProvider.Polza
         }
     } satisfies ServiceSettingsJsonDto

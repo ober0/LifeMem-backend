@@ -110,5 +110,9 @@
     "audio_media_conflict": {
         "ru": "audioId не может совпадать с id из media",
         "en": "audioId must not be listed in media"
+    },
+    "rag_query_required": {
+        "ru": "Укажите вопрос для поиска по заметкам",
+        "en": "Provide a question to search your notes"
     }
 }
