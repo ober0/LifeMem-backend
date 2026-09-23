@@ -13,7 +13,8 @@ export const aiConstants = {
     defaultMaxToolSteps: 10,
     rag: {
         maxToolSteps: 5,
-        limitPerQuery: 3
+        // бля чем больше тем меньше денег
+        limitPerQuery: 6
     },
     responseTtlMs: 3 * 60 * 1000,
     responseCleanupIntervalMs: 60 * 1000,

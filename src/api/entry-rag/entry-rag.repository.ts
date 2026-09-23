@@ -39,6 +39,7 @@ export class EntryRagRepository {
                 text: true,
                 formattedText: true,
                 voice: { select: { id: true } },
+                createdAt: true,
                 _count: {
                     select: {
                         media: true,
@@ -56,7 +57,8 @@ export class EntryRagRepository {
             mediaCount: row._count.media,
             isHasVoice: row.voice != null,
             peopleCount: row._count.people,
-            placesCount: row._count.places
+            placesCount: row._count.places,
+            createdAt: row.createdAt
         }));
     }
 

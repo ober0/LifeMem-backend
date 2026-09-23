@@ -43,6 +43,8 @@ export class SearchEntriesFactory implements AiToolFactory, OnModuleInit {
                     ...new Set((queries ?? []).map((query) => query.trim()).filter((query) => query.length > 0))
                 ].slice(0, 10);
 
+                console.log(JSON.stringify({ queries, peopleIds, placeIds, createdAt }, null, 2));
+
                 if (uniqueQueries.length === 0) {
                     return JSON.stringify({ queries: [], items: [], error: 'queries required' });
                 }
@@ -141,27 +143,41 @@ export class SearchEntriesFactory implements AiToolFactory, OnModuleInit {
             {
                 name: AiToolKey.SearchEntries,
                 description: [
-                    'Semantic vector search over the current user diary notes.',
-                    'Pass complementary search phrases in queries[].',
-                    'Optional peopleIds / placeIds: uuid arrays from search_people / search_places (pg_trgm).',
-                    'Optional createdAt: { min, max } ISO datetimes — only notes created inside that interval.',
-                    'Returns score (0..1 similarity, higher is better) and distance (1-score, lower is better) for confidence.'
+                    'Search diary notes. If the user did not ask about WHEN (no date/year/season in their message) → pass ONLY queries (+ optional peopleIds/placeIds). Do NOT include createdAt.',
+                    'Never invent createdAt from Today (e.g. min=today−1year, max=today) for undated questions.',
+                    'queries[]: 3–6 keyword phrases (places, names, activities) — not "ты …", not the question text.',
+                    'peopleIds / placeIds: optional uuids from search_people / search_places.',
+                    'Returns score and distance per hit.'
                 ].join(' '),
                 schema: z.object({
                     queries: z
                         .array(z.string().min(1))
                         .min(1)
                         .max(10)
-                        .describe('One or more search phrases derived from the user question'),
+                        .describe(
+                            'Keyword phrases for vector search (e.g. "Зарядье", "прогулка с Дашей") — diary-style, no "ты", no copied question'
+                        ),
                     peopleIds: z.array(z.uuid()).max(10).optional().describe('Optional person ids from search_people'),
                     placeIds: z.array(z.uuid()).max(10).optional().describe('Optional place ids from search_places'),
                     createdAt: z
                         .object({
-                            min: z.string().optional().describe('Inclusive lower bound ISO datetime'),
-                            max: z.string().optional().describe('Inclusive upper bound ISO datetime')
+                            min: z
+                                .string()
+                                .optional()
+                                .describe(
+                                    'Only if user asked WHEN. Inclusive UTC start. Forbidden on undated questions (where/what/who only).'
+                                ),
+                            max: z
+                                .string()
+                                .optional()
+                                .describe(
+                                    'Only if user asked WHEN. Inclusive UTC end. Forbidden: max≈today when user did not mention dates.'
+                                )
                         })
                         .optional()
-                        .describe('Optional createdAt interval filter')
+                        .describe(
+                            'DO NOT INCLUDE THIS FIELD unless the user message explicitly mentions a time period (вчера, в 2025, год назад, летом, …). Undated question → omit createdAt entirely (not null). Forbidden: {min: today−1y, max: today} when user did not ask for dates or "last year".'
+                        )
                 })
             }
         );

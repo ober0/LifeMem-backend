@@ -22,6 +22,9 @@ export class EntryRagSourceDto {
 
     @ApiProperty()
     placesCount: number;
+
+    @ApiProperty()
+    createdAt: Date;
 }
 
 export class EntryRagAskResponseDto {

@@ -16,7 +16,7 @@ import { ServiceSettingsService } from '../service-settings/service-settings.ser
 import { entryRagPrompts } from './consts/prompts.const';
 import type { EntryRagAskDto } from './dto/entry-rag-ask.dto';
 import type { EntryRagAskResponseDto, EntryRagSourceDto } from './dto/entry-rag-response.dto';
-import { type CreateAscInput,EntryRagRepository } from './entry-rag.repository';
+import { type CreateAscInput, EntryRagRepository } from './entry-rag.repository';
 
 const entryRagResultSchema = z.object({
     answer: z
@@ -24,7 +24,7 @@ const entryRagResultSchema = z.object({
         .describe(
             'Factual answer: user always "ты" for their actions (including with others — no "они" for the same scene); other people third person; one plain paragraph, no markdown or preambles'
         ),
-    sourceIds: z.array(z.string().uuid()).describe('Entry ids that were actually used as evidence for the answer')
+    sourceIds: z.array(z.uuid()).describe('Entry ids that were actually used as evidence for the answer')
 });
 
 const entryRagResultParser = StructuredOutputParser.fromZodSchema(entryRagResultSchema);
@@ -73,8 +73,9 @@ export class EntryRagService {
                 parser: entryRagResultParser,
                 instruction: entryRagFormatInstructions,
                 input: [
+                    new SystemMessage(entryRagPrompts.systemCreatedAt(todayIsoDate)),
                     new SystemMessage(entryRagPrompts.system(todayIsoDate)),
-                    new SystemMessage(entryRagPrompts.toolUsage),
+                    new SystemMessage(entryRagPrompts.toolUsage()),
                     new HumanMessage(question)
                 ]
             });
