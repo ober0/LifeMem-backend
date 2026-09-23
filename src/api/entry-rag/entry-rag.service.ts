@@ -22,7 +22,7 @@ const entryRagResultSchema = z.object({
     answer: z
         .string()
         .describe(
-            'Direct plain-text reply to the user: address them as Russian "ты" (ты гулял, ты сидел); other people third person; never "они/он/я/мы/вы" for the diary author; one continuous paragraph, no line breaks, no markdown, no lists, no preambles — only the factual answer'
+            'Factual answer: user always "ты" for their actions (including with others — no "они" for the same scene); other people third person; one plain paragraph, no markdown or preambles'
         ),
     sourceIds: z.array(z.string().uuid()).describe('Entry ids that were actually used as evidence for the answer')
 });
