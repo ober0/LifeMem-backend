@@ -17,26 +17,24 @@ export class EntryRelations {
 }
 
 export class BaseEntryUpdateDto {
-    @ApiProperty({ required: false })
+    @ApiPropertyOptional()
     @IsOptional()
     @IsString()
     @MaxLength(50)
     title?: string;
 
-    @ApiProperty({ type: 'string', format: 'uuid', isArray: true, required: false })
+    @ApiPropertyOptional({ type: 'string', format: 'uuid', isArray: true })
     @IsOptional()
     @IsArray()
     @ArrayMaxSize(10)
     @IsUUID('4', { each: true })
     peoples?: string[];
 
-    @ApiProperty({
+    @ApiPropertyOptional({
         type: 'string',
         format: 'uuid',
         isArray: true,
-        required: false,
-        description: `id связанных мест (не больше ${appConstants.entry.maxPlacesPerEntry})`,
-        example: ['b2c3d4e5-f6a7-4890-b123-456789abcdef']
+        description: `id связанных мест (не больше ${appConstants.entry.maxPlacesPerEntry})`
     })
     @IsOptional()
     @IsArray()
@@ -44,9 +42,7 @@ export class BaseEntryUpdateDto {
     @IsUUID('4', { each: true })
     places?: string[];
 
-    @ApiPropertyOptional({
-        type: [EntryLocationDto]
-    })
+    @ApiPropertyOptional({ type: [EntryLocationDto] })
     @IsOptional()
     @IsArray()
     @ArrayMaxSize(appConstants.entry.maxPlacesPerEntry)

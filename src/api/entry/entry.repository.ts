@@ -8,12 +8,17 @@ import { SortTypes } from '../../common/types/search/sort-types.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { baseEntrySelect, createEntrySelect, entryDetailSelect, searchEntrySelect } from './consts/entry.constants';
 import { EntrySearchContentType, EntrySearchDto, EntrySearchFilterDto } from './dto/search/search-request.dto';
-import type { ParsedLocation } from './helpers/parse-form-data.helper';
 import { CreateEntryInput } from './types/uploaded-file.type';
+
+export type UpdateEntryContentInput = {
+    title?: string;
+    text?: string | null;
+    formattedText?: string | null;
+    formattedTextFormat?: Prisma.EntryUpdateInput['formattedTextFormat'];
+};
 
 export type UpdateBaseEntryInput = {
     title?: string;
-    location?: ParsedLocation;
     personIds?: string[];
     placeIds?: string[];
 };
@@ -58,11 +63,27 @@ export class EntryRepository {
     async findOwnedById(id: string, userId: string) {
         return this.prisma.entry.findFirst({
             where: { id, userId, ...this.notDeleted },
-            include: {
+            select: {
+                id: true,
+                title: true,
+                text: true,
+                formattedText: true,
+                formattedTextFormat: true,
+                isReady: true,
+                voice: {
+                    select: { id: true }
+                },
                 _count: {
-                    select: { places: true }
+                    select: { places: true, people: true, media: true }
                 }
             }
+        });
+    }
+
+    async findOwnedBaseById(id: string, userId: string) {
+        return this.prisma.entry.findFirst({
+            where: { id, userId, ...this.notDeleted },
+            select: baseEntrySelect
         });
     }
 
@@ -126,11 +147,130 @@ export class EntryRepository {
                 }
             }
 
-            return tx.entry.findFirstOrThrow({
+            return tx.entry.findFirst({
                 where: { id, ...this.notDeleted },
                 select: baseEntrySelect
             });
         });
+    }
+
+    async updateContent(id: string, userId: string, data: UpdateEntryContentInput) {
+        const entryData: Prisma.EntryUpdateInput = {};
+
+        if (data.title !== undefined) {
+            entryData.title = data.title;
+        }
+
+        if (data.text !== undefined) {
+            entryData.text = data.text;
+        }
+
+        if (data.formattedText !== undefined) {
+            entryData.formattedText = data.formattedText;
+            entryData.formattedTextFormat =
+                data.formattedText && data.formattedText.trim().length > 0
+                    ? (data.formattedTextFormat ?? null)
+                    : null;
+        }
+
+        const updated = await this.prisma.entry.updateMany({
+            where: { id, userId, ...this.notDeleted },
+            data: entryData
+        });
+
+        if (updated.count === 0) {
+            return null;
+        }
+
+        return this.findOwnedBaseById(id, userId);
+    }
+
+    async existsEntryPerson(entryId: string, personId: string) {
+        const row = await this.prisma.entryPerson.findUnique({
+            where: {
+                entryId_personId: { entryId, personId }
+            },
+            select: { entryId: true }
+        });
+
+        return row != null;
+    }
+
+    async addEntryPerson(entryId: string, personId: string) {
+        await this.prisma.$transaction([
+            this.prisma.entryPerson.create({
+                data: { entryId, personId }
+            }),
+            this.prisma.entry.updateMany({
+                where: { id: entryId, ...this.notDeleted },
+                data: { updatedAt: new Date() }
+            })
+        ]);
+    }
+
+    async removeEntryPerson(entryId: string, personId: string): Promise<boolean> {
+        const result = await this.prisma.$transaction(async (tx) => {
+            const deleted = await tx.entryPerson.deleteMany({
+                where: { entryId, personId }
+            });
+
+            if (deleted.count === 0) {
+                return false;
+            }
+
+            await tx.entry.updateMany({
+                where: { id: entryId, ...this.notDeleted },
+                data: { updatedAt: new Date() }
+            });
+
+            return true;
+        });
+
+        return result;
+    }
+
+    async existsEntryPlace(entryId: string, placeId: string) {
+        const row = await this.prisma.entryPlace.findUnique({
+            where: {
+                entryId_placeId: { entryId, placeId }
+            },
+            select: { entryId: true }
+        });
+
+        return row != null;
+    }
+
+    async addEntryPlace(entryId: string, placeId: string) {
+        await this.prisma.$transaction([
+            this.prisma.entryPlace.create({
+                data: { entryId, placeId }
+            }),
+            this.prisma.entry.updateMany({
+                where: { id: entryId, ...this.notDeleted },
+                data: { updatedAt: new Date() }
+            })
+        ]);
+    }
+
+    async removeEntryPlace(entryId: string, placeId: string): Promise<boolean> {
+        const result = await this.prisma.$transaction(async (tx) => {
+            const deleted = await tx.entryPlace.deleteMany({
+                where: { entryId, placeId }
+            });
+
+            if (deleted.count === 0) {
+                return false;
+            }
+
+            await tx.entry.updateMany({
+                where: { id: entryId, ...this.notDeleted },
+                data: { updatedAt: new Date() }
+            });
+
+            return true;
+        });
+
+        return result;
     }
 
     async create(data: CreateEntryInput) {

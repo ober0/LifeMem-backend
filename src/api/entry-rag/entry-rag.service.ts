@@ -14,6 +14,8 @@ import { AiToolKey } from '../ai/tools/ai-tool-key.enum';
 import { DelayedWorkerService } from '../delayed-worker/delayed-worker.service';
 import { ServiceSettingsService } from '../service-settings/service-settings.service';
 import { entryRagPrompts } from './consts/prompts.const';
+import type { EntryAskHistorySearchDto } from './dto/entry-ask-history-search.dto';
+import type { EntryAskHistorySearchResponseDto } from './dto/entry-ask-history-response.dto';
 import type { EntryRagAskDto } from './dto/entry-rag-ask.dto';
 import type { EntryRagAskResponseDto, EntryRagSourceDto } from './dto/entry-rag-response.dto';
 import { type CreateAscInput, EntryRagRepository } from './entry-rag.repository';
@@ -94,6 +96,7 @@ export class EntryRagService {
                 question,
                 result: answer,
                 sourceCount: orderedSources.length,
+                entryIds: orderedSources.map((source) => source.id),
                 timeMs,
                 modelId,
                 usage
@@ -130,5 +133,31 @@ export class EntryRagService {
         const byId = new Map(sources.map((item) => [item.id, item]));
 
         return sourceIds.map((id) => byId.get(id)).filter((item): item is EntryRagSourceDto => item != null);
+    }
+
+    async searchHistory(actor: Actor, dto: EntryAskHistorySearchDto): Promise<EntryAskHistorySearchResponseDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        const userId = actor.user.id;
+
+        const [rows, count] = await Promise.all([
+            this.repository.searchHistory(userId, dto),
+            this.repository.countHistory(userId, dto)
+        ]);
+
+        const entryIds = [...new Set(rows.flatMap((row) => row.entryIds))];
+        const sources = await this.repository.findSourcesByIds(userId, entryIds);
+
+        const data = rows.map((row) => ({
+            id: row.id,
+            question: row.question,
+            answer: row.answer,
+            createdAt: row.createdAt,
+            sources: this.orderSources(row.entryIds, sources)
+        }));
+
+        return { data, count };
     }
 }

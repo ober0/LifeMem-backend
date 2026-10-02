@@ -19,9 +19,12 @@ import type { CreateEntryResponseDto } from './dto/create-entry-response.dto';
 import type { EntryMediaDto } from './dto/entry-media.dto';
 import { EntryVoiceDto } from './dto/entry-voices';
 import type { EntryDetailResponseDto } from './dto/get-entry-response.dto';
+import type { LinkEntryPersonDto } from './dto/link-entry-person.dto';
+import type { LinkEntryPlaceDto } from './dto/link-entry-place.dto';
 import type { EntrySearchDto } from './dto/search/search-request.dto';
 import type { EntrySearchResponseDto } from './dto/search/search-response.dto';
 import { EntryMediaSource, EntryVoiceSource } from './dto/types';
+import type { UpdateEntryContentDto } from './dto/update-entry-content.dto';
 import { entryMapper } from './entry.mapper';
 import { EntryRepository } from './entry.repository';
 import { EntrySearchRepository } from './entry-search.repository';
@@ -32,6 +35,7 @@ import {
     checkEntryInput,
     checkGeo,
     checkMediaLimit,
+    checkPeopleLimit,
     checkPlacesLimit,
     generateDefaultEntryName,
     normalizeMediaDescription,
@@ -148,12 +152,8 @@ export class EntryService {
         };
 
         const hasVideoInMedia = media.some((el) => el.type === FileType.VIDEO);
-        const videoFileIds = new Set(
-            media.filter((el) => el.type === FileType.VIDEO).map((el) => el.fileId)
-        );
-        const entryVideoIds = entry.media
-            .filter((el) => videoFileIds.has(el.fileId))
-            .map((el) => el.id);
+        const videoFileIds = new Set(media.filter((el) => el.type === FileType.VIDEO).map((el) => el.fileId));
+        const entryVideoIds = entry.media.filter((el) => videoFileIds.has(el.fileId)).map((el) => el.id);
 
         await this.entryProcessingService.activatePipeline(
             EntryPipelinesEnum.Create,
@@ -200,6 +200,43 @@ export class EntryService {
             media: entryMedia,
             voice: entryVoice
         });
+    }
+
+    private async requireReadyEntry(id: string, userId: string) {
+        const entry = await this.entryRepository.findOwnedById(id, userId);
+
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        if (!entry.isReady) {
+            throw apiError.badRequest('entry.edit_only_when_ready');
+        }
+
+        return entry;
+    }
+
+    private async toBaseEntryResponse(
+        entry: NonNullable<Awaited<ReturnType<EntryRepository['findOwnedBaseById']>>>
+    ): Promise<BaseEntryDto> {
+        const mediaItems = await this.mapMedia(entry.media);
+
+        return entryMapper.toBaseEntry(
+            {
+                id: entry.id,
+                title: entry.title,
+                text: entry.text,
+                formattedText: entry.formattedText,
+                formattedTextFormat: entry.formattedTextFormat,
+                isHasVoice: Boolean(entry.voice),
+                isReady: entry.isReady,
+                peoples: entry.people.map((el) => el.person),
+                places: entry.places.map((el) => el.place),
+                createdAt: entry.createdAt,
+                updatedAt: entry.updatedAt
+            },
+            mediaItems
+        );
     }
 
     async updateBase(actor: Actor, id: string, dto: BaseEntryUpdateDto): Promise<BaseEntryDto> {
@@ -293,24 +330,198 @@ export class EntryService {
             );
         }
 
-        const mediaItems = await this.mapMedia(entry.media);
+        return this.toBaseEntryResponse(entry);
+    }
 
-        return entryMapper.toBaseEntry(
-            {
-                id: entry.id,
-                title: entry.title,
-                text: entry.text,
-                formattedText: entry.formattedText,
-                formattedTextFormat: entry.formattedTextFormat,
-                isHasVoice: Boolean(entry.voice),
-                isReady: entry.isReady,
-                peoples: entry.people.map((el) => el.person),
-                places: entry.places.map((el) => el.place),
-                createdAt: entry.createdAt,
-                updatedAt: entry.updatedAt
-            },
-            mediaItems
-        );
+    async updateContent(actor: Actor, id: string, dto: UpdateEntryContentDto): Promise<BaseEntryDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        const userId = actor.user.id;
+        const exist = await this.requireReadyEntry(id, userId);
+
+        const hasTitle = dto.title !== undefined;
+        const hasText = dto.text !== undefined;
+        const hasFormatted = dto.formattedText !== undefined;
+
+        if (!hasTitle && !hasText && !hasFormatted) {
+            throw apiError.badRequest('entry.content_nothing_to_update');
+        }
+
+        if (exist.voice && (hasText || hasFormatted)) {
+            throw apiError.badRequest('entry.voice_text_not_editable');
+        }
+
+        const formattedText = hasFormatted
+            ? dto.formattedText === null
+                ? null
+                : dto.formattedText!.trim() || null
+            : undefined;
+
+        const entry = await this.entryRepository.updateContent(id, userId, {
+            ...(hasTitle && { title: dto.title!.trim() }),
+            ...(hasText && { text: dto.text!.trim() || null }),
+            ...(hasFormatted && {
+                formattedText,
+                formattedTextFormat: formattedText
+                    ? (dto.formattedTextFormat ?? exist.formattedTextFormat ?? null)
+                    : null
+            })
+        });
+
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        const textAfterUpdate = hasText ? dto.text!.trim() || null : exist.text?.trim() || null;
+        const hasTextAfterUpdate = Boolean(textAfterUpdate);
+        const reindexText = hasText || hasFormatted;
+
+        const cancelPromises: Promise<void>[] = [];
+
+        if (hasTitle) {
+            cancelPromises.push(this.entryProcessingService.cancelActiveJob(id, EntryProcessingType.EmbedTitle));
+        }
+
+        if (reindexText) {
+            cancelPromises.push(this.entryProcessingService.cancelActiveJob(id, EntryProcessingType.EmbedText));
+            cancelPromises.push(
+                this.entryProcessingService.cancelActiveJob(id, EntryProcessingType.LocationAndPeopleDetect)
+            );
+        }
+
+        await Promise.all(cancelPromises);
+
+        if (hasTitle || reindexText) {
+            const basePayload = {
+                pipeline: EntryPipelinesEnum.UpdateContent,
+                userId,
+                entryId: id
+            };
+
+            await this.entryProcessingService.activatePipeline(
+                EntryPipelinesEnum.UpdateContent,
+                {
+                    hasCoords: false,
+                    hasVoice: Boolean(exist.voice),
+                    hasText: hasTextAfterUpdate,
+                    hasMedia: exist._count.media > 0,
+                    hasVideoInMedia: false
+                },
+                {
+                    ...(hasTitle && {
+                        [DelayedJob.EntryEmbedTitle]: basePayload
+                    }),
+                    ...(reindexText && {
+                        [DelayedJob.EntryEmbedText]: basePayload,
+                        ...(hasTextAfterUpdate && {
+                            [DelayedJob.EntryLocationAndPeopleDetect]: basePayload
+                        })
+                    })
+                }
+            );
+        }
+
+        return this.toBaseEntryResponse(entry);
+    }
+
+    async addPerson(actor: Actor, id: string, dto: LinkEntryPersonDto): Promise<BaseEntryDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        const userId = actor.user.id;
+        const exist = await this.requireReadyEntry(id, userId);
+
+        if (await this.entryRepository.existsEntryPerson(id, dto.personId)) {
+            throw apiError.badRequest('entry.person_already_linked');
+        }
+
+        checkPeopleLimit(exist._count.people + 1);
+        await this.checkLinkedEntities(userId, [dto.personId], []);
+
+        await this.entryRepository.addEntryPerson(id, dto.personId);
+
+        const entry = await this.entryRepository.findOwnedBaseById(id, userId);
+
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        return this.toBaseEntryResponse(entry);
+    }
+
+    async removePerson(actor: Actor, id: string, personId: string): Promise<BaseEntryDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        const userId = actor.user.id;
+        await this.requireReadyEntry(id, userId);
+
+        const removed = await this.entryRepository.removeEntryPerson(id, personId);
+
+        if (!removed) {
+            throw apiError.badRequest('entry.person_not_linked');
+        }
+
+        const entry = await this.entryRepository.findOwnedBaseById(id, userId);
+
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        return this.toBaseEntryResponse(entry);
+    }
+
+    async addPlace(actor: Actor, id: string, dto: LinkEntryPlaceDto): Promise<BaseEntryDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        const userId = actor.user.id;
+        const exist = await this.requireReadyEntry(id, userId);
+
+        if (await this.entryRepository.existsEntryPlace(id, dto.placeId)) {
+            throw apiError.badRequest('entry.place_already_linked');
+        }
+
+        checkPlacesLimit(exist._count.places + 1, 0);
+        await this.checkLinkedEntities(userId, [], [dto.placeId]);
+
+        await this.entryRepository.addEntryPlace(id, dto.placeId);
+
+        const entry = await this.entryRepository.findOwnedBaseById(id, userId);
+
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        return this.toBaseEntryResponse(entry);
+    }
+
+    async removePlace(actor: Actor, id: string, placeId: string): Promise<BaseEntryDto> {
+        if (!actor.user) {
+            throw apiError.unauthorized('auth.unauthorized');
+        }
+
+        const userId = actor.user.id;
+        await this.requireReadyEntry(id, userId);
+
+        const removed = await this.entryRepository.removeEntryPlace(id, placeId);
+
+        if (!removed) {
+            throw apiError.badRequest('entry.place_not_linked');
+        }
+
+        const entry = await this.entryRepository.findOwnedBaseById(id, userId);
+
+        if (!entry) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        return this.toBaseEntryResponse(entry);
     }
 
     private async mapMedia(
@@ -361,10 +572,6 @@ export class EntryService {
 
         if (!entry) {
             throw apiError.notFound('entry.not_found');
-        }
-
-        if (!entry.isReady) {
-            throw apiError.badRequest('entry.attach_only_when_ready');
         }
 
         const remaining = appConstants.entry.maxMediaPerEntry - entry._count.media;
@@ -427,13 +634,20 @@ export class EntryService {
             throw apiError.unauthorized('auth.unauthorized');
         }
 
-        const media = await this.entryRepository.findOwnedEntryMediaForDetach(entryId, mediaId, actor.user.id);
+        const userId = actor.user.id;
+        const exist = await this.entryRepository.findOwnedById(entryId, userId);
+
+        if (!exist) {
+            throw apiError.notFound('entry.not_found');
+        }
+
+        const media = await this.entryRepository.findOwnedEntryMediaForDetach(entryId, mediaId, userId);
 
         if (!media) {
             throw apiError.notFound('entry.media_not_found');
         }
 
-        const deleted = await this.entryRepository.deleteOwnedEntryMedia(entryId, mediaId, actor.user.id);
+        const deleted = await this.entryRepository.deleteOwnedEntryMedia(entryId, mediaId, userId);
 
         if (!deleted) {
             throw apiError.notFound('entry.media_not_found');
@@ -442,8 +656,34 @@ export class EntryService {
         if (media.type === FileType.VIDEO && media.firstFrame) {
             this.delayedWorker.setImmediate(() => {
                 this.s3Service.deleteObject(media.firstFrame!.key).catch(() => undefined);
-                this.filesRepository.deleteOwnedFile(actor.user.id, media.firstFrame!.id);
+                this.filesRepository.deleteOwnedFile(userId, media.firstFrame!.id);
             });
+        }
+
+        const remainingMedia = exist._count.media - 1;
+
+        if (remainingMedia > 0) {
+            const basePayload = {
+                pipeline: EntryPipelinesEnum.UpdateMediaDetach,
+                userId,
+                entryId
+            };
+
+            await this.entryProcessingService.cancelActiveJob(entryId, EntryProcessingType.EmbedMedia);
+
+            await this.entryProcessingService.activatePipeline(
+                EntryPipelinesEnum.UpdateMediaDetach,
+                {
+                    hasCoords: false,
+                    hasVoice: Boolean(exist.voice),
+                    hasText: Boolean(exist.text?.trim()),
+                    hasMedia: true,
+                    hasVideoInMedia: false
+                },
+                {
+                    [DelayedJob.EntryEmbedImage]: basePayload
+                }
+            );
         }
     }
 

@@ -88,6 +88,14 @@ export function checkPlacesLimit(placeIdsCount: number, locationsCount: number):
     }
 }
 
+export function checkPeopleLimit(peopleCount: number): void {
+    if (peopleCount > appConstants.entry.maxPeoplePerEntry) {
+        throw apiError.badRequest('entry.too_many_people', {
+            max: appConstants.entry.maxPeoplePerEntry
+        });
+    }
+}
+
 export function toLocationCoords(
     locations: EntryLocationDto[]
 ): Array<{ latitude: number; longitude: number; locationLabel?: string }> {

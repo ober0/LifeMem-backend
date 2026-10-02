@@ -1,12 +1,19 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import type express from 'express';
 
+import { CurrentActor } from '../../../common/decorators/current-actor.decorator';
 import { ThrottleByIp, ThrottleByUser } from '../../../common/decorators/throttle-by-user.decorator';
+import { JwtAuthGuardHttp } from '../../../common/guards/auth.guard';
 import { apiError } from '../../../common/helpers/errors';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
+import type { Actor } from '../../../common/classes/actor';
+import { AlertBaseDto } from '../../../common/types/common/alert-base.dto';
 import { DeviceType } from '../../../common/types/user';
+import { ChangePasswordDto } from '../dto/change-password.dto';
+import { ConfirmPasswordResetDto } from '../dto/confirm-password-reset.dto';
 import { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
+import { RequestPasswordResetDto } from '../dto/request-password-reset.dto';
 import { LoginDto } from '../dto/login.dto';
 import type { LoginTokensResult } from '../dto/tokens.dto';
 import {
@@ -122,6 +129,42 @@ export class AuthController {
         if (device.type === DeviceType.MOBILE) {
             return data;
         }
+    }
+
+    @ApiOperation({ summary: 'Смена пароля (текущий пользователь)' })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Post('password')
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiErrorResponses(400, 401)
+    async changePassword(@CurrentActor() actor: Actor, @Body() dto: ChangePasswordDto): Promise<void> {
+        await this.authService.changePassword(actor, dto);
+    }
+
+    @ApiOperation({ summary: 'Запрос сброса пароля по email' })
+    @HttpCode(HttpStatus.OK)
+    @Post('password-reset/request')
+    @ThrottleByUser({ limit: 5 })
+    @ThrottleByIp({ limit: 5 })
+    @ApiOkResponse({ type: AlertBaseDto })
+    @ApiErrorResponses(400)
+    async requestPasswordReset(
+        @Body() dto: RequestPasswordResetDto,
+        @Req() request: express.Request
+    ): Promise<AlertBaseDto> {
+        return this.authService.requestPasswordReset(dto, request.actor, request.serverSettings);
+    }
+
+    @ApiOperation({ summary: 'Подтверждение сброса пароля' })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Post('password-reset/confirm')
+    @ThrottleByUser({ limit: 10 })
+    @ThrottleByIp({ limit: 10 })
+    @ApiErrorResponses(400)
+    async confirmPasswordReset(
+        @Body() dto: ConfirmPasswordResetDto,
+        @Req() request: express.Request
+    ): Promise<void> {
+        await this.authService.confirmPasswordReset(dto, request.actor, request.serverSettings);
     }
 
     @ApiOperation({

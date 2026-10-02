@@ -19,10 +19,26 @@ model Asc {
 
   usage AscUsage?
 
+  entries AscEntry[]
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("asc")
+}
+
+model AscEntry {
+  asc   Asc    @relation(fields: [ascId], references: [id], onDelete: Cascade)
+  ascId String @map("asc_id") @db.Uuid
+
+  entry   Entry  @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  entryId String @map("entry_id") @db.Uuid
+
+  position Int @default(0)
+
+  @@id([ascId, entryId])
+  @@index([ascId])
+  @@map("asc_entry")
 }
 
 model AscUsage {

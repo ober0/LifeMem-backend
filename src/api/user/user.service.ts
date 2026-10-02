@@ -377,6 +377,18 @@ export class UserService {
         return this.userRepository.findByEmailWithPassword(email);
     }
 
+    async findByIdWithPassword(userId: string) {
+        return this.userRepository.findByIdWithPassword(userId);
+    }
+
+    async setPasswordHash(userId: string, passwordHash: string): Promise<void> {
+        const updated = await this.userRepository.setPasswordHash(userId, passwordHash);
+
+        if (!updated) {
+            throw apiError.notFound('user.not_found');
+        }
+    }
+
     async findByPhone(phone: Phone) {
         return this.userRepository.findByPhone(phone.normalized);
     }

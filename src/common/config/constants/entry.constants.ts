@@ -2,6 +2,7 @@ import { FileType } from '@prisma/client';
 
 export const entryConstants = {
     maxMediaPerEntry: 5,
+    maxPeoplePerEntry: 10,
     maxPlacesPerEntry: 3,
     mediaUrlLifeTime: 60 * 60, // в секундах (1 час)
     allowedMediaFileTypes: [FileType.IMAGE, FileType.VIDEO] as const,

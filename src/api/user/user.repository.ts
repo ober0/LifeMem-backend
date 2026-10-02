@@ -74,6 +74,46 @@ export class UserRepository {
         return this.prisma.user.findUnique({ where: { email }, include: { password: true } });
     }
 
+    async findByIdWithPassword(userId: string) {
+        return this.prisma.user.findUnique({
+            where: { id: userId },
+            include: { password: true }
+        });
+    }
+
+    async setPasswordHash(userId: string, passwordHash: string): Promise<boolean> {
+        return this.prisma.$transaction(async (tx) => {
+            const user = await tx.user.findUnique({
+                where: { id: userId },
+                select: { passwordId: true }
+            });
+
+            if (!user) {
+                return false;
+            }
+
+            if (user.passwordId) {
+                await tx.password.update({
+                    where: { id: user.passwordId },
+                    data: { password: passwordHash }
+                });
+            } else {
+                await tx.user.update({
+                    where: { id: userId },
+                    data: {
+                        password: {
+                            create: {
+                                password: passwordHash
+                            }
+                        }
+                    }
+                });
+            }
+
+            return true;
+        });
+    }
+
     async findByPhone(phone: string) {
         return this.prisma.user.findUnique({ where: { phoneNumber: phone } });
     }

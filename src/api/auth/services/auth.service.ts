@@ -8,12 +8,13 @@ import type { ServerSettings } from 'src/common/classes/server-settings';
 
 import { Phone } from '../../../common/classes/phone';
 import { appConstants } from '../../../common/config/app.constants';
-import type { AppConfig,AuthConfig} from '../../../common/config/env';
+import type { AppConfig, AuthConfig } from '../../../common/config/env';
 import { appConfig, authConfig } from '../../../common/config/env';
 import { apiError } from '../../../common/helpers/errors';
 import { generateCode } from '../../../common/helpers/generate-code';
 import { resolveAuthCountry } from '../../../common/helpers/get-country-from-request';
 import { translations } from '../../../common/translation/text-translations';
+import type { AlertBaseDto } from '../../../common/types/common/alert-base.dto';
 import { AuthLogService } from '../../auth-log/auth-log.service';
 import { DelayedWorkerService } from '../../delayed-worker/delayed-worker.service';
 import { MobileSmsService } from '../../mobile-sms/mobile-sms.service';
@@ -21,8 +22,11 @@ import { NotificationMessage, NotificationType } from '../../notifications/const
 import { NotificationsService } from '../../notifications/notifications.service';
 import { SmtpService } from '../../smtp/smtp.service';
 import { UserService } from '../../user/user.service';
+import type { ChangePasswordDto } from '../dto/change-password.dto';
+import type { ConfirmPasswordResetDto } from '../dto/confirm-password-reset.dto';
 import type { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
 import type { LoginDto } from '../dto/login.dto';
+import type { RequestPasswordResetDto } from '../dto/request-password-reset.dto';
 import type {
     GeneratedTokens,
     LoginFullResponseDto,
@@ -52,6 +56,10 @@ export class AuthService {
 
     async comparePassword(password: string, hashedPassword: string): Promise<boolean> {
         return bcrypt.compare(password, hashedPassword);
+    }
+
+    private async hashPassword(password: string): Promise<string> {
+        return bcrypt.hash(password, this.auth.saltRounds);
     }
 
     async saveToken(payload: SaveTokenDto) {
@@ -306,5 +314,116 @@ export class AuthService {
 
     private async createCode(data: { type: ConfirmCodeType; code: string; userId: string }) {
         await this.authRepository.createConfirmationCode(data);
+    }
+
+    async changePassword(actor: Actor, dto: ChangePasswordDto): Promise<void> {
+        const user = await this.userService.findByIdWithPassword(actor.user.id);
+
+        if (!user?.passwordId || !user.password) {
+            throw apiError.badRequest('auth.password_not_set');
+        }
+
+        const [isOldPasswordValid, isSamePassword] = await Promise.all([
+            this.comparePassword(dto.oldPassword, user.password.password),
+            this.comparePassword(dto.newPassword, user.password.password)
+        ]);
+
+        if (!isOldPasswordValid) {
+            throw apiError.badRequest('user.password_incorrect');
+        }
+
+        if (isSamePassword) {
+            throw apiError.badRequest('user.password_identical');
+        }
+
+        const passwordHash = await this.hashPassword(dto.newPassword);
+
+        await Promise.all([
+            this.userService.setPasswordHash(user.id, passwordHash),
+            this.authRepository.deleteRefreshTokensByUserId(user.id)
+        ]);
+    }
+
+    async requestPasswordReset(
+        dto: RequestPasswordResetDto,
+        actor: Actor,
+        serverSettings: ServerSettings
+    ): Promise<AlertBaseDto> {
+        serverSettings.assertAuthAllowed('email', 'login', resolveAuthCountry(undefined, actor.requestCountry));
+
+        const email = dto.email.trim();
+        const user = await this.userService.findOneByEmailWithPassword(email);
+
+        let code: string | undefined;
+
+        const userEmail = user?.email;
+
+        if (userEmail) {
+            code = generateCode();
+
+            await this.createCode({
+                type: ConfirmCodeType.PasswordReset,
+                code,
+                userId: user!.id
+            });
+
+            const sentCode = code;
+
+            this.delayedWorker.setImmediate(() =>
+                this.smtpService.sendCodeEmail({
+                    to: userEmail,
+                    code: sentCode,
+                    lang: actor.requestLang,
+                    expiresMinutes: appConstants.code.emailLifetimeMs / 60_000
+                })
+            );
+        }
+
+        return {
+            message: translations.byTextKey({
+                key: 'common.codeSentEmail',
+                lang: actor.requestLang,
+                //FIXME
+                variables: code ? { code } : {}
+            }),
+            alert: true
+        };
+    }
+
+    async confirmPasswordReset(
+        dto: ConfirmPasswordResetDto,
+        actor: Actor,
+        serverSettings: ServerSettings
+    ): Promise<void> {
+        serverSettings.assertAuthAllowed('email', 'login', resolveAuthCountry(undefined, actor.requestCountry));
+
+        const email = dto.email.trim();
+        const user = await this.userService.findOneByEmailWithPassword(email);
+
+        if (!user) {
+            throw apiError.badRequest('auth.invalid_code');
+        }
+
+        const confirm = await this.authRepository.consumeValidConfirmationCode(
+            user.id,
+            ConfirmCodeType.PasswordReset,
+            Number(dto.code)
+        );
+
+        if (!confirm) {
+            throw apiError.badRequest('auth.invalid_code');
+        }
+
+        if (user.password?.password) {
+            const isSamePassword = await this.comparePassword(dto.newPassword, user.password.password);
+
+            if (isSamePassword) {
+                throw apiError.badRequest('user.password_identical');
+            }
+        }
+
+        const passwordHash = await this.hashPassword(dto.newPassword);
+        await this.userService.setPasswordHash(user.id, passwordHash);
+        await this.authRepository.deleteRefreshTokensByUserId(user.id);
     }
 }

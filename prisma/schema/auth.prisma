@@ -19,6 +19,7 @@ model RefreshToken {
 enum ConfirmCodeType {
   Email
   Phone
+  PasswordReset
 
   @@map("cinfirm_code_type")
 }

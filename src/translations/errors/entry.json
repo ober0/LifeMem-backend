@@ -11,6 +11,38 @@
         "ru": "Прикрепить файл можно только к готовой заметке",
         "en": "You can attach a file only to a ready entry"
     },
+    "edit_only_when_ready": {
+        "ru": "Редактировать можно только обработанную заметку",
+        "en": "You can edit only a processed entry"
+    },
+    "voice_text_not_editable": {
+        "ru": "Текст голосовой заметки нельзя редактировать",
+        "en": "Text of a voice entry cannot be edited"
+    },
+    "content_nothing_to_update": {
+        "ru": "Укажите хотя бы одно поле для обновления",
+        "en": "Provide at least one field to update"
+    },
+    "person_already_linked": {
+        "ru": "Этот человек уже связан с заметкой",
+        "en": "This person is already linked to the entry"
+    },
+    "person_not_linked": {
+        "ru": "Этот человек не связан с заметкой",
+        "en": "This person is not linked to the entry"
+    },
+    "place_already_linked": {
+        "ru": "Это место уже связано с заметкой",
+        "en": "This place is already linked to the entry"
+    },
+    "place_not_linked": {
+        "ru": "Это место не связано с заметкой",
+        "en": "This place is not linked to the entry"
+    },
+    "too_many_people": {
+        "ru": "Можно связать не более {{max}} людей",
+        "en": "You can link at most {{max}} people"
+    },
     "media_not_found": {
         "ru": "Медиа не найдено в этой заметке",
         "en": "Media not found in this entry"
