@@ -2,19 +2,19 @@ import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } fro
 import { ApiExtraModels, ApiOkResponse, ApiOperation, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import type express from 'express';
 
+import type { Actor } from '../../../common/classes/actor';
 import { CurrentActor } from '../../../common/decorators/current-actor.decorator';
 import { ThrottleByIp, ThrottleByUser } from '../../../common/decorators/throttle-by-user.decorator';
 import { JwtAuthGuardHttp } from '../../../common/guards/auth.guard';
 import { apiError } from '../../../common/helpers/errors';
 import { ApiErrorResponses } from '../../../common/swagger/api-error-responses';
-import type { Actor } from '../../../common/classes/actor';
 import { AlertBaseDto } from '../../../common/types/common/alert-base.dto';
 import { DeviceType } from '../../../common/types/user';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { ConfirmPasswordResetDto } from '../dto/confirm-password-reset.dto';
 import { ConfirmPhoneDto } from '../dto/confirm-phone.dto';
-import { RequestPasswordResetDto } from '../dto/request-password-reset.dto';
 import { LoginDto } from '../dto/login.dto';
+import { RequestPasswordResetDto } from '../dto/request-password-reset.dto';
 import type { LoginTokensResult } from '../dto/tokens.dto';
 import {
     AccessTokenDto,
