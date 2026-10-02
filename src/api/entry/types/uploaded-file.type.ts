@@ -1,4 +1,4 @@
-import { EntryProcessingStatus, EntryProcessingType, FileType } from '@prisma/client';
+import { EntryFormattedTextFormat, EntryProcessingStatus, EntryProcessingType, FileType } from '@prisma/client';
 
 import type { EntryLocationDto } from '../dto/create-entry.dto';
 
@@ -21,6 +21,8 @@ export type CreateEntryInput = {
     userId: string;
     title: string;
     text?: string | null;
+    formattedText?: string | null;
+    formattedTextFormat?: EntryFormattedTextFormat | null;
     location?: EntryLocationDto | null;
     personIds: string[];
     placeIds: string[];

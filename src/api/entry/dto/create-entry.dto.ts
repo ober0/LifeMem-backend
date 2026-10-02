@@ -1,13 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { EntryFormattedTextFormat } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
     ArrayMaxSize,
     IsArray,
+    IsEnum,
     IsNumber,
     IsOptional,
     IsString,
     IsUUID,
     MaxLength,
+    ValidateIf,
     ValidateNested
 } from 'class-validator';
 
@@ -57,6 +60,17 @@ export class CreateEntryDto {
     @IsString()
     @MaxLength(20000)
     text?: string;
+
+    @ApiProperty({ type: String, nullable: true })
+    @IsOptional()
+    @IsString()
+    @MaxLength(20000)
+    formattedText?: string;
+
+    @ApiProperty({ enum: EntryFormattedTextFormat, nullable: true })
+    @ValidateIf((el) => el.formattedText != null && el.formattedText !== '')
+    @IsEnum(EntryFormattedTextFormat)
+    formattedTextFormat?: EntryFormattedTextFormat;
 
     @ApiPropertyOptional({
         description: 'Фото и видео (id файлов после upload complete)',

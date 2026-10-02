@@ -97,15 +97,33 @@ export class EntryRepository {
                 }
             }
 
-            const updated = await tx.entry.updateMany({
-                where: { id, ...this.notDeleted },
-                data: {
-                    ...(data.title !== undefined && { title: data.title })
-                }
-            });
+            const relationsChanged = data.personIds !== undefined || data.placeIds !== undefined;
+            const entryData: Prisma.EntryUpdateManyMutationInput = {};
 
-            if (updated.count === 0) {
-                return null;
+            if (data.title !== undefined) {
+                entryData.title = data.title;
+            } else if (relationsChanged) {
+                entryData.updatedAt = new Date();
+            }
+
+            if (Object.keys(entryData).length > 0) {
+                const updated = await tx.entry.updateMany({
+                    where: { id, ...this.notDeleted },
+                    data: entryData
+                });
+
+                if (updated.count === 0) {
+                    return null;
+                }
+            } else {
+                const existing = await tx.entry.findFirst({
+                    where: { id, ...this.notDeleted },
+                    select: { id: true }
+                });
+
+                if (!existing) {
+                    return null;
+                }
             }
 
             return tx.entry.findFirstOrThrow({
@@ -120,6 +138,8 @@ export class EntryRepository {
             user: { connect: { id: data.userId } },
             title: data.title,
             text: data.text ?? null,
+            formattedText: data.formattedText ?? null,
+            formattedTextFormat: data.formattedTextFormat ?? null,
             isReady: false,
             ...(data.personIds.length > 0 && {
                 people: {

@@ -125,6 +125,7 @@ export class EntryService {
         const { media, voice } = await this.resolveEntryFiles(userId, dto);
 
         const text = dto.text?.trim() || null;
+        const formattedText = dto.formattedText?.trim() || null;
         const hasLocationCoords = locationCoords.length > 0;
         const hasMedia = media.length > 0;
 
@@ -132,6 +133,8 @@ export class EntryService {
             userId,
             title: dto.title ? dto.title.trim() : generateDefaultEntryName(actor.settings?.lang),
             text,
+            formattedText,
+            formattedTextFormat: formattedText ? (dto.formattedTextFormat ?? null) : null,
             personIds,
             placeIds,
             voice,
