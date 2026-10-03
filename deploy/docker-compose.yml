@@ -13,6 +13,17 @@ services:
             timeout: 5s
             retries: 5
 
+    lifemem-prisma-studio:
+        image: ${LIFEMEM_APP_IMAGE:-lifemem-app:local}
+        container_name: lifemem-prisma-studio
+        command: npx prisma studio --hostname 0.0.0.0 --port 5555
+        environment:
+            DATABASE_URL: ${DATABASE_URL}
+        ports:
+            - "127.0.0.1:5555:5555"
+        depends_on:
+            - lifemem-postgres
+
     lifemem-redis:
         image: redis:alpine
         container_name: lifemem-redis
