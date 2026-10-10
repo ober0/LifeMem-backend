@@ -15,6 +15,7 @@ import {
 } from '../delayed-worker/delayed-worker.constants';
 import { OpenstreetmapService } from '../openstreetmap/openstreetmap.service';
 import { OpenstreetReverseResponse } from '../openstreetmap/types';
+import { PlaceService } from '../place/place.service';
 import { ServiceSettingsService } from '../service-settings/service-settings.service';
 import { entryLocationPrompts } from './consts/prompts.const';
 import { EntryLocationRepository } from './entry-location.repository';
@@ -35,7 +36,8 @@ export class EntryLocationService {
         private readonly repository: EntryLocationRepository,
         private readonly openstreetmap: OpenstreetmapService,
         private readonly serviceSettings: ServiceSettingsService,
-        private readonly ai: AiService
+        private readonly ai: AiService,
+        private readonly placeService: PlaceService
     ) {}
 
     async processEntryLocation(
@@ -80,6 +82,9 @@ export class EntryLocationService {
 
         assertNotAborted(abortSignal);
         await this.repository.createLocation(createData, userId, entryId);
+
+        // инвалидация кеша
+        this.placeService.refreshMapFilters(userId);
     }
 
     private async getLocation(data: {

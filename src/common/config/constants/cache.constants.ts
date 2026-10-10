@@ -1,11 +1,13 @@
 import { AiModelSearchResponseDto } from '../../../api/ai-model/dto/base.dto';
 import { AiModelSearchDto } from '../../../api/ai-model/dto/search.dto';
+import { PlaceMapFiltersDto } from '../../../api/place/dto/place-map.dto';
 import { ServiceSettingsDto } from '../../../api/service-settings/dto/base.dto';
 import { generateObjectHash } from '../../helpers/generate-object-hash';
 
 export enum CacheKey {
     ServiceSettings = 'serviceSettings',
-    AiModelsSearch = 'aiModelsSearch'
+    AiModelsSearch = 'aiModelsSearch',
+    PlaceMapFilters = 'placeMapFilters'
 }
 
 export enum CacheTtl {
@@ -20,6 +22,7 @@ export enum CacheTtl {
 export type CacheTypes = {
     [CacheKey.ServiceSettings]: ServiceSettingsDto;
     [CacheKey.AiModelsSearch]: AiModelSearchResponseDto;
+    [CacheKey.PlaceMapFilters]: PlaceMapFiltersDto;
 };
 
 export type CacheConfig = {
@@ -40,5 +43,8 @@ export const cacheConstants: CacheConstants = {
     }),
     [CacheKey.AiModelsSearch]: (dto: AiModelSearchDto) => ({
         key: `${AI_MODELS_CACHE_KEY_PREFIX}:${generateObjectHash(dto)}`
+    }),
+    [CacheKey.PlaceMapFilters]: (userId: string) => ({
+        key: `place-map-filters:${userId}`
     })
 };

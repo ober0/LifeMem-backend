@@ -1,4 +1,5 @@
 import {
+    Body,
     Controller,
     Delete,
     Get,
@@ -6,6 +7,7 @@ import {
     HttpStatus,
     Param,
     ParseUUIDPipe,
+    Post,
     Query,
     UseGuards
 } from '@nestjs/common';
@@ -17,6 +19,7 @@ import { JwtAuthGuardHttp } from '../../common/guards/auth.guard';
 import { ApiErrorResponses } from '../../common/swagger/api-error-responses';
 import { PlaceListResponseDto } from './dto/place.dto';
 import { PlaceListQueryDto } from './dto/place-list-query.dto';
+import { PlaceMapFiltersDto, PlaceMapRequestDto, PlaceMapResponseDto } from './dto/place-map.dto';
 import { PlaceService } from './place.service';
 
 @ApiTags('Place')
@@ -32,6 +35,26 @@ export class PlaceController {
     @ApiErrorResponses(401)
     async list(@CurrentActor() actor: Actor, @Query() query: PlaceListQueryDto): Promise<PlaceListResponseDto> {
         return this.placeService.list(actor, query);
+    }
+
+    @Post('map')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiOperation({ summary: 'Места для карты' })
+    @ApiOkResponse({ type: PlaceMapResponseDto })
+    @ApiErrorResponses(400, 401)
+    async map(@CurrentActor() actor: Actor, @Body() dto: PlaceMapRequestDto): Promise<PlaceMapResponseDto> {
+        return this.placeService.map(actor, dto);
+    }
+
+    @Get('map/filters')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(JwtAuthGuardHttp({}))
+    @ApiOperation({ summary: 'Страны, регионы и города мест пользователя' })
+    @ApiOkResponse({ type: PlaceMapFiltersDto })
+    @ApiErrorResponses(401)
+    async mapFilters(@CurrentActor() actor: Actor): Promise<PlaceMapFiltersDto> {
+        return this.placeService.getMapFilters(actor);
     }
 
     @Delete(':id')
